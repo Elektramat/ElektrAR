@@ -111,6 +111,9 @@ struct MeasureScreen: View {
                 modePicker
                 statusText
                 Spacer()
+                // Above the buttons, in the layout: positioned under the crosshair it ended up
+                // behind the buttons on an iPhone 15.
+                heightLabel
                 controls
                 if isPlacing {
                     PlacementBar(fixture: fixture, placedCount: placement.placed.count,
@@ -187,7 +190,6 @@ struct MeasureScreen: View {
             }
         }
         .overlay { Crosshair(active: isPlacing ? placement.canPlace : session.canAddPoint) }
-        .overlay { heightLabel }
     }
 
     /// Height of the crosshair (or of the middle of the switch preview) above the floor.
@@ -207,7 +209,6 @@ struct MeasureScreen: View {
         .monospacedDigit()
         .padding(.horizontal, 10).padding(.vertical, 5)
         .background(.black.opacity(0.55), in: Capsule())
-        .offset(y: Theme.crosshair + 8)
         .allowsHitTesting(false)
     }
 
