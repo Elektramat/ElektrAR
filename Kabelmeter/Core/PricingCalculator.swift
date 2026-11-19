@@ -10,7 +10,8 @@ nonisolated struct Quote: Equatable, Sendable {
     let pieces: [Double]
     /// Sum of `pieces`, in meters.
     let billedLength: Double
-    /// billedLength * pricePerMeter, rounded to cents.
+    /// billedLength * pricePerMeter rounded to cents; for cable sold as separate roll products
+    /// (`Cable.rolls`) the sum of the prices of the rolls.
     let price: Double
 }
 
@@ -34,10 +35,72 @@ nonisolated enum PricingCalculator {
                       allowance: Double = connectionAllowance) -> Quote? {
         guard measured.isFinite, measured > 0 else { return nil }
         let required = requiredLength(measured: measured, reserve: reserve, allowance: allowance)
+        if let rolls = cable.rolls, !rolls.isEmpty {
+            let plan = rollPlan(required: required, rolls: rolls)
+            return Quote(measured: measured, required: required, pieces: plan.map(\.lengthM),
+                         billedLength: plan.reduce(0) { $0 + $1.lengthM },
+                         price: roundToCents(plan.reduce(0) { $0 + $1.price }))
+        }
         let pieces = billedPieces(required: required, sales: cable.sales)
         let billed = pieces.reduce(0, +)
         return Quote(measured: measured, required: required, pieces: pieces,
                      billedLength: billed, price: roundToCents(billed * cable.pricePerMeter))
+    }
+
+    /// The rolls to order for `required` meters: the combination with the lowest total price that
+    /// covers the length. A shorter roll costs more per meter, so the cheapest combination is not
+    /// always the shortest one. Ties: fewest rolls, then least left over. Longest roll first.
+    /// Exact search on whole centimeters; falls back to "best price per meter, then the
+    /// cheapest roll that covers the rest" for absurd lengths.
+    static func rollPlan(required: Double, rolls: [CableRoll]) -> [CableRoll] {
+        let options = rolls.filter { $0.lengthM > 0 && $0.price >= 0 }
+        guard !options.isEmpty, required > tolerance else { return [] }
+        let unit = 100.0 // centimeters
+        let sizes = options.map { Int(($0.lengthM * unit).rounded()) }
+        let costs = options.map { Int(($0.price * 100).rounded()) }
+        let target = Int((required * unit - tolerance).rounded(.up))
+        let limit = target + (sizes.max() ?? 0)
+        guard limit <= 2_000_000 else { return greedyRollPlan(required: required, options: options) }
+
+        var cost = [Int](repeating: .max, count: limit + 1)
+        var count = [Int](repeating: .max, count: limit + 1)
+        var last = [Int](repeating: -1, count: limit + 1)
+        cost[0] = 0
+        count[0] = 0
+        for s in 1...limit {
+            for (i, size) in sizes.enumerated() where size <= s && cost[s - size] != .max {
+                let c = cost[s - size] + costs[i]
+                let n = count[s - size] + 1
+                if c < cost[s] || (c == cost[s] && n < count[s]) {
+                    cost[s] = c
+                    count[s] = n
+                    last[s] = i
+                }
+            }
+        }
+        guard var s = (target...limit).filter({ cost[$0] != .max })
+            .min(by: { (cost[$0], count[$0], $0) < (cost[$1], count[$1], $1) }) else {
+            return greedyRollPlan(required: required, options: options)
+        }
+        var plan: [CableRoll] = []
+        while s > 0 {
+            let i = last[s]
+            plan.append(options[i])
+            s -= sizes[i]
+        }
+        return plan.sorted { $0.lengthM > $1.lengthM }
+    }
+
+    private static func greedyRollPlan(required: Double, options: [CableRoll]) -> [CableRoll] {
+        guard let best = options.min(by: { $0.price / $0.lengthM < $1.price / $1.lengthM }) else { return [] }
+        let fullCount = Int((required / best.lengthM - tolerance).rounded(.down))
+        var plan = Array(repeating: best, count: fullCount)
+        let rest = required - Double(fullCount) * best.lengthM
+        if rest > tolerance {
+            let covering = options.filter { $0.lengthM >= rest - tolerance }.min { $0.price < $1.price }
+            plan.append(covering ?? best)
+        }
+        return plan.sorted { $0.lengthM > $1.lengthM }
     }
 
     static func billedPieces(required: Double, sales: SalesUnit) -> [Double] {

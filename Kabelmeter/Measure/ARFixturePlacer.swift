@@ -255,6 +255,9 @@ final class ARFixturePlacer {
             ?? Bundle.main.url(forResource: fixture.model, withExtension: "usdz", subdirectory: "Models"),
            let loaded = try? await Entity(contentsOf: url) {
             template = Self.unanchored(loaded)
+        } else if fixture.shape == "consumerunit" {
+            // The generic consumer unit has no model file: a simple box drawn in code.
+            template = Self.consumerUnitModel(for: fixture)
         } else if fixture.shape != nil {
             // A light without a model file: a stand-in shape of about the right size.
             Self.logger.error("Light model \(fixture.model, privacy: .public) missing; showing a stand-in shape")
@@ -286,6 +289,39 @@ final class ARFixturePlacer {
         for child in entity.children {
             removeAnchoring(child)
         }
+    }
+
+    /// A generic consumer unit: a dark box with a lighter panel, a row of breakers and a red main
+    /// switch, back on the wall (z = 0), +Z out of the wall. Not a real product.
+    private static func consumerUnitModel(for fixture: Fixture) -> Entity {
+        let frame = fixture.frameMM ?? [220, 360]
+        let width = Float(frame.first ?? 220) / 1000
+        let height = Float(frame.last ?? 360) / 1000
+        let depth = Float(fixture.depthMM ?? 100) / 1000
+        let dark = SimpleMaterial(color: UIColor(white: 0.14, alpha: 1), roughness: 0.55, isMetallic: false)
+        let panel = SimpleMaterial(color: UIColor(white: 0.82, alpha: 1), roughness: 0.5, isMetallic: false)
+        let white = SimpleMaterial(color: .white, roughness: 0.4, isMetallic: false)
+        let red = SimpleMaterial(color: UIColor(red: 0.86, green: 0.15, blue: 0.12, alpha: 1), roughness: 0.4, isMetallic: false)
+        let container = Entity()
+        let body = ModelEntity(mesh: .generateBox(width: width, height: height, depth: depth, cornerRadius: 0.008),
+                               materials: [dark])
+        body.position.z = depth / 2
+        container.addChild(body)
+        let panelHeight = height * 0.34
+        let face = ModelEntity(mesh: .generateBox(width: width * 0.82, height: panelHeight, depth: 0.004),
+                               materials: [panel])
+        face.position = [0, -height * 0.12, depth + 0.002]
+        container.addChild(face)
+        let count = 4
+        let slot = width * 0.82 / Float(count)
+        for i in 0..<count {
+            let breaker = ModelEntity(mesh: .generateBox(width: slot * 0.7, height: panelHeight * 0.62, depth: 0.012,
+                                                          cornerRadius: 0.002),
+                                      materials: [i == count - 1 ? red : white])
+            breaker.position = [-width * 0.41 + slot * (Float(i) + 0.5), -height * 0.12, depth + 0.008]
+            container.addChild(breaker)
+        }
+        return container
     }
 
     /// A stand-in for a light, back on the wall or ceiling (z = 0), +Z out of the surface.

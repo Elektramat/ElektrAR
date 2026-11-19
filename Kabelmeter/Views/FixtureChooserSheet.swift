@@ -14,6 +14,7 @@ struct FixtureChooserSheet: View {
         ("schakelaar", "Schakelaar", "lightswitch.on"),
         ("stopcontact", "Stopcontact", "poweroutlet.type.f"),
         ("lamp", "Lamp", "lightbulb"),
+        ("groepenkast", "Groepenkast", "bolt.square"),
     ]
 
     var body: some View {
@@ -41,7 +42,9 @@ struct FixtureChooserSheet: View {
                             Label {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(kind.title).font(.title3.weight(.semibold))
-                                    Text("\(count) uitvoeringen").font(.subheadline).foregroundStyle(.secondary)
+                                    Text(kind.product == "groepenkast" ? "Standaard weergave, begin van je kabels"
+                                         : Format.count(count, "uitvoering", "uitvoeringen"))
+                                        .font(.subheadline).foregroundStyle(.secondary)
                                 }
                             } icon: {
                                 Image(systemName: kind.icon).font(.title2).foregroundStyle(Theme.accent)
@@ -102,8 +105,10 @@ private struct FixtureBrandList: View {
                             HStack(spacing: Theme.spacing) {
                                 FixtureIcon(fixture: fixture)
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(fixture.isLight ? fixture.productName : fixture.line).font(.headline).lineLimit(2)
-                                    Text(fixture.isLight ? "\(fixture.title) · \(fixture.isCeiling ? "plafond" : "wand")"
+                                    Text(fixture.isLight || fixture.isConsumerUnit ? fixture.productName : fixture.line)
+                                        .font(.headline).lineLimit(2)
+                                    Text(fixture.isConsumerUnit ? "Alleen ter oriëntatie, niet te bestellen"
+                                         : fixture.isLight ? "\(fixture.title) · \(fixture.isCeiling ? "plafond" : "wand")"
                                          : fixture.mounting == "opbouw" ? "\(fixture.colourName) · opbouw" : fixture.colourName)
                                         .font(.subheadline).foregroundStyle(.secondary)
                                     Text(FixtureText.price(fixture)).font(.subheadline)
