@@ -14,11 +14,11 @@ struct WebShopSheet: View {
             ZStack {
                 // Always in the hierarchy so the cart page can load in the background.
                 WebView(webView: shop.webView).ignoresSafeArea(edges: .bottom)
-                    .opacity(shop.phase == .cart ? 1 : 0)
-                    .allowsHitTesting(shop.phase == .cart)
+                    .opacity(shop.showsWebView ? 1 : 0)
+                    .allowsHitTesting(shop.showsWebView)
                     .overlay(alignment: .top) {
                         // Shows that a tap in the shop (trash, quantity, checkout) is working.
-                        if shop.phase == .cart, shop.cartPageReady, let progress = shop.pageProgress {
+                        if shop.showsWebView, let progress = shop.pageProgress {
                             ProgressView(value: progress)
                                 .progressViewStyle(.linear)
                                 .tint(Theme.accent)
@@ -31,7 +31,7 @@ struct WebShopSheet: View {
                 case let .adding(index, total): progress(step: total > 1 ? "\(index) van \(total)" : nil)
                 case .added: result
                 case .cart:
-                    if !shop.cartPageReady { ProgressView("Winkelmand laden…").controlSize(.large) }
+                    if !shop.showsWebView { ProgressView("Winkelmand laden…").controlSize(.large) }
                 }
             }
             .background(Color(Theme.Token.black5))

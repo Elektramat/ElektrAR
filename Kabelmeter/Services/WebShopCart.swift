@@ -61,6 +61,9 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate, WKUID
     @Published private(set) var addedCount = 0
     /// True once the cart page finished loading in the background.
     @Published private(set) var cartPageReady = false
+    /// True while the web view shows the session page (robots.txt). That plain-text page must
+    /// never be visible: the sheet keeps the web view hidden until a shop page is loaded.
+    @Published private(set) var isOnSessionPage = false
 
     private var pageLoad: CheckedContinuation<Void, Error>?
     private var sessionTask: Task<Void, Error>?
@@ -89,6 +92,9 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate, WKUID
             },
             webView.observe(\.estimatedProgress, options: [.new]) { [weak self] view, _ in
                 MainActor.assumeIsolated { self?.updateProgress(view) }
+            },
+            webView.observe(\.url, options: [.initial, .new]) { [weak self] view, _ in
+                MainActor.assumeIsolated { self?.urlChanged(view.url) }
             },
         ]
     }
@@ -180,16 +186,32 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate, WKUID
         Task { await loadCartPage() }
     }
 
-    /// Shows the shop cart; the page is already loading or loaded.
+    /// Shows the shop cart; the page is already loading or loaded. When the cart page load was
+    /// cut off and the web view still shows the session page, loads the cart again.
     func showCart() {
         phase = .cart
+        if cartPageReady, isOnSessionPage, !webView.isLoading {
+            Task { await loadCartPage() }
+        }
     }
 
     private func loadCartPage() async {
+        cartPageReady = false
         // A failed load still shows the web view, which then shows the browser's error.
         try? await load(Self.cartUrl)
         cartPageReady = true
     }
+
+    /// Swiping back from the cart lands on the session page in the history: load the cart again.
+    private func urlChanged(_ url: URL?) {
+        isOnSessionPage = url?.path == Self.sessionUrl.path
+        if isOnSessionPage, phase == .cart, cartPageReady {
+            Task { await loadCartPage() }
+        }
+    }
+
+    /// The sheet shows the web view only on a real shop page, never the session page.
+    var showsWebView: Bool { phase == .cart && cartPageReady && !isOnSessionPage }
 
     /// Reuses the warmed-up session page. Loads it again when the warm-up failed or the
     /// web view left the shop (for example to a payment page), because the scripts must run
