@@ -9,8 +9,9 @@ build/
 Package.resolved
 # macOS
 .DS_Store
+# Python
+__pycache__/
 
 # Vercel CLI link
 .vercel/
-.vercel
 .env*
