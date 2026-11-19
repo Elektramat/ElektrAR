@@ -36,7 +36,10 @@ python3 -I scripts/scrape_elektramat.py
 swift test   # checks that the file decodes and every cable has a photo
 ```
 
-Edit `PRODUCTS` in the script to change the list. To use an export from the product database
+Edit `PRODUCTS` in the script to change the list. Cables the shop sells as separate roll products
+(for example the Snelflex rolls of 25, 50 and 100 m, each with its own price) go in `ROLL_CABLES`;
+`python3 -I scripts/scrape_elektramat.py --rolls` refreshes only those. If Python cannot verify the
+shop's certificate, run it with `SSL_CERT_FILE=/etc/ssl/cert.pem`. To use an export from the product database
 instead:
 
 ```sh

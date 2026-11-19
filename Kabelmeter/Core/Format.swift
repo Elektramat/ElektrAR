@@ -29,6 +29,12 @@ nonisolated enum Format {
         pieces.map(orderLength).joined(separator: " + ")
     }
 
+    /// "2 × 50 m + 1 × 25 m": rolls grouped by length, longest first.
+    static func rolls(_ pieces: [Double]) -> String {
+        Dictionary(grouping: pieces, by: { $0 }).sorted { $0.key > $1.key }
+            .map { "\($0.value.count) × \(orderLength($0.key))" }.joined(separator: " + ")
+    }
+
     /// "1 kabel", "3 kabels": a count with the right Dutch word.
     static func count(_ n: Int, _ one: String, _ many: String) -> String {
         "\(n) \(n == 1 ? one : many)"

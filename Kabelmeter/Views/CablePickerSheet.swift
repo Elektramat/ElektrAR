@@ -51,7 +51,7 @@ private struct CableRow: View {
                 Text(cable.name).font(.headline)
                 Text("\(cable.crossSection) · \(cable.use)").font(.subheadline).foregroundStyle(.secondary)
                 HStack(spacing: 6) {
-                    Text("\(Format.euro(cable.pricePerMeter)) per meter").font(.subheadline)
+                    Text("\(cable.hasRolls ? "vanaf " : "")\(Format.euro(cable.pricePerMeter)) per meter").font(.subheadline)
                     Text("· \(salesText)").font(.subheadline).foregroundStyle(.secondary)
                 }
                 Text(cable.stock).font(.caption).foregroundStyle(.secondary)
@@ -67,7 +67,8 @@ private struct CableRow: View {
     private var salesText: String {
         switch cable.sales {
         case .perMeter: "op lengte"
-        case let .fixedLengths(lengths): "rol " + lengths.sorted().map { Format.orderLength($0) }.joined(separator: ", ")
+        case let .fixedLengths(lengths):
+            (lengths.count == 1 ? "rol " : "rollen van ") + lengths.sorted().map { Format.orderLength($0) }.joined(separator: ", ")
         }
     }
 }
