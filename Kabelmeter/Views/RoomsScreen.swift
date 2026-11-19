@@ -205,6 +205,12 @@ struct ProjectSketch: View {
             for item in placed {
                 let c = map(item.position), r: CGFloat = detailed ? 10 : 4
                 let rect = CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r)
+                if byId[item.fixtureId]?.isConsumerUnit == true {
+                    // The consumer unit is where the cables start: same green as the start point.
+                    context.fill(Path(roundedRect: rect.insetBy(dx: -r * 0.2, dy: -r * 0.5), cornerRadius: r * 0.3),
+                                 with: .color(Theme.start))
+                    continue
+                }
                 context.fill(Path(roundedRect: rect, cornerRadius: r * 0.3), with: .color(.white))
                 if detailed {
                     let inner = rect.insetBy(dx: r * 0.45, dy: r * 0.45)

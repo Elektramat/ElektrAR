@@ -313,7 +313,7 @@ struct RoomScreen: View {
                 controlButton("Wis start", icon: "xmark.square") { session.startPoint = nil }
                     .disabled(session.startPoint == nil)
                 spacer
-                plusButton(enabled: session.cursor != nil, label: "Startpunt (groepenkast) hier") {
+                plusButton(enabled: session.cursor != nil, label: "Startpunt hier (zonder groepenkast)") {
                     session.startPoint = session.cursor
                     confirm("Startpunt gezet")
                 }
@@ -415,6 +415,10 @@ struct RoomScreen: View {
                         Text(session.points.isEmpty ? "\(Format.count(session.runs.count, "kabel", "kabels")) in deze ruimte"
                                                     : Format.count(session.points.count, "ankerpunt", "ankerpunten"))
                             .font(Theme.labelFont).foregroundStyle(.secondary)
+                        if cable?.hasRolls == true, let quote {
+                            Text("Alleen deze kabel: \(Format.rolls(quote.pieces))")
+                                .font(Theme.labelFont).foregroundStyle(.secondary)
+                        }
                     }
                     Spacer()
                     Text(quote.map { Format.euro($0.price) } ?? "–").font(Theme.priceFont).monospacedDigit()
@@ -491,6 +495,12 @@ struct RoomScreen: View {
                 Text(Format.count(placement.placed.count, "onderdeel", "onderdelen")).font(Theme.lengthFont)
                 Text("\(Format.count(session.runs.count, "kabel", "kabels")) · \(Format.meters(cableLength))")
                     .font(Theme.labelFont).foregroundStyle(.secondary).monospacedDigit()
+                // Roll advice for this room: how many rolls of which length the cables need.
+                let rollLines = roomLines.filter { $0.rollLength != nil }
+                if !rollLines.isEmpty {
+                    Text("Advies: \(Format.rolls(rollLines.flatMap(\.pieces)))")
+                        .font(Theme.labelFont.weight(.semibold)).foregroundStyle(Theme.accent).monospacedDigit()
+                }
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 0) {
@@ -611,15 +621,18 @@ struct RoomScreen: View {
             FixtureGeometry.size(frameMM: self.fixtureStore.fixture(id: item.fixtureId)?.frameMM)
         }
         let ends = session.runs.flatMap { [$0.points.first, $0.points.last].compactMap { $0 } }
+        let isUnit = { (item: PlacedFixture) in self.fixtureStore.fixture(id: item.fixtureId)?.isConsumerUnit == true }
+        // The consumer unit is where the cables start, not a part that needs a cable.
         let pending = placement.notCabled.filter { item in
-            !FixtureGeometry.anchors(transform: item.transform, size: size(item)).contains { anchor in
+            !isUnit(item) && !FixtureGeometry.anchors(transform: item.transform, size: size(item)).contains { anchor in
                 ends.contains { simd_distance($0, anchor.position) <= ConnectionSnapping.distance }
             }
         }
         let node = { (item: PlacedFixture) in RouteNode.fixture(transform: item.transform, size: size(item)) }
         let nodes = pending.map(node)
         let lastCabled = placement.cabled.last.flatMap { id in placement.placed.first { $0.id == id } }
-        let start = lastCabled.map(node) ?? session.startPoint.map(RouteNode.point)
+        let unit = placement.placed.first(where: isUnit)
+        let start = lastCabled.map(node) ?? unit.map(node) ?? session.startPoint.map(RouteNode.point)
         let routes = AutoRouter.chain(start: start, nodes: nodes, floorY: session.floorY)
         let order = AutoRouter.order(start: start, nodes: nodes)
         return (routes, order.map { pending[$0].id })
@@ -639,7 +652,7 @@ struct RoomScreen: View {
         }
         if placement.placed.isEmpty { return "Plaats eerst onderdelen bij stap 1" }
         if autoPlan.ids.isEmpty { return "Alle onderdelen hebben een kabel" }
-        return "Richt op de groepenkast en tik op + als startpunt"
+        return "Plaats een groepenkast bij stap 1, of tik op + op de plek van de groepenkast"
     }
 
     private func addAutoRoutes() {

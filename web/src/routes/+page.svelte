@@ -1,9 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { cables } from '#lib/catalog.ts';
-	import { cart, linePrice } from '#lib/cart.svelte.ts';
-	import { euro, meters, orderLength, pieces } from '#lib/format.ts';
-	import { CONNECTION_ALLOWANCE, DEFAULT_RESERVE, quote } from '#lib/pricing.ts';
+	import { cart, linePrice, rollLines } from '#lib/cart.svelte.ts';
+	import { euro, meters, orderLength, pieces, rolls } from '#lib/format.ts';
+	import {
+		CONNECTION_ALLOWANCE,
+		DEFAULT_RESERVE,
+		hasRolls,
+		quote,
+		type Cable
+	} from '#lib/pricing.ts';
 
 	const DISCLAIMER =
 		'Dit is een schatting. Controleer de lengte zelf en laat het aansluiten over aan een installateur.';
@@ -39,6 +45,9 @@
 	const cable = $derived(cables.find((c) => c.id === cableId) ?? cables[0]);
 	const measured = $derived(segments.reduce((sum, s) => sum + (parseMeters(s.text) ?? 0), 0));
 	const result = $derived(quote(cable, measured, reservePercent / 100));
+	const isRoll = $derived(hasRolls(cable));
+	/** "1 × 50 m + 1 × 25 m" for a cable sold as rolls, "11 m" otherwise. */
+	const toOrder = $derived(result ? (isRoll ? rolls(result.pieces) : pieces(result.pieces)) : '–');
 	const hasSample = cables.some((c) => c.isSample);
 	const filtered = $derived.by(() => {
 		const q = query.trim().toLowerCase();
@@ -47,6 +56,15 @@
 			[c.name, c.crossSection, c.use].some((v) => v.toLowerCase().includes(q))
 		);
 	});
+
+	/** "€ 1,45 per meter"; a roll cable shows its cheapest price per meter as "vanaf". */
+	const perMeter = (c: Cable) => `${hasRolls(c) ? 'vanaf ' : ''}${euro(c.pricePerMeter)} per meter`;
+
+	const rollSizes = (c: Cable) =>
+		[...(c.rolls ?? [])]
+			.sort((a, b) => a.lengthM - b.lengthM)
+			.map((r) => orderLength(r.lengthM))
+			.join(', ');
 
 	function chooseCable(id: string) {
 		cableId = id;
@@ -75,8 +93,8 @@
 
 	function addToCart() {
 		if (!result) return;
-		cart.add(cable, result.billedLength);
-		show(`${orderLength(result.billedLength)} ${cable.name} toegevoegd`);
+		cart.add(cable, result.billedLength, result.required);
+		show(`${isRoll ? toOrder : orderLength(result.billedLength)} ${cable.name} toegevoegd`);
 	}
 </script>
 
@@ -113,7 +131,7 @@
 					<div>
 						<p class="cable-name">{cable.name}</p>
 						<p class="cable-meta">
-							{cable.crossSection} · {euro(cable.pricePerMeter)} per meter · {cable.stock}
+							{cable.crossSection} · {perMeter(cable)} · {cable.stock}
 						</p>
 						{#if cable.isSample}<span class="sample">Voorbeelddata</span>{/if}
 					</div>
@@ -141,7 +159,9 @@
 						<img class="cable-photo" src={`/cables/${c.sku}.jpg`} alt="" width="56" height="56" />
 						<div>
 							<p class="cable-name">{c.name}</p>
-							<p class="cable-meta">{c.crossSection} · {euro(c.pricePerMeter)} per meter</p>
+							<p class="cable-meta">
+								{c.crossSection} · {perMeter(c)}{hasRolls(c) ? ` · rollen van ${rollSizes(c)}` : ''}
+							</p>
 						</div>
 						{#if c.id === cableId}<span class="selected">✓</span>{/if}
 					</button>
@@ -193,6 +213,14 @@
 				We rekenen {reservePercent}% reserve en {orderLength(CONNECTION_ALLOWANCE)} voor de aansluitingen,
 				afgerond zoals de kabel verkocht wordt. {DISCLAIMER}
 			</p>
+			{#if isRoll}
+				<p class="note" style="margin-top: 12px">
+					Deze kabel wordt verkocht per rol van {rollSizes(cable)}, elke rol met een eigen prijs.
+					Het advies is de combinatie rollen met de laagste totaalprijs voor deze kabel apart. In de
+					winkelmand kiest de app de rollen voor al je routes met deze kabel samen, dat is vaak
+					voordeliger.
+				</p>
+			{/if}
 			{#if hasSample}
 				<p class="muted">
 					<span class="sample">Voorbeelddata</span> Sommige prijzen zijn voorbeelden.
@@ -206,13 +234,13 @@
 			<div class="price-top">
 				<div class="lengths" aria-live="polite">
 					<p>Gemeten: {meters(measured)}</p>
-					<p>Te bestellen: {result ? pieces(result.pieces) : '–'}</p>
+					<p>{isRoll ? 'Rollen' : 'Te bestellen'}: {toOrder}</p>
 				</div>
 				<div class="price" aria-live="polite" data-testid="price">
 					{#if result}
 						{euro(result.price)}
 					{:else}
-						{euro(cable.pricePerMeter)}<small>per meter</small>
+						{#if isRoll}<small>vanaf</small>{/if}{euro(cable.pricePerMeter)}<small>per meter</small>
 					{/if}
 				</div>
 			</div>
@@ -236,7 +264,7 @@
 				</div>
 			</div>
 			<button class="cta" disabled={!result} onclick={addToCart}>
-				{result ? `Voeg ${pieces(result.pieces)} toe aan winkelmand` : 'Vul eerst een lengte in'}
+				{result ? `Voeg ${toOrder} toe aan winkelmand` : 'Vul eerst een lengte in'}
 			</button>
 		</div>
 	</div>
@@ -257,17 +285,43 @@
 			{#each cart.items as item (item.cableId)}
 				<div class="line">
 					<div class="line-top"><span>{item.name}</span><span>{euro(linePrice(item))}</span></div>
-					<p class="cable-meta">
-						{item.crossSection} · {orderLength(item.meters)} × {euro(item.pricePerMeter)} per meter
-					</p>
-					<a
-						class="secondary-cta"
-						href={item.productUrl}
-						target="_blank"
-						rel="external noopener noreferrer"
-					>
-						Bestel op elektramat.nl
-					</a>
+					{#if item.rolls}
+						<!-- One line per roll size: each roll is its own shop product. -->
+						{#each rollLines(item) as { roll, count } (roll.sku)}
+							<div class="roll-line">
+								<div class="line-top">
+									<span>{count} × rol {orderLength(roll.lengthM)}</span>
+									<span>{euro(count * roll.price)}</span>
+								</div>
+								<p class="cable-meta">
+									{item.crossSection} · {euro(roll.price)} per rol · art.nr. {roll.sku}
+								</p>
+								<a
+									class="secondary-cta"
+									href={roll.productUrl}
+									target="_blank"
+									rel="external noopener noreferrer"
+								>
+									Bestel rol {orderLength(roll.lengthM)} op elektramat.nl
+								</a>
+							</div>
+						{/each}
+						<p class="cable-meta">
+							Rollen gekozen op de laagste totaalprijs voor de lengte van al je routes samen.
+						</p>
+					{:else}
+						<p class="cable-meta">
+							{item.crossSection} · {orderLength(item.meters)} × {euro(item.pricePerMeter)} per meter
+						</p>
+						<a
+							class="secondary-cta"
+							href={item.productUrl}
+							target="_blank"
+							rel="external noopener noreferrer"
+						>
+							Bestel op elektramat.nl
+						</a>
+					{/if}
 					<button class="link-button" onclick={() => cart.remove(item.cableId)}>Verwijder</button>
 				</div>
 			{/each}

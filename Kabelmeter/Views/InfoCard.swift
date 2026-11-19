@@ -67,12 +67,25 @@ struct InfoCard: View {
             if let height = FloorHeight.height(of: item.position, floorY: session.floorY) {
                 row("Hoogte (midden)", "\(Format.height(height)) boven de vloer")
             }
-            if let fixture {
+            if let fixture, fixture.isConsumerUnit {
+                row("Winkelwagen", "Niet inbegrepen")
+            } else if let fixture {
                 row("Prijs", fixture.price.map(Format.euro) ?? "Niet compleet te bestellen",
                     warning: !fixture.complete)
                 if placement.cabled.contains(item.id) {
                     row("Kabel", "Automatisch aangesloten")
                 }
+            }
+        }
+        if let fixture, fixture.isConsumerUnit {
+            Section {
+                Button {
+                    if let url = URL(string: "https://www.elektramat.nl/groepenkasten/") { openURL(url) }
+                } label: {
+                    Label("Groepenkast samenstellen op elektramat.nl", systemImage: "safari")
+                }
+            } footer: {
+                Text(fixture.note ?? "")
             }
         }
         if let fixture, !fixture.parts.isEmpty {
@@ -116,7 +129,11 @@ struct InfoCard: View {
             row("Ankerpunten", "\(run.points.count)")
             if let quote {
                 row("Nodig met reserve", Format.meters(quote.required))
-                row("Te bestellen", Format.pieces(quote.pieces))
+                if let cable, cable.hasRolls {
+                    row("Rollen (alleen deze kabel)", Format.rolls(quote.pieces))
+                } else {
+                    row("Te bestellen", Format.pieces(quote.pieces))
+                }
                 row("Prijs", Format.euro(quote.price))
             }
             if let cable {
@@ -125,7 +142,9 @@ struct InfoCard: View {
                 }
             }
         } footer: {
-            Text("Prijs voor deze kabel apart. In de winkelwagen worden alle kabels van hetzelfde type samen afgerond, dat is vaak iets voordeliger.")
+            Text(cable?.hasRolls == true
+                 ? "Voor deze kabel apart. In de winkelwagen kiest de app de rollen voor al je kabels van dit type samen, dat is vaak voordeliger."
+                 : "Prijs voor deze kabel apart. In de winkelwagen worden alle kabels van hetzelfde type samen afgerond, dat is vaak iets voordeliger.")
         }
     }
 

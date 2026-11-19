@@ -62,10 +62,15 @@ nonisolated struct Fixture: Codable, Identifiable, Equatable, Sendable {
 
     var isLight: Bool { product == "lamp" }
 
+    /// The standard consumer unit (groepenkast): a generic stand-in that is placed as the start
+    /// of the cables. It is not a shop article and never goes into the cart.
+    var isConsumerUnit: Bool { product == "groepenkast" }
+
     /// Lights that hang on a ceiling go on a horizontal surface above the user.
     var isCeiling: Bool { mounting == "plafond" }
 
     var title: String {
+        if isConsumerUnit { return "Groepenkast" }
         if isLight {
             switch shape {
             case "recessed": return "Inbouwspot"
@@ -80,16 +85,27 @@ nonisolated struct Fixture: Codable, Identifiable, Equatable, Sendable {
 
     var colourName: String { colour.replacingOccurrences(of: "-", with: " ") }
 
-    var subtitle: String { isLight ? productName : "\(brand) \(line) · \(colourName)" }
+    var subtitle: String {
+        if isConsumerUnit { return "Standaard weergave" }
+        return isLight ? productName : "\(brand) \(line) · \(colourName)"
+    }
 
     /// The second line in the picker: the product name for a light, the colour for a switch.
-    var detail: String { isLight ? productName : colourName }
+    var detail: String { isConsumerUnit ? "Niet te bestellen" : isLight ? productName : colourName }
 
     /// Name of the product photo in the bundle (LightImages/<sku>.jpg) for a light.
     var lightSku: String? { isLight ? parts.first?.sku : nil }
 }
 
 nonisolated extension Fixture {
+    /// The generic consumer unit. A real one is configured with the configurator on elektramat.nl
+    /// (https://www.elektramat.nl/groepenkasten/), so this has no parts and no price.
+    static let consumerUnit = Fixture(
+        id: "groepenkast", brand: "Standaard", line: "Standaard", colour: "", product: "groepenkast",
+        productName: "Standaard groepenkast", mounting: "opbouw", model: "groepenkast", complete: true, price: nil,
+        parts: [], note: "Alleen ter oriëntatie: de echte groepenkast stel je samen met de configurator op elektramat.nl.",
+        frameMM: [220, 360], depthMM: 100, shape: "consumerunit")
+
     /// Fixture for a light: one part (the light itself), always orderable.
     init(light: LightProduct) {
         let size = light.sizeMM.count == 3 ? light.sizeMM : [100, 100, 50]

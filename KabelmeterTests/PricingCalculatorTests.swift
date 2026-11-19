@@ -140,3 +140,64 @@ final class PricingCalculatorTests: XCTestCase {
         XCTAssertTrue(euro.contains("9,90"))
     }
 }
+
+final class RollPlanTests: XCTestCase {
+    private func roll(_ length: Double, _ price: Double) -> CableRoll {
+        CableRoll(lengthM: length, sku: "R\(Int(length))", price: price,
+                  productUrl: URL(string: "https://www.elektramat.nl/")!, shopProductId: Int(length), stock: nil)
+    }
+
+    /// The Snelflex 3x2,5 rolls: a shorter roll costs more per meter.
+    private let rolls: [CableRoll] = [(100.0, 208.77), (50, 117.66), (25, 64.51)].map {
+        CableRoll(lengthM: $0.0, sku: "R\(Int($0.0))", price: $0.1,
+                  productUrl: URL(string: "https://www.elektramat.nl/")!, shopProductId: Int($0.0), stock: nil)
+    }
+
+    private func plan(_ required: Double) -> [Double] {
+        PricingCalculator.rollPlan(required: required, rolls: rolls).map(\.lengthM)
+    }
+
+    func testSmallLengthTakesTheShortestRoll() {
+        XCTAssertEqual(plan(5.2), [25])
+        XCTAssertEqual(plan(25), [25])
+    }
+
+    func testJustOverARollTakesTheCheapestCover() {
+        XCTAssertEqual(plan(25.1), [50])   // 117,66 beats 25+25 (129,02)
+        XCTAssertEqual(plan(60), [50, 25]) // 182,17 beats 100 (208,77)
+    }
+
+    func testPrefersTheBigRollWhenItIsCheaper() {
+        XCTAssertEqual(plan(80), [100])    // 208,77 beats 50+25+25 (246,68)
+        XCTAssertEqual(plan(100), [100])
+    }
+
+    func testSeveralRolls() {
+        XCTAssertEqual(plan(150), [100, 50])
+        XCTAssertEqual(plan(210), [100, 100, 25].sorted(by: >))
+    }
+
+    func testCheaperThanTheShortestTotalWhenPricesDiffer() {
+        // Shortest cover of 70 m is 50+25 = 75 m (182,17); a 100 m roll is longer and dearer here.
+        XCTAssertEqual(plan(70), [50, 25])
+        // But with a cheap 100 m roll the longer combination wins.
+        let cheap100 = [roll(100, 150), roll(50, 117.66), roll(25, 64.51)]
+        XCTAssertEqual(PricingCalculator.rollPlan(required: 70, rolls: cheap100).map(\.lengthM), [100])
+    }
+
+    func testNothingNeededNoRolls() {
+        XCTAssertTrue(PricingCalculator.rollPlan(required: 0, rolls: rolls).isEmpty)
+        XCTAssertTrue(PricingCalculator.rollPlan(required: 10, rolls: []).isEmpty)
+    }
+
+    func testQuoteUsesTheRollPrices() throws {
+        let cable = Cable(id: "c", sku: "c", name: "Snelflex", crossSection: "3x2,5 mm²", use: "x",
+                          pricePerMeter: 2.0877, sales: .fixedLengths([100, 50, 25]), stock: "x", imageUrl: nil,
+                          productUrl: URL(string: "https://www.elektramat.nl/")!, isSample: false, rolls: rolls)
+        let quote = try XCTUnwrap(PricingCalculator.quote(for: cable, measured: 10, reserve: 0.15))
+        XCTAssertEqual(quote.required, 13.5, accuracy: 1e-9)
+        XCTAssertEqual(quote.pieces, [25])
+        XCTAssertEqual(quote.price, 64.51)
+        XCTAssertEqual(Format.rolls([100, 50, 50, 25]), "1 × 100 m + 2 × 50 m + 1 × 25 m")
+    }
+}

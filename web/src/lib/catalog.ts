@@ -3,7 +3,7 @@ import raw from './cables.json';
 import type { Cable } from './pricing';
 
 // Validate the catalog at the boundary, with the same rules as CableCatalog.decode in
-// the iPhone app: valid sales units, no negative prices, unique ids.
+// the iPhone app: valid sales units, no negative prices, valid rolls, unique ids.
 const salesSchema = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('perMeter'),
@@ -12,6 +12,16 @@ const salesSchema = z.discriminatedUnion('type', [
 	}),
 	z.object({ type: z.literal('fixedLengths'), lengthsM: z.array(z.number().positive()).min(1) })
 ]);
+
+// A roll product: positive length, no negative price (CableCatalog.decode: "Bad roll").
+const rollSchema = z.object({
+	lengthM: z.number().positive(),
+	sku: z.string().min(1),
+	price: z.number().min(0),
+	productUrl: z.string().url(),
+	shopProductId: z.number().int().nullable().optional(),
+	stock: z.string().nullable().optional()
+});
 
 export const cableSchema = z.object({
 	id: z.string().min(1),
@@ -25,7 +35,8 @@ export const cableSchema = z.object({
 	imageUrl: z.string().nullable(),
 	productUrl: z.string().url(),
 	isSample: z.boolean(),
-	shopProductId: z.number().int().nullable().optional()
+	shopProductId: z.number().int().nullable().optional(),
+	rolls: z.array(rollSchema).nullable().optional()
 });
 
 export const catalogSchema = z

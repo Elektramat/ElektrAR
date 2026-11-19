@@ -161,6 +161,18 @@ struct SimulatedMeasureView: View {
     }
 
     private func drawFixture(_ fixtureId: String, at center: CGPoint, size: CGFloat, in context: inout GraphicsContext) {
+        if fixtures.first(where: { $0.id == fixtureId })?.isConsumerUnit == true {
+            // The generic consumer unit: 220 x 360 mm, a dark box with a row of breakers.
+            let box = CGRect(x: center.x - size * 0.9, y: center.y - size * 1.5, width: size * 1.8, height: size * 3)
+            context.fill(Path(roundedRect: box, cornerRadius: size * 0.1), with: .color(Color(white: 0.3)))
+            context.stroke(Path(roundedRect: box, cornerRadius: size * 0.1), with: .color(.white), lineWidth: 1.5)
+            for i in 0..<4 {
+                let breaker = CGRect(x: box.minX + size * (0.2 + 0.38 * CGFloat(i)), y: center.y + size * 0.2,
+                                     width: size * 0.28, height: size * 0.6)
+                context.fill(Path(breaker), with: .color(i == 3 ? .red : .white))
+            }
+            return
+        }
         let rect = CGRect(x: center.x - size / 2, y: center.y - size / 2, width: size, height: size)
         context.fill(Path(roundedRect: rect, cornerRadius: size * 0.15), with: .color(.white))
         context.stroke(Path(roundedRect: rect, cornerRadius: size * 0.15), with: .color(.gray), lineWidth: 1)

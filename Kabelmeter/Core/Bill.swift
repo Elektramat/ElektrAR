@@ -25,6 +25,12 @@ nonisolated struct BillLine: Identifiable, Equatable, Sendable {
     let isSample: Bool
     /// The shop's internal product id, so `WebShopCart` can post the form without loading the page.
     let shopProductId: Int?
+    /// Set for a cable the shop sells as roll products: the length of one roll (m). Then `pieces`
+    /// holds one entry per roll and the shop quantity is the number of rolls, not meters.
+    var rollLength: Double? = nil
+
+    /// Number of rolls (roll lines only).
+    var rollCount: Int { rollLength == nil ? 0 : pieces.count }
     /// Names of the rooms this line comes from.
     var rooms: [String]
 
@@ -54,6 +60,8 @@ nonisolated enum Bill {
         var order: [String] = []
         var lines: [String: BillLine] = [:]
         var required: [String: Double] = [:]
+        var cableOrder: [String] = []
+        var cableRooms: [String: [String]] = [:]
 
         func add(_ line: BillLine, room: String) {
             if var existing = lines[line.id] {
@@ -69,12 +77,9 @@ nonisolated enum Bill {
         for project in projects {
             for run in project.cableRuns {
                 guard let cable = cablesById[run.cableId], run.length > 0 else { continue }
+                if required[cable.id] == nil { cableOrder.append(cable.id) }
                 required[cable.id, default: 0] += PricingCalculator.requiredLength(measured: run.length, reserve: reserve)
-                add(BillLine(kind: .cable, productId: cable.id, sku: cable.sku, name: cable.name,
-                             detail: cable.crossSection, unitPrice: cable.pricePerMeter, quantity: 0, pieces: [],
-                             productUrl: cable.productUrl, isSample: cable.isSample,
-                             shopProductId: cable.shopProductId, rooms: [project.name]),
-                    room: project.name)
+                if !(cableRooms[cable.id] ?? []).contains(project.name) { cableRooms[cable.id, default: []].append(project.name) }
             }
             for placement in project.placements {
                 guard let fixture = fixturesById[placement.fixtureId] else { continue }
@@ -90,13 +95,36 @@ nonisolated enum Bill {
             }
         }
 
-        for (cableId, length) in required {
-            guard let cable = cablesById[cableId], var line = lines["cable:\(cableId)"] else { continue }
-            line.pieces = PricingCalculator.billedPieces(required: length, sales: cable.sales)
-            line.quantity = line.pieces.reduce(0, +)
-            lines[line.id] = line
+        // Cable: the lengths of all cables of one type are added up and rounded once.
+        var result = order.compactMap { lines[$0] }
+        for cableId in cableOrder {
+            guard let cable = cablesById[cableId], let length = required[cableId] else { continue }
+            let rooms = cableRooms[cableId] ?? []
+            if let rolls = cable.rolls, !rolls.isEmpty {
+                // Roll products: the cheapest rolls that cover the length, one line per roll size,
+                // each with its own article number, price and shop product id.
+                let plan = PricingCalculator.rollPlan(required: length, rolls: rolls)
+                for roll in rolls.sorted(by: { $0.lengthM > $1.lengthM }) {
+                    let count = plan.filter { $0.sku == roll.sku }.count
+                    guard count > 0 else { continue }
+                    result.append(BillLine(
+                        kind: .cable, productId: roll.sku, sku: roll.sku, name: cable.name,
+                        detail: "\(cable.crossSection) · rol \(Format.orderLength(roll.lengthM))",
+                        unitPrice: roll.price / roll.lengthM, quantity: Double(count) * roll.lengthM,
+                        pieces: Array(repeating: roll.lengthM, count: count), productUrl: roll.productUrl,
+                        isSample: cable.isSample, shopProductId: roll.shopProductId, rollLength: roll.lengthM,
+                        rooms: rooms))
+                }
+            } else {
+                let pieces = PricingCalculator.billedPieces(required: length, sales: cable.sales)
+                result.append(BillLine(
+                    kind: .cable, productId: cable.id, sku: cable.sku, name: cable.name, detail: cable.crossSection,
+                    unitPrice: cable.pricePerMeter, quantity: pieces.reduce(0, +), pieces: pieces,
+                    productUrl: cable.productUrl, isSample: cable.isSample, shopProductId: cable.shopProductId,
+                    rooms: rooms))
+            }
         }
-        return order.compactMap { lines[$0] }
+        return result
     }
 
     static func total(_ lines: [BillLine]) -> Double {

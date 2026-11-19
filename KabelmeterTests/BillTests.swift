@@ -63,4 +63,57 @@ final class BillTests: XCTestCase {
     func testEmptyRoomsGiveEmptyList() {
         XCTAssertTrue(Bill.lines(projects: [room("Leeg")], cables: [], fixtures: [], reserve: 0.15).isEmpty)
     }
+
+    func testRollCableBecomesOneLinePerRollSizeAcrossRooms() {
+        let rolls = [(100.0, 208.77), (50, 117.66), (25, 64.51)].map {
+            CableRoll(lengthM: $0.0, sku: "R\(Int($0.0))", price: $0.1, productUrl: url, shopProductId: Int($0.0), stock: nil)
+        }
+        let snelflex = Cable(id: "S", sku: "R100", name: "Snelflex", crossSection: "3x2,5 mm²", use: "x", pricePerMeter: 2.0877,
+                             sales: .fixedLengths([100, 50, 25]), stock: "x", imageUrl: nil, productUrl: url,
+                             isSample: false, rolls: rolls)
+        // Two rooms with 26 m each, no reserve: (26 + 2) * 2 = 56 m -> 50 + 25 (182,17) beats 100 (208,77).
+        let lines = Bill.lines(projects: [room("A", runs: [("S", 26)]), room("B", runs: [("S", 26)])],
+                               cables: [snelflex], fixtures: [], reserve: 0)
+        XCTAssertEqual(lines.map(\.sku), ["R50", "R25"])
+        XCTAssertEqual(lines.map(\.rollCount), [1, 1])
+        XCTAssertEqual(lines.map(\.rollLength), [50, 25])
+        XCTAssertEqual(Bill.total(lines), 182.17)
+        XCTAssertEqual(lines.first?.rooms, ["A", "B"])
+        // The shop gets whole rolls per product, not meters.
+        let order = WebShopOrder.lines(for: lines)
+        XCTAssertEqual(order.map(\.quantity), [1, 1])
+        XCTAssertEqual(order.map(\.productId), [50, 25])
+    }
+
+    func testTwoRollsOfTheSameSizeAreOneShopLine() {
+        let roll = CableRoll(lengthM: 100, sku: "R100", price: 208.77, productUrl: url, shopProductId: 7, stock: nil)
+        let c = Cable(id: "S", sku: "R100", name: "Snelflex", crossSection: "x", use: "x", pricePerMeter: 2.0877,
+                      sales: .fixedLengths([100]), stock: "x", imageUrl: nil, productUrl: url, isSample: false, rolls: [roll])
+        let lines = Bill.lines(projects: [room("A", runs: [("S", 90), ("S", 90)])], cables: [c], fixtures: [], reserve: 0)
+        XCTAssertEqual(lines.count, 1)
+        XCTAssertEqual(lines[0].rollCount, 2) // (90+2)*2 = 184 m -> 2 rolls
+        XCTAssertEqual(WebShopOrder.lines(for: lines).map(\.quantity), [2])
+        XCTAssertEqual(Bill.total(lines), 417.54)
+    }
+}
+
+final class ConsumerUnitTests: XCTestCase {
+    func testIsAStandInWithoutPartsOrPrice() {
+        let unit = Fixture.consumerUnit
+        XCTAssertTrue(unit.isConsumerUnit)
+        XCTAssertFalse(unit.isLight)
+        XCTAssertTrue(unit.parts.isEmpty)
+        XCTAssertNil(unit.price)
+        XCTAssertEqual(unit.title, "Groepenkast")
+        XCTAssertEqual(FixtureGeometry.size(frameMM: unit.frameMM), [0.22, 0.36])
+    }
+
+    func testNeverEndsUpInTheCartOrCountsAsIncomplete() {
+        let transform = Project.encode(matrix_identity_float4x4)
+        let room = Project(id: UUID(), name: "Meterkast", createdAt: Date(), updatedAt: Date(), floorY: 0, startPoint: nil,
+                           placements: [.init(id: UUID(), fixtureId: Fixture.consumerUnit.id, transform: transform)],
+                           runs: [], cabled: [])
+        XCTAssertTrue(Bill.lines(projects: [room], cables: [], fixtures: [.consumerUnit], reserve: 0.15).isEmpty)
+        XCTAssertEqual(Bill.incompleteFixtures(projects: [room], fixtures: [.consumerUnit]), 0)
+    }
 }

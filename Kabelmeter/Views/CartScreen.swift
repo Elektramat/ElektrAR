@@ -73,6 +73,10 @@ struct CartScreen: View {
                 if !cables.isEmpty {
                     Section {
                         ForEach(cables) { line in row(line) }
+                        if cables.contains(where: { $0.rollLength != nil }) {
+                            Text("Rollen gekozen op de laagste totaalprijs voor de lengte uit al je ruimtes samen.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
                         HStack {
                             Text("Reserve \(reservePercent)% + \(Format.orderLength(PricingCalculator.connectionAllowance)) aansluiting per kabel")
                                 .font(.footnote)
@@ -116,7 +120,11 @@ struct CartScreen: View {
             Group {
                 switch line.kind {
                 case .cable:
-                    Text("\(line.detail) · \(Format.pieces(line.pieces)) × \(Format.euro(line.unitPrice)) per meter")
+                    if let rollLength = line.rollLength {
+                        Text("\(line.detail) · \(line.rollCount) × \(Format.euro(PricingCalculator.roundToCents(line.unitPrice * rollLength))) per rol · art.nr. \(line.sku)")
+                    } else {
+                        Text("\(line.detail) · \(Format.pieces(line.pieces)) × \(Format.euro(line.unitPrice)) per meter")
+                    }
                 case .part:
                     Text("\(Format.quantity(line.quantity)) × \(Format.euro(line.unitPrice)) · art.nr. \(line.sku)")
                 }
