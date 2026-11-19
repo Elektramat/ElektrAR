@@ -47,7 +47,7 @@ struct WebShopSheet: View {
     private func progress(step: String?) -> some View {
         VStack(spacing: Theme.spacing) {
             ProgressView().controlSize(.large)
-            Text(lines.count == 1 ? "Kabel in je winkelmand zetten…" : "Kabels in je winkelmand zetten…")
+            Text(lines.count == 1 ? "Product in je winkelwagen zetten…" : "Producten in je winkelwagen zetten…")
                 .font(.headline)
             if let step { Text(step).foregroundStyle(Theme.inkSecondary) }
         }
@@ -80,7 +80,7 @@ struct WebShopSheet: View {
             .buttonBorderShape(.roundedRectangle(radius: Theme.buttonCorner))
             .padding(.top, 8)
 
-            Button("Verder meten") { dismiss() }
+            Button("Terug naar de app") { dismiss() }
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .foregroundStyle(Theme.accent)
         }

@@ -1,107 +1,86 @@
 import SwiftUI
 
+/// The shared shopping list of all rooms, plus the button that opens it.
+/// It is worked out from the rooms (see `Bill`), so it always matches the designs.
 struct CartScreen: View {
-    @EnvironmentObject private var cart: CartStore
+    @EnvironmentObject private var projectStore: ProjectStore
+    @EnvironmentObject private var cableStore: CableStore
+    @EnvironmentObject private var fixtureStore: FixtureStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @AppStorage("reservePercent") private var reservePercent = Int(PricingCalculator.defaultReserve * 100)
     @State private var webShopLines: [WebShopLine] = []
     @State private var showWebShop = false
     /// Created with the cart screen and warmed up right away, so adding to the shop is faster.
     @StateObject private var shop = WebShopCart()
 
-    /// Sample cables have no real product page, so they stay out of the shop cart.
-    private var realLines: [WebShopLine] { WebShopOrder.lines(for: cart.items.filter { !$0.isSample }) }
+    private var lines: [BillLine] {
+        Bill.lines(projects: projectStore.projects, cables: cableStore.cables, fixtures: fixtureStore.fixtures,
+                   reserve: Double(reservePercent) / 100)
+    }
 
     var body: some View {
+        let lines = lines
+        let cables = lines.filter { $0.kind == .cable }
+        let parts = lines.filter { $0.kind == .part }
+        let incomplete = Bill.incompleteFixtures(projects: projectStore.projects, fixtures: fixtureStore.fixtures)
+
         NavigationStack {
             List {
-                if cart.items.isEmpty {
-                    ContentUnavailableView("Je winkelmand is leeg", systemImage: "cart",
-                                           description: Text("Meet een kabel of plaats schakelaars en voeg ze toe."))
+                if lines.isEmpty {
+                    ContentUnavailableView("Je winkelwagen is leeg", systemImage: "cart",
+                                           description: Text("Alles wat je in je ruimtes plaatst en trekt, komt hier vanzelf bij elkaar."))
                 } else {
                     Section {
-                        ForEach(cart.items) { item in
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack(alignment: .firstTextBaseline) {
-                                    Text(item.name).font(.headline)
-                                    Spacer()
-                                    Text(Format.euro(item.linePrice)).font(.headline).monospacedDigit()
-                                        .contentTransition(.numericText(value: item.linePrice))
-                                        .animation(.snappy, value: item.linePrice)
-                                }
-                                switch item.kind {
-                                case .cable:
-                                    Text("\(item.detail) · \(Format.orderLength(item.quantity)) × \(Format.euro(item.unitPrice)) per meter")
-                                        .font(.subheadline).foregroundStyle(.secondary)
-                                case .part:
-                                    Text("\(item.detail) · art.nr. \(item.sku)")
-                                        .font(.subheadline).foregroundStyle(.secondary)
-                                    Stepper(value: Binding(get: { Int(item.quantity) },
-                                                           set: { cart.setQuantity($0, for: item.id) }),
-                                            in: 1...99) {   // removing is the trash button
-                                        Text("\(Format.quantity(item.quantity)) × \(Format.euro(item.unitPrice))")
-                                            .monospacedDigit()
-                                            .contentTransition(.numericText(value: item.quantity))
-                                            .animation(.snappy, value: item.quantity)
-                                    }
-                                    .sensoryFeedback(.selection, trigger: item.quantity)
-                                }
-                                if item.isSample { SampleBadge() }
-                                // A light text link with its own space, not a second filled button
-                                // right under the stepper; the trash button removes the whole line.
-                                HStack {
-                                    Button {
-                                        openURL(item.productUrl)
-                                    } label: {
-                                        HStack(spacing: 6) {
-                                            Text("Bekijk op elektramat.nl")
-                                            Image(systemName: "arrow.up.right")
-                                        }
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundStyle(Theme.accent)
-                                        .frame(minHeight: 44)
-                                    }
-                                    .buttonStyle(.borderless)
-                                    Spacer()
-                                    Button {
-                                        withAnimation { cart.remove(id: item.id) }
-                                    } label: {
-                                        Image(systemName: "trash")
-                                            .font(.title3.weight(.semibold))
-                                            .foregroundStyle(Theme.alert)
-                                            .frame(width: 44, height: 44)
-                                            .contentShape(Rectangle())
-                                    }
-                                    .buttonStyle(CardButtonStyle())
-                                    .accessibilityLabel("Verwijder \(item.name)")
-                                }
-                                .padding(.top, 4)
-                            }
-                            .padding(.vertical, 8)
-                        }
-                        .onDelete { cart.remove(atOffsets: $0) }
-                    }
-
-                    Section {
                         HStack {
-                            Text("Totaal").font(.headline)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Totaal").font(.headline)
+                                Text("Uit \(projectStore.projects.filter { !$0.placements.isEmpty || !$0.runs.isEmpty }.count) ruimtes")
+                                    .font(.subheadline).foregroundStyle(.secondary)
+                            }
                             Spacer()
-                            Text(Format.euro(cart.total)).font(.title2.bold()).monospacedDigit()
+                            Text(Format.euro(Bill.total(lines))).font(.title.bold()).monospacedDigit()
                         }
+                        // Sample cables have no real product page, so they stay out of the shop cart.
+                        let realLines = WebShopOrder.lines(for: lines.filter { !$0.isSample })
                         Button {
                             webShopLines = realLines
                             showWebShop = true
                         } label: {
-                            Label("Zet in winkelmand op elektramat.nl", systemImage: "cart.badge.plus")
+                            Label("Zet in winkelwagen op elektramat.nl", systemImage: "cart.badge.plus")
                                 .font(.headline)
                                 .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
                         }
-                        .brandProminentButton()
+                        .brandProminentButton(Theme.cta)
+                        .buttonBorderShape(.roundedRectangle(radius: Theme.buttonCorner))
                         .disabled(realLines.isEmpty || showWebShop || shop.isBusy)
-                        if cart.items.contains(where: \.isSample) {
+                        if lines.contains(where: \.isSample) {
                             Text("Voorbeeldkabels gaan niet mee naar de webshop.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
+                        if incomplete > 0 {
+                            Label("\(incomplete) schakelaars of stopcontacten zijn niet compleet te bestellen; de ontbrekende onderdelen staan er niet bij.",
+                                  systemImage: "exclamationmark.triangle")
+                                .font(.footnote)
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                }
+
+                if !cables.isEmpty {
+                    Section {
+                        ForEach(cables) { line in row(line) }
+                        Stepper(value: $reservePercent, in: 0...30, step: 5) {
+                            Text("Reserve \(reservePercent)% + \(Format.orderLength(PricingCalculator.connectionAllowance)) aansluiting per kabel")
+                                .font(.footnote)
+                        }
+                    } header: {
+                        Text("Kabel")
+                    }
+                }
+                if !parts.isEmpty {
+                    Section("Schakelmateriaal") {
+                        ForEach(parts) { line in row(line) }
                     }
                 }
 
@@ -112,17 +91,73 @@ struct CartScreen: View {
                 }
             }
             .sheet(isPresented: $showWebShop) { WebShopSheet(lines: webShopLines, shop: shop) }
-            .onAppear { if !realLines.isEmpty { shop.warmUp() } }
-            .navigationTitle("Winkelmand")
+            .onAppear { if !lines.isEmpty { shop.warmUp() } }
+            .navigationTitle("Winkelwagen")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Klaar") { dismiss() } }
-                if !cart.items.isEmpty {
-                    ToolbarItem(placement: .destructiveAction) {
-                        Button("Leegmaken", role: .destructive) { cart.removeAll() }
-                    }
-                }
             }
         }
+    }
+
+    private func row(_ line: BillLine) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(line.name).font(.headline)
+                Spacer()
+                Text(Format.euro(line.linePrice)).font(.headline).monospacedDigit()
+            }
+            Group {
+                switch line.kind {
+                case .cable:
+                    Text("\(line.detail) · \(Format.pieces(line.pieces)) × \(Format.euro(line.unitPrice)) per meter")
+                case .part:
+                    Text("\(Format.quantity(line.quantity)) × \(Format.euro(line.unitPrice)) · art.nr. \(line.sku)")
+                }
+            }
+            .font(.subheadline).foregroundStyle(.secondary).monospacedDigit()
+            Label(line.rooms.joined(separator: ", "), systemImage: "square.split.bottomrightquarter")
+                .font(.caption).foregroundStyle(.secondary)
+            if line.isSample { SampleBadge() }
+            Button { openURL(line.productUrl) } label: {
+                HStack(spacing: 6) {
+                    Text("Bekijk op elektramat.nl")
+                    Image(systemName: "arrow.up.right")
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.accent)
+                .frame(minHeight: 40)
+            }
+            .buttonStyle(.borderless)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// Always-visible cart button with the total of all rooms.
+struct CartButton: View {
+    @EnvironmentObject private var projectStore: ProjectStore
+    @EnvironmentObject private var cableStore: CableStore
+    @EnvironmentObject private var fixtureStore: FixtureStore
+    @AppStorage("reservePercent") private var reservePercent = Int(PricingCalculator.defaultReserve * 100)
+    @State private var showCart = false
+
+    var body: some View {
+        let total = Bill.total(Bill.lines(projects: projectStore.projects, cables: cableStore.cables,
+                                          fixtures: fixtureStore.fixtures, reserve: Double(reservePercent) / 100))
+        Button { showCart = true } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "cart.fill").foregroundStyle(Theme.accent)
+                Text(Format.euro(total)).monospacedDigit().contentTransition(.numericText())
+                    .animation(.snappy, value: total)
+            }
+            .font(.subheadline.weight(.semibold))
+            .padding(.horizontal, 14)
+            .frame(minHeight: 44)
+            .surface(Capsule())
+        }
+        .buttonStyle(CardButtonStyle())
+        .accessibilityLabel("Winkelwagen, \(Format.euro(total))")
+        .sheet(isPresented: $showCart) { CartScreen() }
     }
 }

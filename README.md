@@ -12,8 +12,6 @@ Built for the Elektramat hackathon of 19 November 2026. See `CLAUDE.md` for the 
 3. Pick your iPhone as the run destination and press Run.
 4. First run on the phone: Settings > General > VPN & Device Management > trust the developer.
 
-ARKit does not run in the Simulator. In the Simulator, and in Demo-modus on a device,
-the app uses simulated points. Long-press the "Kabelmeter" title to switch Demo-modus on or off.
 
 ## Tests
 
@@ -85,7 +83,7 @@ of fixed roll lengths. See `Kabelmeter/Core/PricingCalculator.swift`.
 ## Known limits
 
 - Cable prices and stock are a snapshot of 19 November 2026; rerun the script before a demo.
-- "Zet in winkelmand op elektramat.nl" (cart screen) opens the shop in a web view inside the
+- "Zet in winkelwagen op elektramat.nl" (cart screen) opens the shop in a web view inside the
   app, posts the shop's add-to-cart form per cable with the meters as quantity (using
   `shopProductId`, without rendering a product page), checks the shop cart and shows it. That cart lives in the app's web view, not in Safari: check out there.
   It depends on the product form (`product_addtocart_form`) and Magento's customer section

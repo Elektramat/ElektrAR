@@ -61,71 +61,79 @@ nonisolated struct PlacedFixture: Identifiable, Equatable, Sendable {
     }
 }
 
-/// Switches and sockets placed on walls. The UI calls place/undo/clearAll; a
-/// MeasureProvider writes `cursor`, draws `placed` and keeps them in the world
-/// (and, on a device, saves them with the room so they come back after a restart).
+/// Switches and sockets placed on walls. The UI calls place/remove/replace/undo; a
+/// MeasureProvider writes `cursor`, draws `placed` and keeps them fixed in the room.
 @MainActor
 final class PlacementSession: ObservableObject {
     @Published private(set) var placed: [PlacedFixture] = []
     /// Pose on the wall under the crosshair; nil when no wall is hit.
     @Published var cursor: simd_float4x4?
-    /// True while the "Plaatsen" mode is on.
+    /// True while placing parts: the provider aims at walls and shows a preview.
     @Published var isActive = false
-    /// The fixture the "+" button places; the provider shows it as a preview at the crosshair.
+    /// The fixture shown as a see-through preview at the crosshair.
     @Published var selectedFixtureId: String?
     /// Set when the preview is snapped to a cable point or next to another fixture.
     @Published var guide: MeasureGuide?
-    /// Placements that are already in the cart, so adding again only adds the new ones.
-    @Published private(set) var inCart: Set<UUID> = []
-    /// True while ARKit tries to recognise the room of the saved placements.
+    /// What the preview lines up with (level, straight above, standard height).
+    @Published var alignment = Alignment.none
+    /// True while ARKit tries to recognise the saved room.
     @Published var isRestoring = false
-    /// Fires when the user wants to start over in a different room.
-    let newRoomRequests = PassthroughSubject<Void, Never>()
+    /// Placements that have an automatic cable, in routing order.
+    @Published private(set) var cabled: [UUID] = []
+    /// The placement whose info card is open; drawn highlighted.
+    @Published var selectedId: UUID?
+    /// A saved room to open. The provider picks it up, clears it and, in AR, first recognises the room.
+    @Published var pendingLoad: ProjectLoad?
+    /// Set once the room's content is back on screen; until then nothing may be saved over it.
+    @Published var loadedRoomId: UUID?
+    /// Fires when the room is not recognised and the user wants to see the design here anyway.
+    let skipRestoreRequests = PassthroughSubject<Void, Never>()
 
     var canPlace: Bool { isActive && cursor != nil }
 
-    @discardableResult
-    func place(_ fixtureId: String) -> Bool {
-        guard canPlace, let cursor else { return false }
-        placed.append(PlacedFixture(id: UUID(), fixtureId: fixtureId, transform: cursor))
-        return true
+    /// Places at a pose taken earlier (the "+" first asks which fixture).
+    func place(_ fixtureId: String, at pose: simd_float4x4) {
+        placed.append(PlacedFixture(id: UUID(), fixtureId: fixtureId, transform: pose))
     }
 
-    /// Adds a placement that came back from a saved room. Ignores ids it already has.
-    func restore(_ fixture: PlacedFixture) {
-        guard !placed.contains(where: { $0.id == fixture.id }) else { return }
-        placed.append(fixture)
+    func remove(_ id: UUID) {
+        placed.removeAll { $0.id == id }
+        cabled.removeAll { $0 == id }
+        if selectedId == id { selectedId = nil }
+    }
+
+    /// Swaps a placement for another fixture at the same spot; its cable stays.
+    func replace(_ id: UUID, with fixtureId: String) {
+        guard let index = placed.firstIndex(where: { $0.id == id }) else { return }
+        let new = PlacedFixture(id: UUID(), fixtureId: fixtureId, transform: placed[index].transform)
+        placed[index] = new
+        cabled = cabled.map { $0 == id ? new.id : $0 }
+        if selectedId == id { selectedId = new.id }
+    }
+
+    /// Placements without an automatic cable yet.
+    var notCabled: [PlacedFixture] { placed.filter { !cabled.contains($0.id) } }
+
+    func markCabled(_ ids: [UUID]) {
+        cabled += ids.filter { !cabled.contains($0) }
+    }
+
+    /// Replaces everything with a saved room.
+    func load(_ fixtures: [PlacedFixture], cabled: [UUID], roomId: UUID) {
+        loadedRoomId = roomId
+        placed = fixtures
+        self.cabled = cabled.filter { id in fixtures.contains { $0.id == id } }
+        selectedId = nil
     }
 
     func undo() {
-        if let last = placed.popLast() { inCart.remove(last.id) }
+        if let last = placed.last { remove(last.id) }
     }
 
     func clearAll() {
         placed.removeAll()
-        inCart.removeAll()
-    }
-
-    func startNewRoom() {
-        placed.removeAll()
-        inCart.removeAll()
-        isRestoring = false
-        newRoomRequests.send()
-    }
-
-    /// Placements not yet in the cart, counted per fixture id (in placing order).
-    var notInCart: [(fixtureId: String, count: Int)] {
-        var order: [String] = []
-        var counts: [String: Int] = [:]
-        for item in placed where !inCart.contains(item.id) {
-            if counts[item.fixtureId] == nil { order.append(item.fixtureId) }
-            counts[item.fixtureId, default: 0] += 1
-        }
-        return order.map { ($0, counts[$0] ?? 0) }
-    }
-
-    func markAllInCart() {
-        inCart = Set(placed.map(\.id))
+        cabled.removeAll()
+        selectedId = nil
     }
 
     /// Connection points of every placed fixture plus the points of the given cables.
@@ -135,15 +143,11 @@ final class PlacementSession: ObservableObject {
         }
         return ConnectionSnapping.points(fixtures: fixtures, cables: cables)
     }
+}
 
-    /// Sum of the complete sets, and how many placed fixtures have no complete price.
-    func total(in catalog: [Fixture]) -> (price: Double, incomplete: Int) {
-        let byId = Dictionary(uniqueKeysWithValues: catalog.map { ($0.id, $0) })
-        var price = 0.0
-        var incomplete = 0
-        for item in placed {
-            if let p = byId[item.fixtureId]?.price { price += p } else { incomplete += 1 }
-        }
-        return (PricingCalculator.roundToCents(price), incomplete)
-    }
+/// A saved room to open, with its AR room map to recognise first (nil when
+/// the room map could not be saved).
+nonisolated struct ProjectLoad: Sendable {
+    let project: Project
+    let mapURL: URL?
 }

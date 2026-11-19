@@ -6,7 +6,7 @@ import UIKit
 
 /// Real measuring with ARKit + RealityKit. A few times per second it finds the world
 /// point under the crosshair and draws points, segments and the live preview.
-/// In the "Schakelaars en lampen" mode it hands the crosshair to `ARFixturePlacer`.
+/// While placing parts it hands the crosshair to `ARFixturePlacer`.
 ///
 /// Two paths:
 /// - LiDAR (Pro models): read the smoothed LiDAR depth at the crosshair, then raycast
@@ -23,18 +23,28 @@ final class ARMeasureProvider: MeasureProvider {
     private weak var placement: PlacementSession?
     private let placer: ARFixturePlacer
     private let catalog: [String: Fixture]
-    private let heightLine = HeightLine()
-    private var newRoomSubscription: AnyCancellable?
+    private let heightLine = DashedLine(color: Theme.arHeight)
+    private let levelGuide = DashedLine(color: Theme.arAlign)
+    private let aboveGuide = DashedLine(color: Theme.arAlign)
+    private var skipSubscription: AnyCancellable?
+    private var tapHandler: TapHandler?
     private let root = AnchorEntity(world: .zero)
-    private let previewLegs: [ModelEntity]
-    private var hasLiDAR = false
+    /// The live cable to the crosshair: up to two segments (a corner with right angles).
+    private let preview: [ModelEntity]
     private let verticalGuide: ModelEntity
     private var smoother = CursorSmoother()
+    private var hasLiDAR = false
     private var lastHitTime: CFTimeInterval = 0
     /// Keep the last cursor this long when ARKit briefly loses the surface.
     private static let holdDuration: CFTimeInterval = 0.5
     private var placed: [Entity] = []
     private var runEntities: [Entity] = []
+    private var proposedEntities: [Entity] = []
+    private let highlight = Entity()
+    /// A saved design waiting until ARKit has recognised its room.
+    private var pendingProject: Project?
+    private var projectSubscription: AnyCancellable?
+    private var proposedSubscription: AnyCancellable?
     private var updateSubscription: Cancellable?
     private var pointsSubscription: AnyCancellable?
     private var runsSubscription: AnyCancellable?
@@ -43,20 +53,30 @@ final class ARMeasureProvider: MeasureProvider {
     /// ARKit ambient intensity in lumen; ~1000 is a well lit room.
     private static let darkThreshold: CGFloat = 150
 
-    init(fixtures: [Fixture]) {
+    /// `mapURL`: where the room is saved (the open room's map).
+    init(fixtures: [Fixture], mapURL: URL?) {
         arView = ARView(frame: .zero, cameraMode: .ar, automaticallyConfigureSession: false)
         arView.renderOptions.insert(.disableMotionBlur)
         placer = ARFixturePlacer(arView: arView, fixtures: fixtures)
+        placer.mapURL = mapURL
         catalog = Dictionary(fixtures.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        previewLegs = (0..<2).map { _ in Self.makeSegmentEntity(color: Theme.arPreview) }
-        for leg in previewLegs {
-            leg.isEnabled = false
-            root.addChild(leg)
+        preview = (0..<2).map { _ in Self.makeSegmentEntity(color: Theme.arPreview) }
+        for segment in preview {
+            segment.isEnabled = false
+            root.addChild(segment)
         }
         verticalGuide = Self.makeSegmentEntity(color: Theme.arGuide, thickness: 0.002)
         verticalGuide.isEnabled = false
         root.addChild(verticalGuide)
         root.addChild(heightLine.entity)
+        root.addChild(levelGuide.entity)
+        root.addChild(aboveGuide.entity)
+        let plate = ModelEntity(mesh: .generateBox(size: 1),
+                                materials: [UnlitMaterial(color: Theme.arHighlight)])
+        plate.components.set(OpacityComponent(opacity: 0.45))
+        highlight.addChild(plate)
+        highlight.isEnabled = false
+        root.addChild(highlight)
         arView.scene.addAnchor(root)
 
         let coaching = ARCoachingOverlayView()
@@ -74,29 +94,43 @@ final class ARMeasureProvider: MeasureProvider {
             session.trackingMessage = TrackingText.unavailable
             return
         }
-        let config = Self.makeConfiguration()
         hasLiDAR = ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh)
         session.usesLiDAR = hasLiDAR
-        placer.prepare(config, placement: placement)
-        arView.session.run(config)
-        newRoomSubscription = placement.newRoomRequests.sink { [weak self] in self?.startNewRoom() }
+        placer.prepare(placement: placement)
+        arView.session.run(Self.makeConfiguration())
+        skipSubscription = placement.skipRestoreRequests.sink { [weak self] in self?.skipRestore() }
+        let tap = TapHandler { [weak self] point in self?.handleTap(at: point) }
+        arView.addGestureRecognizer(UITapGestureRecognizer(target: tap, action: #selector(TapHandler.tapped(_:))))
+        tapHandler = tap
 
         updateSubscription = arView.scene.subscribe(to: SceneEvents.Update.self) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
         }
-        pointsSubscription = session.$points.combineLatest(session.$mode).sink { [weak self] points, mode in
-            self?.render(points: points, mode: mode)
+        pointsSubscription = session.$points.sink { [weak self] points in
+            self?.render(points: points)
         }
-        runsSubscription = session.$runs.sink { [weak self] runs in
-            self?.render(runs: runs)
+        runsSubscription = session.$runs.combineLatest(session.$selectedRunId).sink { [weak self] runs, selected in
+            self?.render(runs: runs, selected: selected)
+            self?.placer.markDirty()
         }
+        proposedSubscription = session.$proposedRoutes.combineLatest(session.$startPoint).sink { [weak self] routes, start in
+            self?.renderProposed(routes: routes, start: start)
+        }
+        projectSubscription = placement.$pendingLoad.compactMap { $0 }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] load in
+                self?.placement?.pendingLoad = nil
+                self?.open(load)
+            }
     }
 
     func stop() {
         updateSubscription?.cancel()
         pointsSubscription?.cancel()
         runsSubscription?.cancel()
-        newRoomSubscription?.cancel()
+        proposedSubscription?.cancel()
+        projectSubscription?.cancel()
+        skipSubscription?.cancel()
         placer.flush()
         arView.session.pause()
     }
@@ -113,14 +147,59 @@ final class ARMeasureProvider: MeasureProvider {
         return config
     }
 
-    /// Drops the saved room and starts tracking from scratch. Measured points belong
-    /// to the old coordinate system, so they go too.
-    private func startNewRoom() {
-        placer.removeAll()
+    /// The saved room is not recognised: start tracking from scratch and show the design
+    /// relative to where the user stands now.
+    private func skipRestore() {
         smoother.reset()
-        session?.resetAll()
         session?.floorY = nil
         arView.session.run(Self.makeConfiguration(), options: [.resetTracking, .removeExistingAnchors])
+        placement?.isRestoring = false
+        if let project = pendingProject {
+            pendingProject = nil
+            apply(project)
+        }
+    }
+
+    /// Opens a saved design. With a saved room, ARKit first has to recognise it; until then
+    /// the design waits, because its coordinates only fit that room.
+    private func open(_ load: ProjectLoad) {
+        guard let session, let placement else { return }
+        placer.removeAll()
+        smoother.reset()
+        session.resetAll()
+        placement.clearAll()
+        if let url = load.mapURL, let map = ARFixturePlacer.loadMap(at: url) {
+            // The design's own placements are added again once the room is recognised.
+            map.anchors = map.anchors.filter { $0.name?.hasPrefix(ARFixturePlacer.anchorPrefix) != true }
+            let config = Self.makeConfiguration()
+            config.initialWorldMap = map
+            arView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
+            placement.isRestoring = true
+            pendingProject = load.project
+        } else {
+            apply(load.project)
+        }
+    }
+
+    private func apply(_ project: Project) {
+        session?.load(runs: project.cableRuns, startPoint: project.startPoint.map(Project.point),
+                      floorY: project.floorY)
+        placement?.load(project.placedFixtures, cabled: project.cabled, roomId: project.id)
+    }
+
+    // MARK: Tapping
+
+    /// Tells the UI which fixture or cable was tapped, from their positions on screen.
+    private func handleTap(at point: CGPoint) {
+        guard let session, let placement, placement.loadedRoomId != nil else { return }
+        let screen = { [arView] (p: SIMD3<Float>) -> SIMD2<Double>? in
+            guard let s = arView.project(p) else { return nil }
+            return SIMD2(Double(s.x), Double(s.y))
+        }
+        let target = TapHit.target(at: SIMD2(Double(point.x), Double(point.y)),
+                                    fixtures: placement.placed.map { ($0.id, screen($0.position)) },
+                                    cables: session.runs.map { ($0.id, $0.points.map(screen)) })
+        session.tapped = target
     }
 
     // MARK: Per-frame work (throttled)
@@ -131,17 +210,38 @@ final class ARMeasureProvider: MeasureProvider {
         lastTick = now
 
         let frame = arView.session.currentFrame
+        if let project = pendingProject, placement?.isRestoring == false {
+            pendingProject = nil
+            apply(project)
+        }
         updateFloor(frame: frame, session: session)
+        updateHighlight()
         let cables = session.runs.map(\.points)
         if let placement {
             // A new switch may click onto any cable point, also of the cable being measured.
             placer.tick(frame: frame, connections: placement.connectionPoints(catalog: catalog,
-                                                                             cables: cables + [session.points]))
+                                                                             cables: cables + [session.points]),
+                        floorY: session.floorY)
         }
 
-        // Placing switches: the placer owns the crosshair, measuring pauses.
+        // Only looking: no crosshair, no preview.
+        if !session.isAiming {
+            if session.cursor != nil { session.cursor = nil }
+            if session.guide != nil { session.guide = nil }
+            let message = Self.message(for: frame?.camera.trackingState)
+            if session.trackingMessage != message { session.trackingMessage = message }
+            smoother.reset()
+            updatePreview([])
+            updateVerticalGuide(through: nil)
+            updateHeightLine(at: nil, floorY: nil)
+            updateAlignmentGuides(nil, cursor: nil)
+            return
+        }
+
+        // Placing parts: the placer owns the crosshair, measuring pauses.
         if let placement, placement.isActive {
-            heightLine.update(at: placement.cursor?.translation, floorY: session.floorY)
+            updateHeightLine(at: placement.cursor?.translation, floorY: session.floorY)
+            updateAlignmentGuides(placement.alignment, cursor: placement.cursor)
             let message = Self.message(for: frame?.camera.trackingState)
                 ?? (placement.cursor == nil
                     ? (placement.selectedFixtureId.flatMap { catalog[$0] }?.isCeiling == true
@@ -151,17 +251,18 @@ final class ARMeasureProvider: MeasureProvider {
             if session.guide != nil { session.guide = nil }
             if session.cursor != nil { session.cursor = nil }
             smoother.reset()
-            updatePreview(from: nil, to: nil, mode: session.mode)
+            updatePreview([])
             updateVerticalGuide(through: nil)
             return
         }
+        updateAlignmentGuides(nil, cursor: nil)
 
-        let last = session.isFinished ? nil : session.points.last
+        let last = session.isFinished || session.pausesRoute ? nil : session.points.last
         var message = Self.message(for: frame?.camera.trackingState)
         var cursor: SIMD3<Float>?
         var guide: MeasureGuide?
-        var onConnection = false
 
+        var onConnection = false
         if message == nil {
             let ray = rayFromCenter()
             var candidate: SIMD3<Float>?
@@ -173,7 +274,7 @@ final class ARMeasureProvider: MeasureProvider {
 
             if let hit = candidate {
                 lastHitTime = now
-                // A connection point (switch edge, earlier cable) within reach wins; otherwise
+                // A connection point (part edge, earlier cable) within reach wins; otherwise
                 // vertical/level snapping from the last point.
                 let connections = placement?.connectionPoints(catalog: catalog, cables: cables) ?? []
                 if let target = ConnectionSnapping.nearest(to: hit, in: connections) {
@@ -221,13 +322,13 @@ final class ARMeasureProvider: MeasureProvider {
         if session.trackingMessage != message { session.trackingMessage = message }
         if session.guide != guide { session.guide = guide }
         session.cursor = cursor
-        updatePreview(from: last, to: cursor, mode: session.mode)
+        updatePreview(session.previewPoints)
         updateVerticalGuide(through: guide == .vertical ? last : nil)
-        heightLine.update(at: cursor, floorY: session.floorY)
+        updateHeightLine(at: cursor, floorY: session.floorY)
     }
 
     /// The floor is the lowest horizontal plane ARKit calls a floor, or else the lowest one
-    /// well below the camera. Only goes down over time, so a table seen later does not win.
+    /// well below the camera (tables and seats are higher).
     private func updateFloor(frame: ARFrame?, session: MeasureSession) {
         guard let frame else { return }
         let planes = frame.anchors.compactMap { anchor -> (y: Float, isFloor: Bool)? in
@@ -327,7 +428,7 @@ final class ARMeasureProvider: MeasureProvider {
 
     // MARK: Drawing
 
-    private func render(points: [SIMD3<Float>], mode: RouteMode) {
+    private func render(points: [SIMD3<Float>]) {
         placed.forEach { $0.removeFromParent() }
         placed.removeAll()
         for point in points {
@@ -338,45 +439,120 @@ final class ARMeasureProvider: MeasureProvider {
             placed.append(dot)
         }
         for (a, b) in zip(points, points.dropFirst()) {
-            for (from, to) in MeasureMath.legs(a, b, mode: mode) {
-                let segment = Self.makeSegmentEntity(color: Theme.arSegment)
-                Self.place(segment, from: from, to: to)
-                root.addChild(segment)
-                placed.append(segment)
-            }
+            let segment = Self.makeSegmentEntity(color: Theme.arSegment)
+            Self.place(segment, from: a, to: b)
+            root.addChild(segment)
+            placed.append(segment)
         }
     }
 
     /// Cables added earlier: drawn thinner and in a calmer color than the cable being measured.
-    private func render(runs: [CableRun]) {
+    /// The one selected in the edit mode is drawn thicker in the highlight color.
+    private func render(runs: [CableRun], selected: UUID?) {
         runEntities.forEach { $0.removeFromParent() }
         runEntities.removeAll()
         for run in runs {
-            for point in run.points {
-                let dot = ModelEntity(mesh: .generateSphere(radius: 0.006),
-                                      materials: [UnlitMaterial(color: Theme.arRun)])
-                dot.position = point
-                root.addChild(dot)
-                runEntities.append(dot)
-            }
-            for (a, b) in zip(run.points, run.points.dropFirst()) {
-                let segment = Self.makeSegmentEntity(color: Theme.arRun, thickness: 0.003)
-                Self.place(segment, from: a, to: b)
-                root.addChild(segment)
-                runEntities.append(segment)
-            }
+            let isSelected = run.id == selected
+            runEntities += drawPath(run.points, color: isSelected ? Theme.arHighlight : Theme.arRun,
+                                    thickness: isSelected ? 0.008 : 0.003)
         }
     }
 
-    private func updatePreview(from start: SIMD3<Float>?, to end: SIMD3<Float>?, mode: RouteMode) {
-        let legs = (start != nil && end != nil) ? MeasureMath.legs(start!, end!, mode: mode) : []
-        for (index, entity) in previewLegs.enumerated() {
-            if index < legs.count {
-                Self.place(entity, from: legs[index].0, to: legs[index].1)
-                entity.isEnabled = true
-            } else {
+    /// Cables the automatic mode suggests, and the start point (electrical cabinet).
+    private func renderProposed(routes: [[SIMD3<Float>]], start: SIMD3<Float>?) {
+        proposedEntities.forEach { $0.removeFromParent() }
+        proposedEntities.removeAll()
+        for route in routes {
+            proposedEntities += drawPath(route, color: Theme.arProposed, thickness: 0.004)
+        }
+        if let start {
+            let marker = ModelEntity(mesh: .generateBox(size: 0.04, cornerRadius: 0.006),
+                                     materials: [UnlitMaterial(color: Theme.arStart)])
+            marker.position = start
+            root.addChild(marker)
+            proposedEntities.append(marker)
+        }
+    }
+
+    private func drawPath(_ points: [SIMD3<Float>], color: UIColor, thickness: Float) -> [Entity] {
+        var entities: [Entity] = []
+        for point in points {
+            let dot = ModelEntity(mesh: .generateSphere(radius: thickness * 1.6), materials: [UnlitMaterial(color: color)])
+            dot.position = point
+            root.addChild(dot)
+            entities.append(dot)
+        }
+        for (a, b) in zip(points, points.dropFirst()) {
+            let segment = Self.makeSegmentEntity(color: color, thickness: thickness)
+            Self.place(segment, from: a, to: b)
+            root.addChild(segment)
+            entities.append(segment)
+        }
+        return entities
+    }
+
+    /// A colored plate over the fixture selected in the edit mode.
+    private func updateHighlight() {
+        guard let placement, let id = placement.selectedId,
+              let item = placement.placed.first(where: { $0.id == id }) else {
+            if highlight.isEnabled { highlight.isEnabled = false }
+            return
+        }
+        let size = FixtureGeometry.size(frameMM: catalog[item.fixtureId]?.frameMM)
+        let depth = Float(catalog[item.fixtureId]?.depthMM ?? 12) / 1000
+        highlight.setTransformMatrix(item.transform, relativeTo: root)
+        if let plate = highlight.children.first {
+            plate.scale = [size.x + 0.02, size.y + 0.02, depth + 0.004]
+            plate.position = [0, 0, depth / 2]
+        }
+        highlight.isEnabled = true
+    }
+
+    /// The live cable: the segments between `points` (2 or 3 points), hidden when empty.
+    private func updatePreview(_ points: [SIMD3<Float>]) {
+        let segments = Array(zip(points, points.dropFirst()))
+        for (i, entity) in preview.enumerated() {
+            guard i < segments.count, simd_distance(segments[i].0, segments[i].1) > 0.005 else {
                 entity.isEnabled = false
+                continue
             }
+            Self.place(entity, from: segments[i].0, to: segments[i].1)
+            entity.isEnabled = true
+        }
+    }
+
+    /// Dotted line from the floor up to `point`.
+    private func updateHeightLine(at point: SIMD3<Float>?, floorY: Float?) {
+        guard let point, let floorY, point.y > floorY + 0.05 else {
+            heightLine.set(from: nil, to: nil)
+            return
+        }
+        heightLine.set(from: [point.x, floorY, point.z], to: point)
+    }
+
+    /// Dotted lines that show what the part preview lines up with: from the other part to the
+    /// preview (and a bit past it), or a short line at the standard height.
+    private func updateAlignmentGuides(_ alignment: Alignment?, cursor: simd_float4x4?) {
+        guard let alignment, let cursor, !alignment.isEmpty else {
+            levelGuide.set(from: nil, to: nil)
+            aboveGuide.set(from: nil, to: nil)
+            return
+        }
+        let here = cursor.translation
+        if let level = alignment.level {
+            let d = here - level
+            levelGuide.set(from: level - d * 0.3, to: here + d * 0.3)
+        } else if alignment.standardHeight != nil {
+            let right = cursor.axisX * 0.6
+            levelGuide.set(from: here - right, to: here + right)
+        } else {
+            levelGuide.set(from: nil, to: nil)
+        }
+        if let vertical = alignment.vertical {
+            let d = here - vertical
+            aboveGuide.set(from: vertical - d * 0.3, to: here + d * 0.3)
+        } else {
+            aboveGuide.set(from: nil, to: nil)
         }
     }
 
@@ -406,40 +582,55 @@ final class ARMeasureProvider: MeasureProvider {
     }
 }
 
-/// Dotted vertical line from the crosshair down to the floor, so the user sees the height.
+/// A dotted line between two points, made of a fixed pool of small boxes.
 @MainActor
-private final class HeightLine {
+private final class DashedLine {
     let entity = Entity()
     private var dashes: [ModelEntity] = []
-    private static let dash: Float = 0.02
-    private static let period: Float = 0.04
-    private static let maxHeight: Float = 3.2
+    private let dash: Float = 0.02
+    private let period: Float = 0.04
+    private static let maxLength: Float = 4
 
-    init() {
-        let count = Int(Self.maxHeight / Self.period)
-        for _ in 0..<count {
-            let dash = ModelEntity(mesh: .generateBox(width: 0.003, height: Self.dash, depth: 0.003),
-                                   materials: [UnlitMaterial(color: Theme.arHeight)])
-            dash.isEnabled = false
-            entity.addChild(dash)
-            dashes.append(dash)
+    init(color: UIColor, thickness: Float = 0.003) {
+        for _ in 0..<Int(Self.maxLength / period) {
+            let piece = ModelEntity(mesh: .generateBox(width: thickness, height: dash, depth: thickness),
+                                    materials: [UnlitMaterial(color: color)])
+            piece.isEnabled = false
+            entity.addChild(piece)
+            dashes.append(piece)
         }
+        entity.isEnabled = false
     }
 
-    /// Shows dashes from the floor up to `point`; hides the line without a point or floor.
-    func update(at point: SIMD3<Float>?, floorY: Float?) {
-        guard let point, let floorY, point.y > floorY + 0.05 else {
-            entity.isEnabled = false
+    /// Shows dashes from `a` to `b`; hides the line when either is nil or they are too close.
+    func set(from a: SIMD3<Float>?, to b: SIMD3<Float>?) {
+        guard let a, let b, simd_distance(a, b) > 0.03 else {
+            if entity.isEnabled { entity.isEnabled = false }
             return
         }
+        let d = b - a
+        let length = simd_length(d)
+        entity.position = a
+        entity.orientation = simd_quatf(from: [0, 1, 0], to: d / length)
         entity.isEnabled = true
-        entity.position = [point.x, floorY, point.z]
-        let height = point.y - floorY
-        for (i, dash) in dashes.enumerated() {
-            let bottom = Float(i) * Self.period
-            let visible = bottom + Self.dash <= height
-            if dash.isEnabled != visible { dash.isEnabled = visible }
-            if visible { dash.position = [0, bottom + Self.dash / 2, 0] }
+        for (i, piece) in dashes.enumerated() {
+            let bottom = Float(i) * period
+            let visible = bottom + dash <= length
+            if piece.isEnabled != visible { piece.isEnabled = visible }
+            if visible { piece.position = [0, bottom + dash / 2, 0] }
         }
+    }
+}
+
+/// Target for the tap gesture on the ARView (gesture recognizers need an Objective-C target).
+private final class TapHandler: NSObject {
+    private let onTap: @MainActor (CGPoint) -> Void
+
+    init(onTap: @escaping @MainActor (CGPoint) -> Void) {
+        self.onTap = onTap
+    }
+
+    @MainActor @objc func tapped(_ recognizer: UITapGestureRecognizer) {
+        onTap(recognizer.location(in: recognizer.view))
     }
 }

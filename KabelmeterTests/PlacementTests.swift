@@ -50,59 +50,29 @@ final class WallPoseTests: XCTestCase {
 final class PlacementSessionTests: XCTestCase {
     private let pose = matrix_identity_float4x4
 
-    func testPlaceNeedsActiveModeAndCursor() {
+    func testCanPlaceNeedsActiveModeAndCursor() {
         let s = PlacementSession()
-        XCTAssertFalse(s.place("a"))
+        XCTAssertFalse(s.canPlace)
         s.isActive = true
-        XCTAssertFalse(s.place("a"))
+        XCTAssertFalse(s.canPlace)
         s.cursor = pose
-        XCTAssertTrue(s.place("a"))
-        XCTAssertEqual(s.placed.map(\.fixtureId), ["a"])
+        XCTAssertTrue(s.canPlace)
     }
 
-    func testUndoClearAndNewRoom() {
+    func testUndoAndClear() {
         let s = PlacementSession()
-        s.isActive = true
-        s.cursor = pose
-        s.place("a"); s.place("b")
+        s.place("a", at: pose); s.place("b", at: pose)
         s.undo()
         XCTAssertEqual(s.placed.map(\.fixtureId), ["a"])
         s.clearAll()
         XCTAssertTrue(s.placed.isEmpty)
-
-        var requests = 0
-        let sub = s.newRoomRequests.sink { requests += 1 }
-        s.place("c")
-        s.isRestoring = true
-        s.startNewRoom()
-        XCTAssertTrue(s.placed.isEmpty)
-        XCTAssertFalse(s.isRestoring)
-        XCTAssertEqual(requests, 1)
-        sub.cancel()
     }
 
-    func testRestoreIgnoresDuplicates() {
-        let s = PlacementSession()
-        let item = PlacedFixture(id: UUID(), fixtureId: "a", transform: pose)
-        s.restore(item)
-        s.restore(item)
-        XCTAssertEqual(s.placed.count, 1)
-    }
-
-    func testTotalCountsIncompleteSeparately() throws {
+    func testIncompleteFixtureTitle() throws {
         let json = #"""
-        [{"id":"a","brand":"B","line":"l","colour":"wit","product":"schakelaar","productName":"x","mounting":"inbouw","model":"a","complete":true,"price":13.48,"parts":[],"note":null},
-         {"id":"b","brand":"B","line":"l","colour":"wit","product":"stopcontact","productName":"x","mounting":"opbouw","model":"b","complete":false,"price":null,"parts":[],"note":null}]
+        [{"id":"b","brand":"B","line":"l","colour":"wit","product":"stopcontact","productName":"x","mounting":"opbouw","model":"b","complete":false,"price":null,"parts":[],"note":null}]
         """#
-        let catalog = try FixtureCatalog.decode(Data(json.utf8))
-        XCTAssertEqual(catalog[1].title, "Stopcontact opbouw")
-        let s = PlacementSession()
-        s.isActive = true
-        s.cursor = pose
-        s.place("a"); s.place("a"); s.place("b")
-        let total = s.total(in: catalog)
-        XCTAssertEqual(total.price, 26.96, accuracy: 1e-9)
-        XCTAssertEqual(total.incomplete, 1)
+        XCTAssertEqual(try FixtureCatalog.decode(Data(json.utf8)).first?.title, "Stopcontact opbouw")
     }
 
     func testBundledFixturesHaveAModelEach() throws {

@@ -2,7 +2,7 @@ import Combine
 import Foundation
 import simd
 
-/// Fake measuring for the Simulator and for Demo-modus. The crosshair walks along a
+/// Fake measuring for the Simulator. The crosshair walks along a
 /// route on a wall (x = horizontal, y = height, in meters), so the length and price
 /// change live, just like on a device.
 @MainActor
@@ -41,22 +41,36 @@ final class SimulatedMeasureProvider: ObservableObject, MeasureProvider {
         let position = Self.position(at: travelled)
         guard let session else { return }
         let cables = session.runs.map(\.points)
+        if !session.isAiming {
+            placement?.cursor = nil
+            session.cursor = nil
+            session.guide = nil
+            return
+        }
         if let placement, placement.isActive {
             // The simulated wall is the x/y plane facing +z: identity rotation.
             var pose = matrix_identity_float4x4
             pose.columns.3 = SIMD4(position, 1)
             let size = FixtureGeometry.size(frameMM: placement.selectedFixtureId.flatMap { catalog[$0] }?.frameMM)
             let connections = placement.connectionPoints(catalog: catalog, cables: cables + [session.points])
-            let (snapped, kind) = ConnectionSnapping.snapFixture(pose: pose, size: size, to: connections)
+            var (snapped, kind) = ConnectionSnapping.snapFixture(pose: pose, size: size, to: connections)
+            var alignment = Alignment.none
+            if kind == nil {
+                let fixture = placement.selectedFixtureId.flatMap { catalog[$0] }
+                (snapped, alignment) = AlignmentSnapping.align(
+                    pose: snapped, others: placement.placed.map(\.transform), floorY: session.floorY,
+                    standardHeight: fixture.flatMap { FixtureGeometry.standardHeight(product: $0.product) })
+            }
             placement.cursor = snapped
             placement.guide = kind.map(MeasureGuide.init)
+            placement.alignment = alignment
             session.cursor = nil
             session.guide = nil
         } else {
             placement?.cursor = nil
             placement?.guide = nil
             let connections = placement?.connectionPoints(catalog: catalog, cables: cables) ?? []
-            let last = session.isFinished ? nil : session.points.last
+            let last = session.isFinished || session.pausesRoute ? nil : session.points.last
             let (cursor, guide) = Snapping.cursor(position, last: last, connections: connections)
             session.cursor = cursor
             session.guide = guide

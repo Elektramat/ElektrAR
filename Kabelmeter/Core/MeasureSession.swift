@@ -2,48 +2,15 @@ import Combine
 import Foundation
 import simd
 
-/// How a segment between two points is counted.
-nonisolated enum RouteMode: String, CaseIterable, Sendable {
-    /// Cable follows the wall: the vertical and horizontal parts are added up.
-    case alongWall
-    /// Straight line between the points.
-    case straight
-}
-
 nonisolated enum MeasureMath {
-    /// Length of one segment in meters.
-    static func segmentLength(_ a: SIMD3<Float>, _ b: SIMD3<Float>, mode: RouteMode) -> Double {
-        switch mode {
-        case .straight:
-            return Double(simd_distance(a, b))
-        case .alongWall:
-            let d = b - a
-            return Double(simd_length(SIMD2(d.x, d.z)) + abs(d.y))
-        }
-    }
-
-    /// Sum of segments between consecutive points, in meters.
-    static func pathLength(_ points: [SIMD3<Float>], mode: RouteMode = .straight) -> Double {
-        zip(points, points.dropFirst()).reduce(0) { $0 + segmentLength($1.0, $1.1, mode: mode) }
-    }
-
-    /// The lines to draw for one segment: one straight line, or along the wall first
-    /// vertical (at `a`) and then horizontal (at the height of `b`). Skips tiny legs.
-    static func legs(_ a: SIMD3<Float>, _ b: SIMD3<Float>, mode: RouteMode) -> [(SIMD3<Float>, SIMD3<Float>)] {
-        let candidates: [(SIMD3<Float>, SIMD3<Float>)]
-        switch mode {
-        case .straight:
-            candidates = [(a, b)]
-        case .alongWall:
-            let corner = SIMD3(a.x, b.y, a.z)
-            candidates = [(a, corner), (corner, b)]
-        }
-        return candidates.filter { simd_distance($0.0, $0.1) > 0.001 }
+    /// Sum of straight segments between consecutive points, in meters.
+    static func pathLength(_ points: [SIMD3<Float>]) -> Double {
+        zip(points, points.dropFirst()).reduce(0) { $0 + Double(simd_distance($1.0, $1.1)) }
     }
 }
 
-/// A cable route that is done (added to the cart). It stays visible and its points are
-/// connection points for the next cable, so a second or third cable can branch off it.
+/// A finished cable in a room. Its points are connection points for the next cable, so a
+/// second or third cable can branch off it.
 nonisolated struct CableRun: Identifiable, Equatable, Sendable {
     let id: UUID
     let cableId: String
@@ -52,13 +19,14 @@ nonisolated struct CableRun: Identifiable, Equatable, Sendable {
     var length: Double { MeasureMath.pathLength(points) }
 }
 
-/// Points, segments and the total length. A MeasureProvider writes `cursor` and
-/// `trackingMessage`; the UI calls addPoint, undo, reset and finish.
+/// The cable being drawn by hand (anchor points), the finished cables, and the crosshair.
+/// A MeasureProvider writes `cursor` and `trackingMessage`; the UI calls addPoint, undo, reset
+/// and completeRun.
 @MainActor
 final class MeasureSession: ObservableObject {
-    /// Points of the cable being measured now.
+    /// Anchor points of the cable being drawn now.
     @Published private(set) var points: [SIMD3<Float>] = []
-    /// Cables measured earlier in this session.
+    /// Finished cables in this room.
     @Published private(set) var runs: [CableRun] = []
     /// World position under the crosshair, nil when nothing is hit.
     @Published var cursor: SIMD3<Float>?
@@ -69,44 +37,83 @@ final class MeasureSession: ObservableObject {
     /// Height of the floor in world space, nil until ARKit has seen it.
     @Published var floorY: Float?
     @Published private(set) var isFinished = false
-    /// Along the wall (default) or straight lines.
-    @Published var mode: RouteMode = .alongWall
     /// True when the device measures with LiDAR depth.
     @Published var usesLiDAR = false
+    /// Draw with right angles: from the last anchor first straight up or down, then sideways
+    /// to the crosshair, the way cable runs along a wall. Off: a straight line.
+    @Published var rightAngles = true
+    /// Automatic mode: cables the app suggests between the parts, not yet added.
+    @Published var proposedRoutes: [[SIMD3<Float>]] = []
+    /// Automatic mode: where the cables start (electrical cabinet).
+    @Published var startPoint: SIMD3<Float>?
+    /// True when the crosshair aims but no live cable segment is drawn (placing the start point).
+    @Published var pausesRoute = false
+    /// False in the view mode: no crosshair, no cursor, only looking and tapping.
+    @Published var isAiming = true
+    /// The cable whose info card is open; drawn highlighted.
+    @Published var selectedRunId: UUID?
+    /// Set by the provider when the user taps a part or a cable; the UI opens its info card.
+    @Published var tapped: TapTarget?
+
+    /// How many points each "+" added (1, or 2 with a corner), so undo removes a whole step.
+    private var steps: [Int] = []
 
     var canAddPoint: Bool { !isFinished && cursor != nil }
     var canFinish: Bool { !isFinished && points.count >= 2 }
 
-    var confirmedLength: Double { MeasureMath.pathLength(points, mode: mode) }
+    var confirmedLength: Double { MeasureMath.pathLength(points) }
 
-    /// Confirmed segments plus the live preview segment to the crosshair.
+    /// The live part of the cable: from the last anchor to the crosshair, with a corner in
+    /// between when drawing with right angles. Empty when there is nothing to preview.
+    var previewPoints: [SIMD3<Float>] {
+        guard !isFinished, !pausesRoute, let cursor, let last = points.last else { return [] }
+        return Self.route(from: last, to: cursor, rightAngles: rightAngles)
+    }
+
+    /// Confirmed segments plus the live preview to the crosshair.
     var totalLength: Double {
-        guard !isFinished, let cursor, let last = points.last else { return confirmedLength }
-        return confirmedLength + MeasureMath.segmentLength(last, cursor, mode: mode)
+        confirmedLength + MeasureMath.pathLength(previewPoints)
+    }
+
+    /// The points from `a` to `b`: with right angles via the corner straight above or below `a`.
+    static func route(from a: SIMD3<Float>, to b: SIMD3<Float>, rightAngles: Bool) -> [SIMD3<Float>] {
+        guard rightAngles else { return [a, b] }
+        let corner = SIMD3(a.x, b.y, a.z)
+        guard simd_distance(corner, a) > 0.01, simd_distance(corner, b) > 0.01 else { return [a, b] }
+        return [a, corner, b]
     }
 
     @discardableResult
     func addPoint() -> Bool {
         guard canAddPoint, let cursor else { return false }
-        points.append(cursor)
+        let added = points.last.map { Array(Self.route(from: $0, to: cursor, rightAngles: rightAngles).dropFirst()) }
+            ?? [cursor]
+        points += added
+        steps.append(added.count)
         return true
     }
 
+    /// Removes the last "+" (the point and, with right angles, its corner).
     func undo() {
         isFinished = false
-        if !points.isEmpty { points.removeLast() }
+        let count = steps.popLast() ?? 1
+        points.removeLast(min(count, points.count))
     }
 
-    /// Clears the cable being measured; earlier cables stay.
+    /// Clears the cable being drawn; finished cables stay.
     func reset() {
         isFinished = false
         points.removeAll()
+        steps.removeAll()
     }
 
-    /// Clears everything, also the earlier cables (e.g. a new room in AR).
+    /// Clears everything, also the finished cables (e.g. opening another room).
     func resetAll() {
         reset()
         runs.removeAll()
+        proposedRoutes.removeAll()
+        startPoint = nil
+        selectedRunId = nil
     }
 
     func finish() {
@@ -117,10 +124,34 @@ final class MeasureSession: ObservableObject {
         isFinished = false
     }
 
-    /// Keeps the current route as a finished cable and starts a new, empty one.
-    func completeRun(cableId: String) {
-        guard points.count >= 2 else { return }
-        runs.append(CableRun(id: UUID(), cableId: cableId, points: points))
+    /// Keeps the current cable as a finished one and starts a new, empty one.
+    /// Returns the new cable, or nil when there are fewer than two points.
+    @discardableResult
+    func completeRun(cableId: String) -> CableRun? {
+        guard points.count >= 2 else { return nil }
+        let run = CableRun(id: UUID(), cableId: cableId, points: points)
+        runs.append(run)
         reset()
+        return run
+    }
+
+    /// Keeps automatically drawn cables as finished cables.
+    func addRuns(_ routes: [[SIMD3<Float>]], cableId: String) {
+        runs += routes.filter { $0.count >= 2 }.map { CableRun(id: UUID(), cableId: cableId, points: $0) }
+    }
+
+    func removeRun(_ id: UUID) {
+        runs.removeAll { $0.id == id }
+        if selectedRunId == id { selectedRunId = nil }
+    }
+
+    /// Replaces everything with a saved room.
+    func load(runs: [CableRun], startPoint: SIMD3<Float>?, floorY: Float?) {
+        reset()
+        self.runs = runs
+        self.startPoint = startPoint
+        proposedRoutes.removeAll()
+        selectedRunId = nil
+        if let floorY { self.floorY = floorY }
     }
 }

@@ -77,17 +77,17 @@ final class LightCatalogTests: XCTestCase {
         XCTAssertTrue(lights.allSatisfy { $0.id.hasPrefix("light-") })
     }
 
-    @MainActor
-    func testAddingALightToTheCartKeepsTheShopProductId() throws {
-        let defaults = UserDefaults(suiteName: "LightCatalogTests")!
-        defaults.removePersistentDomain(forName: "LightCatalogTests")
-        let store = CartStore(defaults: defaults)
-        let lamp = try XCTUnwrap(FixtureCatalog.decodeLights(Data(json.utf8)).first)
-        let result = store.add(fixture: lamp, count: 2)
-        XCTAssertEqual(result.pieces, 2)
-        XCTAssertEqual(result.incompleteFixtures, 0)
-        XCTAssertEqual(store.items.first?.quantity, 2)
-        XCTAssertEqual(store.items.first?.shopProductId, 1299136)
-        XCTAssertEqual(store.total, 42.68)
+    func testALightInARoomIsOneOrderableLineWithTheShopProductId() throws {
+        let lights = try FixtureCatalog.decodeLights(Data(json.utf8))
+        let lamp = try XCTUnwrap(lights.first)
+        let room = Project(id: UUID(), name: "Hal", createdAt: Date(), updatedAt: Date(), floorY: 0, startPoint: nil,
+                           placements: [.init(id: UUID(), fixtureId: lamp.id, transform: Project.encode(matrix_identity_float4x4)),
+                                        .init(id: UUID(), fixtureId: lamp.id, transform: Project.encode(matrix_identity_float4x4))],
+                           runs: [], cabled: [])
+        let lines = Bill.lines(projects: [room], cables: [], fixtures: lights, reserve: 0.15)
+        XCTAssertEqual(lines.count, 1)
+        XCTAssertEqual(lines.first?.quantity, 2)
+        XCTAssertEqual(lines.first?.shopProductId, 1299136)
+        XCTAssertEqual(Bill.total(lines), 42.68)
     }
 }

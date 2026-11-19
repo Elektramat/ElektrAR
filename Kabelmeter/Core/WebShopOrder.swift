@@ -7,14 +7,14 @@ nonisolated struct WebShopLine: Equatable, Sendable {
     let productUrl: URL
     /// The shop's internal product id; nil means the app reads it from the product page first.
     let productId: Int?
-    /// The shop sells cable per whole meter, so the quantity is a whole number of meters.
+    /// Whole meters of cable, or pieces of a part.
     let quantity: Int
 }
 
 nonisolated enum WebShopOrder {
-    /// Whole meters to order. The cart already holds the billed length; the tolerance keeps
-    /// 10.000000001 m at 10. Lines below 1 m or with an invalid length are skipped.
-    static func lines(for items: [CartItem]) -> [WebShopLine] {
+    /// Whole meters (or pieces) to order. The bill already holds the billed length; the
+    /// tolerance keeps 10.000000001 m at 10. Lines below 1 or with an invalid quantity are skipped.
+    static func lines(for items: [BillLine]) -> [WebShopLine] {
         items.compactMap { item in
             guard item.quantity.isFinite, item.quantity > 0 else { return nil }
             let quantity = Int((item.quantity - 1e-6).rounded(.up))

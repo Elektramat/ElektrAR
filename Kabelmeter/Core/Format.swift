@@ -29,6 +29,11 @@ nonisolated enum Format {
         pieces.map(orderLength).joined(separator: " + ")
     }
 
+    /// "1 kabel", "3 kabels": a count with the right Dutch word.
+    static func count(_ n: Int, _ one: String, _ many: String) -> String {
+        "\(n) \(n == 1 ? one : many)"
+    }
+
     /// "€ 9,90"
     static func euro(_ value: Double) -> String {
         value.formatted(.currency(code: "EUR").locale(locale))

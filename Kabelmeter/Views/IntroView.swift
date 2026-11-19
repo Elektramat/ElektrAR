@@ -1,17 +1,17 @@
 import AVFoundation
 import SwiftUI
 
-/// Shown once before the camera opens: three steps, why the app needs the camera,
-/// and one button that asks for camera access. Also reachable via the "?" button.
+/// Shown once at the first start: three steps, why the app needs the camera, and one button
+/// that asks for camera access. Also reachable via the "?" button on the rooms screen.
 struct IntroView: View {
     /// Called after the user tapped "Start meten" and answered the camera prompt.
     let onStart: () -> Void
     @State private var asking = false
 
     private let steps: [(icon: String, title: String, text: String)] = [
-        ("cable.connector", "Kies je kabel", "Uit het assortiment van Elektramat, met de prijs per meter."),
-        ("plus.viewfinder", "Meet de route", "Richt op het beginpunt en tik op + bij elke hoek langs de muur."),
-        ("cart.badge.plus", "Bestel de juiste lengte", "Met reserve, afgerond zoals de kabel verkocht wordt."),
+        ("square.split.bottomrightquarter", "Maak een ruimte", "Woonkamer, keuken… Elke ruimte is een eigen ontwerp."),
+        ("lightswitch.on", "Plaats je onderdelen", "Richt op de muur en tik op +: schakelaars, stopcontacten en lampen, op de juiste hoogte."),
+        ("cable.connector", "Trek de kabels", "Automatisch vanaf de groepenkast, of zelf met een + bij elke hoek. De winkelwagen rekent alles samen."),
     ]
 
     var body: some View {
@@ -38,7 +38,7 @@ struct IntroView: View {
             }
 
             Button(action: start) {
-                Text("Start meten")
+                Text("Aan de slag")
                     .font(.headline.weight(.heavy))
                     .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
             }
@@ -64,7 +64,7 @@ struct IntroView: View {
             Text("Kabelmeter")
                 .font(Theme.branded(.largeTitle))
                 .foregroundStyle(.white)
-            Text("Nooit te weinig of te veel kabel. Loop één keer door je ruimte en de juiste lengte staat in je winkelmand.")
+            Text("Nooit te weinig of te veel materiaal. Ontwerp je ruimte één keer en alles staat in je winkelwagen.")
                 .font(.callout)
                 .foregroundStyle(.white.opacity(0.9))
                 .fixedSize(horizontal: false, vertical: true)

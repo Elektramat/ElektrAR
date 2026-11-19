@@ -170,7 +170,7 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate, WKUID
             let after = try await cartQuantities()
             let missing = WebShopOrder.missing(posted, before: before, after: after)
             failures += missing.map {
-                Failure(name: $0.line.name, reason: "De webshop nam \($0.arrived) van \($0.line.quantity) m over.")
+                Failure(name: $0.line.name, reason: "De webshop nam \($0.arrived) van \($0.line.quantity) over.")
             }
             addedCount = posted.count - missing.count
         } catch {

@@ -58,6 +58,17 @@ enum Theme {
     static let arRun = UIColor.systemTeal
     /// Dotted height line from the crosshair to the floor.
     static let arHeight = UIColor.systemYellow
+    /// Dotted lines a part being placed lines up with.
+    static let arAlign = UIColor.systemCyan
+    static let align = Color.cyan
+    /// Edit mode: the selected fixture or cable.
+    static let arHighlight = UIColor.systemPink
+    /// Automatic mode: suggested cables and the start point.
+    static let arProposed = UIColor.systemPurple
+    static let arStart = UIColor.systemGreen
+    static let highlight = Color.pink
+    static let proposed = Color.purple
+    static let start = Color.green
     static let run = Color.teal
     static let height = Color.yellow
 
