@@ -1,0 +1,216 @@
+[
+  {
+    "id": "sample-001",
+    "sku": "SAMPLE-001",
+    "name": "Installatiekabel 3x1,5 mm²",
+    "crossSection": "3x1,5 mm²",
+    "use": "Verlichting",
+    "pricePerMeter": 0.99,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": null,
+    "productUrl": "https://www.elektramat.nl",
+    "isSample": true
+  },
+  {
+    "id": "sample-002",
+    "sku": "SAMPLE-002",
+    "name": "Installatiekabel 3x2,5 mm²",
+    "crossSection": "3x2,5 mm²",
+    "use": "Stopcontacten",
+    "pricePerMeter": 1.49,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": null,
+    "productUrl": "https://www.elektramat.nl",
+    "isSample": true
+  },
+  {
+    "id": "sample-003",
+    "sku": "SAMPLE-003",
+    "name": "Installatiekabel 5x2,5 mm²",
+    "crossSection": "5x2,5 mm²",
+    "use": "Krachtstroom",
+    "pricePerMeter": 2.79,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": null,
+    "productUrl": "https://www.elektramat.nl",
+    "isSample": true
+  },
+  {
+    "id": "sample-004",
+    "sku": "SAMPLE-004",
+    "name": "Installatiekabel 3x1,5 mm² op rol",
+    "crossSection": "3x1,5 mm²",
+    "use": "Verlichting",
+    "pricePerMeter": 0.79,
+    "sales": {
+      "type": "fixedLengths",
+      "lengthsM": [
+        10,
+        25,
+        50,
+        100
+      ]
+    },
+    "stock": "Op voorraad",
+    "imageUrl": null,
+    "productUrl": "https://www.elektramat.nl",
+    "isSample": true
+  },
+  {
+    "id": "sample-005",
+    "sku": "SAMPLE-005",
+    "name": "Installatiekabel 3x2,5 mm² op rol",
+    "crossSection": "3x2,5 mm²",
+    "use": "Stopcontacten",
+    "pricePerMeter": 1.19,
+    "sales": {
+      "type": "fixedLengths",
+      "lengthsM": [
+        10,
+        25,
+        50,
+        100
+      ]
+    },
+    "stock": "Op voorraad",
+    "imageUrl": null,
+    "productUrl": "https://www.elektramat.nl",
+    "isSample": true
+  },
+  {
+    "id": "sample-006",
+    "sku": "SAMPLE-006",
+    "name": "Grondkabel 3x2,5 mm²",
+    "crossSection": "3x2,5 mm²",
+    "use": "Buiten",
+    "pricePerMeter": 2.49,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": null,
+    "productUrl": "https://www.elektramat.nl",
+    "isSample": true
+  },
+  {
+    "id": "sample-007",
+    "sku": "SAMPLE-007",
+    "name": "Grondkabel 3x4 mm²",
+    "crossSection": "3x4 mm²",
+    "use": "Buiten",
+    "pricePerMeter": 3.69,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Beperkt op voorraad",
+    "imageUrl": null,
+    "productUrl": "https://www.elektramat.nl",
+    "isSample": true
+  },
+  {
+    "id": "sample-008",
+    "sku": "SAMPLE-008",
+    "name": "Soepele kabel 3x1,5 mm²",
+    "crossSection": "3x1,5 mm²",
+    "use": "Verlengsnoer",
+    "pricePerMeter": 1.29,
+    "sales": {
+      "type": "perMeter",
+      "step": 0.5,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": null,
+    "productUrl": "https://www.elektramat.nl",
+    "isSample": true
+  },
+  {
+    "id": "sample-009",
+    "sku": "SAMPLE-009",
+    "name": "Soepele kabel 3x2,5 mm²",
+    "crossSection": "3x2,5 mm²",
+    "use": "Verlengsnoer",
+    "pricePerMeter": 1.89,
+    "sales": {
+      "type": "perMeter",
+      "step": 0.5,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": null,
+    "productUrl": "https://www.elektramat.nl",
+    "isSample": true
+  },
+  {
+    "id": "sample-010",
+    "sku": "SAMPLE-010",
+    "name": "VD-draad 2,5 mm² blauw",
+    "crossSection": "1x2,5 mm²",
+    "use": "In buis",
+    "pricePerMeter": 0.39,
+    "sales": {
+      "type": "fixedLengths",
+      "lengthsM": [
+        100
+      ]
+    },
+    "stock": "Op voorraad",
+    "imageUrl": null,
+    "productUrl": "https://www.elektramat.nl",
+    "isSample": true
+  },
+  {
+    "id": "sample-011",
+    "sku": "SAMPLE-011",
+    "name": "VD-draad 2,5 mm² bruin",
+    "crossSection": "1x2,5 mm²",
+    "use": "In buis",
+    "pricePerMeter": 0.39,
+    "sales": {
+      "type": "fixedLengths",
+      "lengthsM": [
+        100
+      ]
+    },
+    "stock": "Op voorraad",
+    "imageUrl": null,
+    "productUrl": "https://www.elektramat.nl",
+    "isSample": true
+  },
+  {
+    "id": "sample-012",
+    "sku": "SAMPLE-012",
+    "name": "Datakabel CAT6 U/UTP",
+    "crossSection": "4x2x0,5 mm",
+    "use": "Netwerk",
+    "pricePerMeter": 0.69,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Niet op voorraad",
+    "imageUrl": null,
+    "productUrl": "https://www.elektramat.nl",
+    "isSample": true
+  }
+]
