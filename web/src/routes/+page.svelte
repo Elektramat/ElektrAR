@@ -108,12 +108,26 @@
 				winkelmand.
 			</p>
 		</div>
+		<!-- A solid white circle with a blue cart and a green count badge (DESIGN.md: no
+		     see-through fills). The total is in the label; the price bar shows the route price. -->
 		<button
-			class="icon-button"
-			aria-label={`Winkelmand, ${cart.items.length} artikelen`}
+			class="icon-button cart-button"
+			aria-label={`Winkelmand, ${cart.items.length} artikelen, ${euro(cart.total)}`}
 			onclick={() => cartDialog?.showModal()}
 		>
-			<span aria-hidden="true">🛒</span>
+			<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+				<path
+					d="M2.5 3.5h2.6l2.6 11"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2.2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+				<path d="M6.4 6.5h14.6l-2.3 8.5H8.2z" fill="currentColor" />
+				<circle cx="9.5" cy="19" r="1.7" fill="currentColor" />
+				<circle cx="17" cy="19" r="1.7" fill="currentColor" />
+			</svg>
 			{#if cart.items.length > 0}<span class="badge">{cart.items.length}</span>{/if}
 		</button>
 	</header>
@@ -135,7 +149,7 @@
 						</p>
 						{#if cable.isSample}<span class="sample">Voorbeelddata</span>{/if}
 					</div>
-					<span class="selected">Wijzig</span>
+					<span class="change">Wijzig</span>
 				</button>
 			{:else}
 				<!-- svelte-ignore a11y_autofocus -->
@@ -246,7 +260,8 @@
 			</div>
 			<div class="reserve">
 				<span>Reserve {reservePercent}% + {orderLength(CONNECTION_ALLOWANCE)} aansluiting</span>
-				<div class="stepper">
+				<!-- Brand stepper (DESIGN.md): the pressed button turns solid blue with a white icon. -->
+				<div class="stepper" role="group" aria-label="Reserve in procent">
 					<button
 						aria-label="Minder reserve"
 						disabled={reservePercent <= 0}

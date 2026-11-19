@@ -107,10 +107,22 @@ button:disabled {
 	height: var(--tap);
 	border-radius: 999px;
 	border: 0;
-	background: rgba(255, 255, 255, 0.18);
-	color: #fff;
+	background: #fff;
+	color: var(--color-primary);
 	font-size: 1.2rem;
 	position: relative;
+	display: grid;
+	place-items: center;
+	flex: none;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+	transition:
+		transform 0.18s ease-out,
+		filter 0.18s ease-out;
+}
+/* Pressed: shrinks and darkens a little, like CardButtonStyle in the app. */
+.icon-button:active {
+	transform: scale(0.9);
+	filter: brightness(0.92);
 }
 .badge {
 	position: absolute;
@@ -208,6 +220,17 @@ main {
 	margin-left: auto;
 	color: var(--color-primary);
 	font-weight: 800;
+}
+/* "Wijzig" is a solid blue pill with white text, as in the app (no see-through buttons). */
+.change {
+	margin-left: auto;
+	flex: none;
+	background: var(--color-primary);
+	color: #fff;
+	font-weight: 700;
+	font-size: 0.9rem;
+	padding: 8px 14px;
+	border-radius: 999px;
 }
 .search {
 	width: 100%;
@@ -308,13 +331,27 @@ main {
 	display: flex;
 	gap: 6px;
 }
+/* BrandStepper in the app: light grey with an ink icon, solid blue with a white icon while
+   pressed, 40 % opacity at the end of the range (DESIGN.md). */
 .stepper button {
-	width: var(--tap);
+	width: 52px;
 	height: 40px;
 	border-radius: var(--radius-xl);
 	border: 0;
 	background: var(--color-black-5);
+	color: var(--color-text);
 	font-size: 1.2rem;
+	font-weight: 700;
+	transition:
+		background-color 0.12s ease-out,
+		color 0.12s ease-out;
+}
+.stepper button:active:not(:disabled) {
+	background: var(--color-primary);
+	color: #fff;
+}
+.stepper button:disabled {
+	opacity: 0.4;
 }
 .cta {
 	height: 56px;
