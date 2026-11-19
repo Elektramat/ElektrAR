@@ -165,14 +165,14 @@ struct RoomScreen: View {
             .accessibilityLabel("Terug naar ruimtes")
 
             Text(room?.name ?? "Ruimte")
-                .font(.headline).lineLimit(1)
+                .font(.headline).lineLimit(1).truncationMode(.tail)
                 .padding(.horizontal, 14)
                 .frame(minHeight: 44)
                 .surface(Capsule())
 
             Spacer(minLength: 0)
             editToggle
-            CartButton()
+            CartButton(compact: true)
         }
         .padding(.top, 4)
     }
@@ -184,6 +184,8 @@ struct RoomScreen: View {
         } label: {
             Label(isEditing ? "Klaar" : "Bewerk", systemImage: isEditing ? "checkmark" : "pencil")
                 .font(.headline)
+                .lineLimit(1)
+                .fixedSize()
                 .foregroundStyle(Theme.onAccent)
                 .padding(.horizontal, 16)
                 .frame(minHeight: 44)
@@ -402,7 +404,7 @@ struct RoomScreen: View {
             case (.view, _, _):
                 roomSummary
                 Text(placement.placed.isEmpty && session.runs.isEmpty
-                     ? "Nog leeg. Kies Bewerken om onderdelen te plaatsen."
+                     ? "Nog leeg. Tik op Bewerk om onderdelen te plaatsen."
                      : "Tik op een onderdeel of kabel voor info.")
                     .font(Theme.labelFont).foregroundStyle(.secondary)
             case (.edit, .parts, _):
