@@ -4,11 +4,18 @@ import WebKit
 
 /// Puts the in-app cart into the real elektramat.nl cart.
 ///
-/// The shop (Magento with Hyvä) only accepts its product form with a session form key, so a
-/// link from Safari cannot fill the cart. Instead this loads each product page in a web view
-/// owned by the app, posts the page's own add-to-cart form with the right quantity, and checks
-/// the cart through Magento's customer section endpoint. The cart lives in this web view's
-/// cookie store (persisted), not in Safari; the user checks out in the same web view.
+/// The shop (Magento with Hyvä) only accepts its add-to-cart form with a form key that matches
+/// the session cookie, so a link from Safari cannot fill the cart. Instead this works inside a
+/// web view owned by the app. To keep it fast it renders no product page:
+/// 1. Load a tiny page on the shop's domain (robots.txt, 7 KB) to run scripts as the shop.
+/// 2. Read the cart quantities from Magento's customer section (about 1 KB).
+/// 3. Post the add-to-cart form per cable without following the redirect (which would
+///    download the 2.7 MB product page again).
+/// 4. Read the cart again, report every cable that did not arrive, and show the cart page.
+/// Measured with curl on 19 Nov 2026: about 2 s for one cable instead of about 7 s.
+///
+/// The cart lives in this web view's cookie store (persisted), not in Safari; the user checks
+/// out in the same web view.
 ///
 /// TODO: for production, ask the webshop team for a deep link (for example
 /// /kabelmeter/add?sku=…&qty=…) or a cart API with a hand-off to the browser session.
@@ -16,6 +23,7 @@ import WebKit
 final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate {
     enum Phase: Equatable {
         case idle
+        case connecting
         case adding(index: Int, total: Int)
         case done
     }
@@ -27,6 +35,7 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     static let cartUrl = URL(string: "https://www.elektramat.nl/checkout/cart/")!
+    private static let sessionUrl = URL(string: "https://www.elektramat.nl/robots.txt")!
     private static let pageTimeout: TimeInterval = 30
 
     let webView: WKWebView
@@ -44,41 +53,58 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate {
         webView.allowsBackForwardNavigationGestures = true
     }
 
-    /// Adds every line, then shows the shop cart. Runs once per instance.
+    /// Adds every line, checks the cart, then shows the shop cart. Runs once per instance.
     func run(_ lines: [WebShopLine]) async {
         guard phase == .idle else { return }
-        for (index, line) in lines.enumerated() {
-            phase = .adding(index: index + 1, total: lines.count)
-            do {
-                try await load(line.productUrl)
-                let result = try await webView.callAsyncJavaScript(
-                    Self.addToCartScript,
-                    arguments: ["qty": line.quantity, "sku": line.sku],
-                    contentWorld: .page)
-                if let reason = Self.failureReason(result, expected: line.quantity) {
+        phase = .connecting
+        defer { phase = .done }
+        do {
+            try await load(Self.sessionUrl)
+            let before = try await cartQuantities()
+            var posted: [WebShopLine] = []
+            for (index, line) in lines.enumerated() {
+                phase = .adding(index: index + 1, total: lines.count)
+                if let reason = try await post(line) {
                     failures.append(Failure(name: line.name, reason: reason))
+                } else {
+                    posted.append(line)
                 }
-            } catch {
-                failures.append(Failure(name: line.name, reason: "De pagina laadde niet (\(error.localizedDescription))."))
             }
+            let after = try await cartQuantities()
+            failures += WebShopOrder.missing(posted, before: before, after: after).map {
+                Failure(name: $0.line.name, reason: "De webshop nam \($0.arrived) van \($0.line.quantity) m over.")
+            }
+        } catch {
+            failures.append(Failure(name: "Webshop", reason: "Geen verbinding met elektramat.nl (\(error.localizedDescription))."))
         }
-        phase = .done
         try? await load(Self.cartUrl)
     }
 
-    private static func failureReason(_ result: Any?, expected: Int) -> String? {
-        guard let dict = result as? [String: Any] else { return "Onverwacht antwoord van de webshop." }
-        if let error = dict["error"] as? String {
-            switch error {
-            case "no-form": return "Dit product kan nu niet besteld worden (geen bestelknop op de pagina)."
-            case "timeout": return "De webshop reageerde niet op tijd."
-            default: return "De webshop gaf een fout (\(error))."
-            }
-        }
-        let before = (dict["before"] as? NSNumber)?.intValue ?? 0
-        let after = (dict["after"] as? NSNumber)?.intValue ?? 0
-        return after - before >= expected ? nil : "De webshop nam \(after - before) van \(expected) m over."
+    // MARK: Steps
+
+    private func cartQuantities() async throws -> [String: Int] {
+        let result = try await webView.callAsyncJavaScript(Self.cartQuantitiesScript, arguments: [:], contentWorld: .page)
+        guard let dict = result as? [String: Any] else { throw WebShopError.unexpectedAnswer }
+        if let error = dict["error"] as? String { throw WebShopError.shop(error) }
+        let items = dict["items"] as? [String: Any] ?? [:]
+        return items.compactMapValues { ($0 as? NSNumber)?.intValue }
     }
+
+    /// Returns nil when the form was accepted, otherwise a reason for the user.
+    private func post(_ line: WebShopLine) async throws -> String? {
+        var arguments: [String: Any] = ["qty": line.quantity, "productUrl": line.productUrl.absoluteString]
+        if let id = line.productId { arguments["productId"] = id }
+        let result = try await webView.callAsyncJavaScript(Self.addScript, arguments: arguments, contentWorld: .page)
+        guard let dict = result as? [String: Any] else { return "Onverwacht antwoord van de webshop." }
+        switch dict["error"] as? String {
+        case nil: return nil
+        case "no-form": return "Dit product kan nu niet besteld worden (geen bestelknop op de pagina)."
+        case "timeout": return "De webshop reageerde niet op tijd."
+        case let error?: return "De webshop gaf een fout (\(error))."
+        }
+    }
+
+    // MARK: Page loading
 
     private func load(_ url: URL) async throws {
         pageLoad?.resume(throwing: CancellationError())
@@ -107,33 +133,72 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate {
         MainActor.assumeIsolated { finishPageLoad(error) }
     }
 
-    /// Runs in the product page. Posts the page's add-to-cart form with `qty`, and returns the
-    /// quantity of `sku` in the cart before and after, read from Magento's customer section.
-    private static let addToCartScript = """
-    const form = document.getElementById('product_addtocart_form');
-    if (!form) { return { error: 'no-form' }; }
+    // MARK: Scripts (run on www.elektramat.nl)
+
+    /// Quantity per SKU in the shop cart, from Magento's customer section.
+    private static let cartQuantitiesScript = """
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 20000);
-    const cartQty = async () => {
+    const timer = setTimeout(() => controller.abort(), 15000);
+    try {
         const r = await fetch('/customer/section/load/?sections=cart&force_new_section_timestamp=true',
             { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: controller.signal });
-        if (!r.ok) { throw new Error('section-' + r.status); }
-        const items = ((await r.json()).cart || {}).items || [];
-        return items.filter(i => i.product_sku === sku).reduce((sum, i) => sum + Number(i.qty || 0), 0);
-    };
-    try {
-        const before = await cartQty();
-        const data = new FormData(form);
-        data.set('qty', String(qty));
-        if (window.hyva && typeof hyva.getFormKey === 'function') { data.set('form_key', hyva.getFormKey()); }
-        const r = await fetch(form.action, { method: 'POST', body: data, credentials: 'same-origin', signal: controller.signal });
-        if (!r.ok) { return { error: 'http-' + r.status }; }
-        const after = await cartQty();
-        return { before, after };
+        if (!r.ok) { return { error: 'section-' + r.status }; }
+        const items = {};
+        for (const i of ((await r.json()).cart || {}).items || []) {
+            items[i.product_sku] = (items[i.product_sku] || 0) + Number(i.qty || 0);
+        }
+        return { items };
     } catch (e) {
         return { error: e.name === 'AbortError' ? 'timeout' : String(e.message || e) };
     } finally {
         clearTimeout(timer);
     }
     """
+
+    /// Posts the add-to-cart form for one product. Uses the form key cookie the shop's own
+    /// scripts use (creates it when missing, like Hyvä does). Reads the product id from the
+    /// product page only when the catalog has none.
+    private static let addScript = """
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20000);
+    try {
+        let formKey = (document.cookie.match(/(?:^|; )form_key=([^;]+)/) || [])[1];
+        if (!formKey) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            formKey = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => chars[b % chars.length]).join('');
+            document.cookie = 'form_key=' + formKey + '; path=/; secure; samesite=lax';
+        }
+        let id = typeof productId === 'number' ? productId : null;
+        if (id === null) {
+            const page = await (await fetch(productUrl, { credentials: 'same-origin', signal: controller.signal })).text();
+            const match = page.match(/action="[^"]*\\/checkout\\/cart\\/add\\/[^"]*\\/product\\/(\\d+)\\/"\\s*id="product_addtocart_form"/);
+            if (!match) { return { error: 'no-form' }; }
+            id = Number(match[1]);
+        }
+        const body = new FormData();
+        body.set('product', String(id));
+        body.set('qty', String(qty));
+        body.set('form_key', formKey);
+        const r = await fetch('/checkout/cart/add/product/' + id + '/',
+            { method: 'POST', body, credentials: 'same-origin', redirect: 'manual', signal: controller.signal });
+        if (r.type !== 'opaqueredirect' && !r.ok) { return { error: 'http-' + r.status }; }
+        return {};
+    } catch (e) {
+        return { error: e.name === 'AbortError' ? 'timeout' : String(e.message || e) };
+    } finally {
+        clearTimeout(timer);
+    }
+    """
+}
+
+private enum WebShopError: LocalizedError {
+    case unexpectedAnswer
+    case shop(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .unexpectedAnswer: "onverwacht antwoord"
+        case let .shop(code): code
+        }
+    }
 }

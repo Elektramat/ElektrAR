@@ -62,6 +62,9 @@ nonisolated struct Cable: Codable, Identifiable, Equatable, Sendable {
     let imageUrl: URL?
     let productUrl: URL
     let isSample: Bool
+    /// The id the shop's add-to-cart form posts (not the SKU). Lets the app add to the shop
+    /// cart without loading the product page. Optional: CSV data may not have it.
+    var shopProductId: Int? = nil
 }
 
 nonisolated enum CableCatalog {

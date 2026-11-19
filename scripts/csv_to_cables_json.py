@@ -6,6 +6,8 @@ Usage: python3 scripts/csv_to_cables_json.py export.csv > Kabelmeter/Resources/c
 Expected columns (header row, comma separated, UTF-8):
   sku, name, cross_section, use, price_per_meter, sales_type,
   step_m, minimum_m, lengths_m, stock, image_url, product_url
+Optional: shop_product_id (the id the shop's add-to-cart form posts; without it the app
+reads it from the product page, which is slower).
 
 sales_type is "perMeter" (uses step_m and minimum_m) or "fixedLengths"
 (uses lengths_m, separated by ";", e.g. "10;25;50;100").
@@ -54,6 +56,11 @@ def main(path):
                 "productUrl": r["product_url"].strip() or "https://www.elektramat.nl",
                 "isSample": False,
             })
+            shop_id = (r.get("shop_product_id") or "").strip()
+            if shop_id:
+                if not shop_id.isdigit():
+                    sys.exit(f"Row {row}: shop_product_id must be a whole number, got {shop_id!r}")
+                cables[-1]["shopProductId"] = int(shop_id)
     if not cables:
         sys.exit("No cables in the export")
     json.dump(cables, sys.stdout, ensure_ascii=False, indent=2)

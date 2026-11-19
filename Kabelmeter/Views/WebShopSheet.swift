@@ -10,9 +10,13 @@ struct WebShopSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                // Hidden until the cart page loads: the session page is plain text.
                 WebView(webView: shop.webView).ignoresSafeArea(edges: .bottom)
-                if case let .adding(index, total) = shop.phase {
-                    progress(index: index, total: total)
+                    .opacity(shop.phase == .done ? 1 : 0)
+                switch shop.phase {
+                case .idle, .connecting: progress(step: nil)
+                case let .adding(index, total): progress(step: total > 1 ? "\(index) van \(total)" : nil)
+                case .done: EmptyView()
                 }
             }
             .safeAreaInset(edge: .top) {
@@ -27,11 +31,11 @@ struct WebShopSheet: View {
         .task { await shop.run(lines) }
     }
 
-    private func progress(index: Int, total: Int) -> some View {
+    private func progress(step: String?) -> some View {
         VStack(spacing: Theme.spacing) {
             ProgressView().controlSize(.large)
             Text("Kabel in je winkelmand zetten…").font(.headline)
-            if total > 1 { Text("\(index) van \(total)").foregroundStyle(.secondary) }
+            if let step { Text(step).foregroundStyle(.secondary) }
         }
         .padding(24)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.corner))

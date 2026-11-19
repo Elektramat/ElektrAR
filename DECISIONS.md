@@ -37,3 +37,5 @@ One line each: what we chose and why.
 - Demo-modus and AR have separate placement lists: their coordinates do not mix, and switching Demo-modus must not wipe the saved room.
 - Fixtures are not added to the cart yet: the cart is meter-based.
 - No Elektramat MCP cart: without a login `cable_create_order` returns only the generic cart URL (no cart id or session), so Safari would show an empty cart. Details in `RemoteCartService`.
+- Faster shop cart: the web view loads robots.txt (7 KB) for the session, posts the add-to-cart form per cable without following the redirect (the redirect downloads the 2.7 MB product page), and checks the cart once before and once after. Measured with curl: two cables in 2.7 s instead of about 14 s. Needs the shop's form product id (`shopProductId`, from the scraper); without it the app reads the id from the product page HTML.
+- Cables are posted one after the other, not in parallel: parallel adds to one Magento cart can overwrite each other.

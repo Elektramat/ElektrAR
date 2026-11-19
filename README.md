@@ -46,7 +46,7 @@ python3 scripts/csv_to_cables_json.py export.csv > Kabelmeter/Resources/cables.j
 ```
 
 Expected CSV columns: `sku, name, cross_section, use, price_per_meter, sales_type, step_m,
-minimum_m, lengths_m, stock, image_url, product_url`. `sales_type` is `perMeter` (uses
+minimum_m, lengths_m, stock, image_url, product_url`, optionally `shop_product_id`. `sales_type` is `perMeter` (uses
 `step_m`, `minimum_m`) or `fixedLengths` (uses `lengths_m`, separated by `;`). Decimals may use
 a comma or a dot. The app shows a bundled `<sku>.jpg` if there is one, otherwise it loads
 `image_url`.
@@ -79,8 +79,8 @@ of fixed roll lengths. See `Kabelmeter/Core/PricingCalculator.swift`.
 
 - Cable prices and stock are a snapshot of 19 November 2026; rerun the script before a demo.
 - "Zet in winkelmand op elektramat.nl" (cart screen) opens the shop in a web view inside the
-  app, posts each product page's own add-to-cart form with the meters as quantity, checks the
-  shop cart and shows it. That cart lives in the app's web view, not in Safari: check out there.
+  app, posts the shop's add-to-cart form per cable with the meters as quantity (using
+  `shopProductId`, without rendering a product page), checks the shop cart and shows it. That cart lives in the app's web view, not in Safari: check out there.
   It depends on the product form (`product_addtocart_form`) and Magento's customer section
   endpoint; a site change can break it. See `Kabelmeter/Services/WebShopCart.swift`.
 - Sample cables (`"isSample": true`) stay out of the shop cart.

@@ -148,4 +148,62 @@ final class WebShopOrderTests: XCTestCase {
     func testEmptyCartHasNoLines() {
         XCTAssertTrue(WebShopOrder.lines(for: []).isEmpty)
     }
+
+    func testPassesShopProductId() {
+        var withId = item(5)
+        withId.shopProductId = 610957
+        XCTAssertEqual(WebShopOrder.lines(for: [withId, item(3)]).map(\.productId), [610957, nil])
+    }
+
+    // MARK: missing(_:before:after:)
+
+    private func line(_ sku: String, _ quantity: Int) -> WebShopLine {
+        WebShopLine(sku: sku, name: sku, productUrl: URL(string: "https://www.elektramat.nl/")!,
+                    productId: 1, quantity: quantity)
+    }
+
+    func testAllArrivedIntoEmptyCart() {
+        XCTAssertTrue(WebShopOrder.missing([line("A", 7)], before: [:], after: ["A": 7]).isEmpty)
+    }
+
+    func testCountsOnlyWhatWasAddedOnTopOfAnExistingLine() {
+        let result = WebShopOrder.missing([line("A", 7)], before: ["A": 4], after: ["A": 8])
+        XCTAssertEqual(result, [.init(line: line("A", 7), arrived: 4)])
+    }
+
+    func testNothingArrived() {
+        let result = WebShopOrder.missing([line("A", 3), line("B", 2)], before: ["B": 1], after: ["A": 3, "B": 1])
+        XCTAssertEqual(result, [.init(line: line("B", 2), arrived: 0)])
+    }
+
+    func testCartShrankCountsAsNothingArrived() {
+        let result = WebShopOrder.missing([line("A", 2)], before: ["A": 5], after: ["A": 1])
+        XCTAssertEqual(result, [.init(line: line("A", 2), arrived: 0)])
+    }
+
+    func testSameSkuTwiceSharesWhatArrivedInOrder() {
+        let result = WebShopOrder.missing([line("A", 3), line("A", 4)], before: [:], after: ["A": 5])
+        XCTAssertEqual(result, [.init(line: line("A", 4), arrived: 2)])
+    }
+
+    func testNoLinesNoShortfall() {
+        XCTAssertTrue(WebShopOrder.missing([], before: ["A": 1], after: [:]).isEmpty)
+    }
+}
+
+@MainActor
+final class CartStoreShopIdTests: XCTestCase {
+    func testMergeFillsMissingShopProductId() {
+        let defaults = UserDefaults(suiteName: "CartStoreShopIdTests")!
+        defaults.removePersistentDomain(forName: "CartStoreShopIdTests")
+        var old = Cable(id: "c1", sku: "S1", name: "Kabel", crossSection: "3x1,5 mm²", use: "x",
+                        pricePerMeter: 1, sales: .perMeter(step: 1, minimum: 1), stock: "x",
+                        imageUrl: nil, productUrl: URL(string: "https://www.elektramat.nl/")!, isSample: false)
+        let store = CartStore(defaults: defaults)
+        store.add(cable: old, meters: 2)
+        old.shopProductId = 42
+        store.add(cable: old, meters: 3)
+        XCTAssertEqual(store.items.first?.shopProductId, 42)
+        XCTAssertEqual(store.items.first?.meters, 5)
+    }
 }

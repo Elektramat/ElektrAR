@@ -11,6 +11,7 @@ nonisolated struct CartItem: Codable, Identifiable, Equatable, Sendable {
     var meters: Double
     let productUrl: URL
     let isSample: Bool
+    var shopProductId: Int? = nil
 
     var linePrice: Double { PricingCalculator.roundToCents(meters * pricePerMeter) }
 }
@@ -39,10 +40,13 @@ final class CartStore: ObservableObject {
         guard meters.isFinite, meters > 0 else { return }
         if let index = items.firstIndex(where: { $0.cableId == cable.id }) {
             items[index].meters += meters
+            // A cart saved by an older build has no shop product id yet.
+            if items[index].shopProductId == nil { items[index].shopProductId = cable.shopProductId }
         } else {
             items.append(CartItem(id: UUID(), cableId: cable.id, sku: cable.sku, name: cable.name,
                                   crossSection: cable.crossSection, pricePerMeter: cable.pricePerMeter,
-                                  meters: meters, productUrl: cable.productUrl, isSample: cable.isSample))
+                                  meters: meters, productUrl: cable.productUrl, isSample: cable.isSample,
+                                  shopProductId: cable.shopProductId))
         }
         save()
     }
