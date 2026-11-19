@@ -50,6 +50,18 @@ nonisolated extension SalesUnit: Codable {
     }
 }
 
+/// One roll size of a cable that the shop sells as separate roll products. A shorter roll costs
+/// more per meter, so each roll has its own price, article number and shop product id.
+nonisolated struct CableRoll: Codable, Equatable, Sendable {
+    let lengthM: Double
+    let sku: String
+    /// Price of the whole roll incl. VAT.
+    let price: Double
+    let productUrl: URL
+    let shopProductId: Int?
+    let stock: String?
+}
+
 nonisolated struct Cable: Codable, Identifiable, Equatable, Sendable {
     let id: String
     let sku: String
@@ -65,6 +77,12 @@ nonisolated struct Cable: Codable, Identifiable, Equatable, Sendable {
     /// The id the shop's add-to-cart form posts (not the SKU). Lets the app add to the shop
     /// cart without loading the product page. Optional: CSV data may not have it.
     var shopProductId: Int? = nil
+    /// Cables sold as rolls of several lengths: the options, each with its own price. Then
+    /// `sales` is `fixedLengths` with the same lengths and `pricePerMeter` is the cheapest one.
+    var rolls: [CableRoll]? = nil
+
+    /// True when the shop sells this cable as roll products.
+    var hasRolls: Bool { !(rolls ?? []).isEmpty }
 }
 
 nonisolated enum CableCatalog {
@@ -76,6 +94,9 @@ nonisolated enum CableCatalog {
         }
         guard cables.allSatisfy({ $0.pricePerMeter >= 0 }) else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Negative price"))
+        }
+        guard cables.allSatisfy({ ($0.rolls ?? []).allSatisfy { $0.lengthM > 0 && $0.price >= 0 } }) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Bad roll"))
         }
         return cables
     }

@@ -28,8 +28,18 @@ final class MeasureSession: ObservableObject {
     @Published private(set) var points: [SIMD3<Float>] = []
     /// Finished cables in this room.
     @Published private(set) var runs: [CableRun] = []
-    /// World position under the crosshair, nil when nothing is hit.
-    @Published var cursor: SIMD3<Float>?
+    /// World position under the crosshair, nil when nothing is hit. Changes about 15 times a
+    /// second, so it is not @Published: views that draw it observe `live`; the rest of the
+    /// screen only hears `hasCursor` flip.
+    var cursor: SIMD3<Float>? {
+        get { live.value }
+        set {
+            live.value = newValue
+            if hasCursor != (newValue != nil) { hasCursor = newValue != nil }
+        }
+    }
+    let live = LiveValue<SIMD3<Float>>()
+    @Published private(set) var hasCursor = false
     /// Dutch hint for the user, nil when tracking is fine.
     @Published var trackingMessage: String?
     /// Set when the cursor is snapped to vertical, level, a switch or an earlier cable.
@@ -58,7 +68,7 @@ final class MeasureSession: ObservableObject {
     /// How many points each "+" added (1, or 2 with a corner), so undo removes a whole step.
     private var steps: [Int] = []
 
-    var canAddPoint: Bool { !isFinished && cursor != nil }
+    var canAddPoint: Bool { !isFinished && hasCursor }
     var canFinish: Bool { !isFinished && points.count >= 2 }
 
     var confirmedLength: Double { MeasureMath.pathLength(points) }

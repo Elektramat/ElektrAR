@@ -47,7 +47,10 @@ struct RoomsScreen: View {
                     }
                     .accessibilityLabel("Uitleg")
                 }
+                // iOS 26 puts every toolbar item in its own glass capsule. CartButton draws its
+                // own surface, so hide the system one or the button gets a second border inside.
                 ToolbarItem(placement: .topBarTrailing) { CartButton() }
+                    .sharedBackgroundVisibility(.hidden)
             }
             .safeAreaInset(edge: .bottom) {
                 Button { showNewRoom = true } label: {
@@ -82,7 +85,7 @@ struct RoomsScreen: View {
     }
 
     private func row(_ room: Project) -> some View {
-        let price = Bill.total(Bill.lines(projects: [room], cables: cableStore.cables, fixtures: fixtureStore.fixtures,
+        let price = Bill.total(BillCache.lines(projects: [room], cables: cableStore.cables, fixtures: fixtureStore.fixtures,
                                           reserve: Double(reservePercent) / 100))
         return HStack(spacing: Theme.spacing) {
             ProjectSketch(project: room, fixtures: fixtureStore.fixtures)
@@ -120,7 +123,7 @@ private struct NewRoomSheet: View {
                         HStack {
                             ForEach(Self.suggestions, id: \.self) { suggestion in
                                 Button(suggestion) { name = suggestion }
-                                    .buttonStyle(.bordered)
+                                    .brandProminentButton(Theme.accent)
                             }
                         }
                     }
@@ -205,6 +208,12 @@ struct ProjectSketch: View {
             for item in placed {
                 let c = map(item.position), r: CGFloat = detailed ? 10 : 4
                 let rect = CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r)
+                if byId[item.fixtureId]?.isConsumerUnit == true {
+                    // The consumer unit is where the cables start: same green as the start point.
+                    context.fill(Path(roundedRect: rect.insetBy(dx: -r * 0.2, dy: -r * 0.5), cornerRadius: r * 0.3),
+                                 with: .color(Theme.start))
+                    continue
+                }
                 context.fill(Path(roundedRect: rect, cornerRadius: r * 0.3), with: .color(.white))
                 if detailed {
                     let inner = rect.insetBy(dx: r * 0.45, dy: r * 0.45)

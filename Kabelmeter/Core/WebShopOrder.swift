@@ -17,7 +17,8 @@ nonisolated enum WebShopOrder {
     static func lines(for items: [BillLine]) -> [WebShopLine] {
         items.compactMap { item in
             guard item.quantity.isFinite, item.quantity > 0 else { return nil }
-            let quantity = Int((item.quantity - 1e-6).rounded(.up))
+            // A roll product is ordered per roll, not per meter.
+            let quantity = item.rollLength != nil ? item.rollCount : Int((item.quantity - 1e-6).rounded(.up))
             guard quantity >= 1 else { return nil }
             return WebShopLine(sku: item.sku, name: item.name, productUrl: item.productUrl,
                                 productId: item.shopProductId, quantity: quantity)

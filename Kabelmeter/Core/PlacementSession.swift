@@ -66,8 +66,17 @@ nonisolated struct PlacedFixture: Identifiable, Equatable, Sendable {
 @MainActor
 final class PlacementSession: ObservableObject {
     @Published private(set) var placed: [PlacedFixture] = []
-    /// Pose on the wall under the crosshair; nil when no wall is hit.
-    @Published var cursor: simd_float4x4?
+    /// Pose on the wall under the crosshair; nil when no wall is hit. Not @Published (it
+    /// changes about 15 times a second): views that draw it observe `live`.
+    var cursor: simd_float4x4? {
+        get { live.value }
+        set {
+            live.value = newValue
+            if hasCursor != (newValue != nil) { hasCursor = newValue != nil }
+        }
+    }
+    let live = LiveValue<simd_float4x4>()
+    @Published private(set) var hasCursor = false
     /// True while placing parts: the provider aims at walls and shows a preview.
     @Published var isActive = false
     /// The fixture shown as a see-through preview at the crosshair.
@@ -89,7 +98,7 @@ final class PlacementSession: ObservableObject {
     /// Fires when the room is not recognised and the user wants to see the design here anyway.
     let skipRestoreRequests = PassthroughSubject<Void, Never>()
 
-    var canPlace: Bool { isActive && cursor != nil }
+    var canPlace: Bool { isActive && hasCursor }
 
     /// Places at a pose taken earlier (the "+" first asks which fixture).
     func place(_ fixtureId: String, at pose: simd_float4x4) {

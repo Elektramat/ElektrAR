@@ -32,7 +32,7 @@ struct IntroView: View {
                     .foregroundStyle(.secondary)
                     .padding(Theme.spacing)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Theme.brandSurfaceSoft.opacity(0.6), in: RoundedRectangle(cornerRadius: Theme.buttonCorner))
+                    .background(Theme.brandSurfaceSoft, in: RoundedRectangle(cornerRadius: Theme.buttonCorner))
                 }
                 .padding(24)
             }

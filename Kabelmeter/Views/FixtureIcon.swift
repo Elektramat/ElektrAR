@@ -15,7 +15,8 @@ struct FixtureIcon: View {
                 if let image = Self.preview(for: fixture) {
                     Image(uiImage: image).resizable().scaledToFit().padding(size * 0.04)
                 } else {
-                    Image(systemName: fixture.isLight ? "lightbulb"
+                    Image(systemName: fixture.isConsumerUnit ? "bolt.square"
+                          : fixture.isLight ? "lightbulb"
                           : fixture.product == "stopcontact" ? "poweroutlet.type.f" : "lightswitch.on")
                         .font(size > 40 ? .title3 : .body)
                         .foregroundStyle(.secondary)
@@ -40,6 +41,7 @@ struct FixtureIcon: View {
 
 enum FixtureText {
     static func price(_ fixture: Fixture) -> String {
+        if fixture.isConsumerUnit { return "Geen artikel" }
         if let price = fixture.price { return fixture.isLight ? Format.euro(price) : "\(Format.euro(price)) complete set" }
         return "Niet compleet te bestellen"
     }

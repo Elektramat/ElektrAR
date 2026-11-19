@@ -1,9 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { cables } from '#lib/catalog.ts';
-	import { billLines, billTotal, linePrice } from '#lib/bill.ts';
-	import { count, euro, meters, orderLength, pieces } from '#lib/format.ts';
-	import { CONNECTION_ALLOWANCE, DEFAULT_RESERVE, quote } from '#lib/pricing.ts';
+	import { billLines, billTotal, linePrice, rollCount } from '#lib/bill.ts';
+	import { count, euro, meters, orderLength, pieces, rolls } from '#lib/format.ts';
+	import {
+		CONNECTION_ALLOWANCE,
+		DEFAULT_RESERVE,
+		hasRolls,
+		quote,
+		type Cable
+	} from '#lib/pricing.ts';
 	import {
 		ROOM_SUGGESTIONS,
 		createRoom,
@@ -61,6 +67,9 @@
 	);
 	const measured = $derived(segments.reduce((sum, s) => sum + (parseMeters(s.text) ?? 0), 0));
 	const result = $derived(invalidSegment ? null : quote(cable, measured, reserve));
+	const isRoll = $derived(hasRolls(cable));
+	/** "1 × 50 m + 1 × 25 m" for a cable sold as rolls, "11 m" otherwise. */
+	const toOrder = $derived(result ? (isRoll ? rolls(result.pieces) : pieces(result.pieces)) : '–');
 	const lines = $derived(billLines(rooms.list, cables, reserve));
 	const total = $derived(billTotal(lines));
 	const roomsInCart = $derived(rooms.list.filter((r) => r.runs.length > 0).length);
@@ -77,6 +86,15 @@
 	const summary = (r: Room) =>
 		r.runs.length === 0 ? 'Leeg' : `${meters(roomCableLength(r))} kabel`;
 	const cableOf = (id: string) => cables.find((c) => c.id === id);
+
+	/** "€ 1,45 per meter"; a roll cable shows its cheapest price per meter as "vanaf". */
+	const perMeter = (c: Cable) => `${hasRolls(c) ? 'vanaf ' : ''}${euro(c.pricePerMeter)} per meter`;
+
+	const rollSizes = (c: Cable) =>
+		[...(c.rolls ?? [])]
+			.sort((a, b) => a.lengthM - b.lengthM)
+			.map((r) => orderLength(r.lengthM))
+			.join(', ');
 
 	function chooseCable(id: string) {
 		cableId = id;
@@ -169,7 +187,8 @@
 		<span>
 			Reserve {reservePercent}% + {orderLength(CONNECTION_ALLOWANCE)} aansluiting per kabel
 		</span>
-		<div class="stepper">
+		<!-- Brand stepper (DESIGN.md): the pressed button turns solid blue with a white icon. -->
+		<div class="stepper" role="group" aria-label="Reserve in procent">
 			<button
 				aria-label="Minder reserve"
 				disabled={reservePercent <= 0}
@@ -198,13 +217,28 @@
 				winkelwagen.
 			</p>
 		</div>
+		<!-- A solid white pill with a blue cart, the total of all rooms and a green count badge
+		     (DESIGN.md: no see-through fills); like CartButton in the app. -->
 		<button
 			class="icon-button cart-button"
-			aria-label={`Winkelwagen, ${euro(total)}`}
+			aria-label={`Winkelwagen, ${count(lines.length, 'artikel', 'artikelen')}, ${euro(total)}`}
 			onclick={() => cartDialog?.showModal()}
 		>
-			<span aria-hidden="true">🛒</span>
+			<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+				<path
+					d="M2.5 3.5h2.6l2.6 11"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2.2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+				<path d="M6.4 6.5h14.6l-2.3 8.5H8.2z" fill="currentColor" />
+				<circle cx="9.5" cy="19" r="1.7" fill="currentColor" />
+				<circle cx="17" cy="19" r="1.7" fill="currentColor" />
+			</svg>
 			<span class="cart-total">{euro(total)}</span>
+			{#if lines.length > 0}<span class="badge">{lines.length}</span>{/if}
 		</button>
 	</header>
 
@@ -306,11 +340,11 @@
 						<div>
 							<p class="cable-name">{cable.name}</p>
 							<p class="cable-meta">
-								{cable.crossSection} · {euro(cable.pricePerMeter)} per meter · {cable.stock}
+								{cable.crossSection} · {perMeter(cable)} · {cable.stock}
 							</p>
 							{#if cable.isSample}<span class="sample">Voorbeelddata</span>{/if}
 						</div>
-						<span class="selected">Wijzig</span>
+						<span class="change">Wijzig</span>
 					</button>
 				{:else}
 					<!-- svelte-ignore a11y_autofocus -->
@@ -334,7 +368,11 @@
 							<img class="cable-photo" src={`/cables/${c.sku}.jpg`} alt="" width="56" height="56" />
 							<div>
 								<p class="cable-name">{c.name}</p>
-								<p class="cable-meta">{c.crossSection} · {euro(c.pricePerMeter)} per meter</p>
+								<p class="cable-meta">
+									{c.crossSection} · {perMeter(c)}{hasRolls(c)
+										? ` · rollen van ${rollSizes(c)}`
+										: ''}
+								</p>
 							</div>
 							{#if c.id === cableId}<span class="selected">✓</span>{/if}
 						</button>
@@ -379,6 +417,14 @@
 						zelf in.
 					{/if}
 				</div>
+				{#if isRoll}
+					<p class="note" style="margin-top: 12px">
+						Deze kabel wordt verkocht per rol van {rollSizes(cable)}, elke rol met een eigen prijs.
+						Het advies is de combinatie rollen met de laagste totaalprijs voor deze kabel apart. In
+						de winkelwagen kiest de app de rollen voor al je kabels van dit type in alle ruimtes
+						samen, dat is vaak voordeliger.
+					</p>
+				{/if}
 			</section>
 
 			<section class="card" aria-labelledby="kabels">
@@ -397,7 +443,11 @@
 						<p class="cable-meta">
 							{meters(runLength(run))}
 							· {count(run.segments.length, 'stuk', 'stukken')}
-							{#if q}· te bestellen {pieces(q.pieces)}{/if}
+							{#if q}
+								· {c && hasRolls(c)
+									? `rollen ${rolls(q.pieces)}`
+									: `te bestellen ${pieces(q.pieces)}`}
+							{/if}
 						</p>
 						<button
 							class="link-button"
@@ -435,13 +485,15 @@
 				<div class="price-top">
 					<div class="lengths" aria-live="polite">
 						<p>Deze kabel: {meters(measured)}</p>
-						<p>Te bestellen: {result ? pieces(result.pieces) : '–'}</p>
+						<p>{isRoll ? 'Rollen' : 'Te bestellen'}: {toOrder}</p>
 					</div>
 					<div class="price" aria-live="polite" data-testid="price">
 						{#if result}
 							{euro(result.price)}
 						{:else}
-							{euro(cable.pricePerMeter)}<small>per meter</small>
+							{#if isRoll}<small>vanaf</small>{/if}{euro(cable.pricePerMeter)}<small>
+								per meter
+							</small>
 						{/if}
 					</div>
 				</div>
@@ -480,9 +532,17 @@
 				{#each lines as line (line.productId)}
 					<div class="line">
 						<div class="line-top"><span>{line.name}</span><span>{euro(linePrice(line))}</span></div>
-						<p class="cable-meta">
-							{line.detail} · {pieces(line.pieces)} × {euro(line.unitPrice)} per meter
-						</p>
+						{#if line.rollLength !== undefined}
+							<!-- One line per roll size: each roll is its own shop product. -->
+							<p class="cable-meta">
+								{line.detail} · {rollCount(line)} × {euro(line.unitPrice * line.rollLength)} per rol ·
+								art.nr. {line.sku}
+							</p>
+						{:else}
+							<p class="cable-meta">
+								{line.detail} · {pieces(line.pieces)} × {euro(line.unitPrice)} per meter
+							</p>
+						{/if}
 						<p class="cable-meta">{line.rooms.join(', ')}</p>
 						{#if line.isSample}<span class="sample">Voorbeelddata</span>{/if}
 						<a
@@ -491,10 +551,17 @@
 							target="_blank"
 							rel="external noopener noreferrer"
 						>
-							Bekijk op elektramat.nl
+							{line.rollLength !== undefined
+								? `Bekijk rol ${orderLength(line.rollLength)} op elektramat.nl`
+								: 'Bekijk op elektramat.nl'}
 						</a>
 					</div>
 				{/each}
+				{#if lines.some((l) => l.rollLength !== undefined)}
+					<p class="cable-meta">
+						Rollen gekozen op de laagste totaalprijs voor de lengte van al je kabels samen.
+					</p>
+				{/if}
 				{@render reserveControl()}
 			{/if}
 			<p class="muted">{DISCLAIMER}</p>

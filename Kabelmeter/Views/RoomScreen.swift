@@ -77,9 +77,8 @@ struct RoomScreen: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 10) {
+                // DESIGN.md: one bar on top, one line of hint, one card at the bottom.
                 header
-                modePicker
-                if isEditing { stepPicker }
                 statusPills
                 Spacer()
                 if isEditing { controls }
@@ -147,8 +146,9 @@ struct RoomScreen: View {
         }
         .overlay {
             if isEditing {
-                Crosshair(active: step == .parts ? placement.canPlace : session.cursor != nil)
-                heightLabel
+                Crosshair(active: step == .parts ? placement.canPlace : session.hasCursor)
+                LiveHeightLabel(sessionLive: session.live, placementLive: placement.live,
+                                usePlacement: step == .parts, floorY: session.floorY)
             }
         }
     }
@@ -166,50 +166,46 @@ struct RoomScreen: View {
             .accessibilityLabel("Terug naar ruimtes")
 
             Text(room?.name ?? "Ruimte")
-                .font(.headline).lineLimit(1)
+                .font(.headline).lineLimit(1).truncationMode(.tail)
                 .padding(.horizontal, 14)
                 .frame(minHeight: 44)
                 .surface(Capsule())
 
             Spacer(minLength: 0)
-            CartButton()
+            editToggle
+            CartButton(compact: true)
         }
         .padding(.top, 4)
     }
 
-    private var modePicker: some View {
-        Picker("Modus", selection: $mode) {
-            Label("Bekijken", systemImage: "eye").tag(Mode.view)
-            Label("Bewerken", systemImage: "pencil").tag(Mode.edit)
+    /// "Bewerk" in view mode, "Klaar" in edit mode: replaces the Bekijken/Bewerken bar.
+    private var editToggle: some View {
+        Button {
+            mode = isEditing ? .view : .edit
+        } label: {
+            Label(isEditing ? "Klaar" : "Bewerk", systemImage: isEditing ? "checkmark" : "pencil")
+                .font(.headline)
+                .lineLimit(1)
+                .fixedSize()
+                .foregroundStyle(Theme.onAccent)
+                .padding(.horizontal, 16)
+                .frame(minHeight: 44)
+                .background(Theme.accent, in: Capsule())
         }
-        .pickerStyle(.segmented)
-        .controlSize(.large)
+        .buttonStyle(CardButtonStyle())
         .sensoryFeedback(.selection, trigger: mode)
-        .padding(3)
-        .surface(RoundedRectangle(cornerRadius: 11))
+        .accessibilityLabel(isEditing ? "Klaar met bewerken" : "Bewerk deze ruimte")
     }
 
-    /// Step 1 parts, step 2 cables (automatically or by hand).
-    private var stepPicker: some View {
+    /// Step tabs and, for cables, the automatic/manual choice: one row at the top of the card.
+    /// Step tabs and, in the cable step, automatic or manual. Plain buttons, no Menu: this view
+    /// redraws about 15 times a second (crosshair, height), and a Menu rebuilt that often misses taps.
+    private var cardHeader: some View {
         VStack(spacing: 8) {
-            Picker("Stap", selection: $step) {
-                Text("1  Onderdelen").tag(Step.parts)
-                Text("2  Kabels").tag(Step.cables)
-            }
-            .pickerStyle(.segmented)
-            .sensoryFeedback(.selection, trigger: step)
-            .padding(3)
-            .surface(RoundedRectangle(cornerRadius: 11))
-
+            BrandTabs(selection: $step, options: [(Step.parts, "Onderdelen"), (Step.cables, "Kabels")])
             if step == .cables {
-                Picker("Kabels", selection: $cableMode) {
-                    Text("Automatisch").tag(CableMode.auto)
-                    Text("Handmatig").tag(CableMode.manual)
-                }
-                .pickerStyle(.segmented)
-                .sensoryFeedback(.selection, trigger: cableMode)
-                .padding(3)
-                .surface(RoundedRectangle(cornerRadius: 11))
+                BrandTabs(selection: $cableMode, options: [(CableMode.auto, "Automatisch"), (CableMode.manual, "Handmatig")])
+                    .accessibilityLabel("Kabels trekken")
             }
         }
     }
@@ -218,7 +214,7 @@ struct RoomScreen: View {
     private var statusPills: some View {
         VStack(spacing: 6) {
             if placement.isRestoring {
-                pill("Kijk rustig rond: zodra de ruimte herkend is, komt je ontwerp terug", color: Theme.warning)
+                pill("Kijk rustig rond tot de ruimte herkend is", color: Theme.warning)
                 Button("Niet herkend? Toon hier") { placement.skipRestoreRequests.send() }
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(Theme.accent)
@@ -249,39 +245,26 @@ struct RoomScreen: View {
         case .cables:
             if cableMode == .auto { return (autoHint, session.proposedRoutes.isEmpty ? .white : Theme.proposed) }
             if let guide = session.guide { return (guide.label, Color(Theme.Token.secondary)) }
-            if session.points.isEmpty { return ("Begin bij een onderdeel of de groepenkast: richt en tik op +", .white) }
-            return ("Tik op + bij elke hoek; tik op Klaar bij het laatste onderdeel", .white)
+            if session.points.isEmpty { return ("Begin bij een onderdeel of de groepenkast en tik op +", .white) }
+            return ("Tik op + bij elke hoek, Klaar bij het laatste onderdeel", .white)
         }
     }
 
+    /// DESIGN.md: text on the camera image is white on a dark pill, one line. The role colour
+    /// only shows as a small dot in front of it.
     private func pill(_ text: String, color: Color) -> some View {
-        Text(text)
-            .font(.callout.weight(.medium))
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 14).padding(.vertical, 8)
-            .background(.black.opacity(0.55), in: Capsule())
-            .foregroundStyle(color)
-    }
-
-    /// Height of the crosshair (or of the middle of the part preview) above the floor.
-    @ViewBuilder
-    private var heightLabel: some View {
-        let point = step == .parts ? placement.cursor?.translation : session.cursor
-        Group {
-            if let height = FloorHeight.height(of: point, floorY: session.floorY) {
-                Label("\(Format.height(height)) boven de vloer", systemImage: "arrow.up.and.down")
-                    .foregroundStyle(Theme.height)
-            } else if point != nil {
-                Label("Richt even op de vloer voor de hoogte", systemImage: "arrow.down.to.line")
-                    .foregroundStyle(.white.opacity(0.8))
+        HStack(spacing: 8) {
+            if color != .white {
+                Circle().fill(color).frame(width: 8, height: 8)
             }
+            Text(text)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
         }
-        .font(.footnote.weight(.semibold))
-        .monospacedDigit()
-        .padding(.horizontal, 10).padding(.vertical, 5)
-        .background(.black.opacity(0.55), in: Capsule())
-        .offset(y: Theme.crosshair + 8)
-        .allowsHitTesting(false)
+        .font(.callout.weight(.medium))
+        .foregroundStyle(Theme.pillText)
+        .padding(.horizontal, 14).padding(.vertical, 8)
+        .background(Theme.pillBackground, in: Capsule())
     }
 
     // MARK: Controls
@@ -301,14 +284,14 @@ struct RoomScreen: View {
                     .disabled(session.points.isEmpty)
                 controlButton("Opnieuw", icon: "xmark") { session.reset() }
                     .disabled(session.points.isEmpty)
-                plusButton(enabled: session.cursor != nil, label: "Ankerpunt toevoegen", action: addAnchor)
+                plusButton(enabled: session.hasCursor, label: "Ankerpunt toevoegen", action: addAnchor)
                 controlButton("Klaar", icon: "checkmark") { finishCable() }
                     .disabled(session.points.count < 2)
             case (.cables, .auto):
                 controlButton("Wis start", icon: "xmark.square") { session.startPoint = nil }
                     .disabled(session.startPoint == nil)
                 spacer
-                plusButton(enabled: session.cursor != nil, label: "Startpunt (groepenkast) hier") {
+                plusButton(enabled: session.hasCursor, label: "Startpunt hier (zonder groepenkast)") {
                     session.startPoint = session.cursor
                     confirm("Startpunt gezet")
                 }
@@ -368,18 +351,19 @@ struct RoomScreen: View {
 
     private var roomLines: [BillLine] {
         guard let room else { return [] }
-        return Bill.lines(projects: [current(room)], cables: cableStore.cables, fixtures: fixtureStore.fixtures,
+        return BillCache.lines(projects: [current(room)], cables: cableStore.cables, fixtures: fixtureStore.fixtures,
                           reserve: reserve)
     }
 
     @ViewBuilder
     private var bottomCard: some View {
         VStack(alignment: .leading, spacing: 10) {
+            if isEditing { cardHeader }
             switch (mode, step, cableMode) {
             case (.view, _, _):
                 roomSummary
                 Text(placement.placed.isEmpty && session.runs.isEmpty
-                     ? "Nog leeg. Kies Bewerken om onderdelen te plaatsen."
+                     ? "Nog leeg. Tik op Bewerk om onderdelen te plaatsen."
                      : "Tik op een onderdeel of kabel voor info.")
                     .font(Theme.labelFont).foregroundStyle(.secondary)
             case (.edit, .parts, _):
@@ -391,7 +375,7 @@ struct RoomScreen: View {
                             Text("Tik op + op de nieuwe plek").font(Theme.labelFont).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Button("Annuleer") { cancelMove() }.buttonStyle(.bordered).tint(Theme.accent)
+                        Button("Annuleer") { cancelMove() }.brandProminentButton(Theme.accent).buttonBorderShape(.capsule)
                     }
                 } else {
                     selectionRow(icon: { if let fixture { FixtureIcon(fixture: fixture, size: 44) } },
@@ -401,19 +385,8 @@ struct RoomScreen: View {
                 }
                 summaryLine
             case (.edit, .cables, .manual):
-                let quote = cable.flatMap { PricingCalculator.quote(for: $0, measured: session.totalLength, reserve: reserve) }
                 cableRow
-                HStack(alignment: .firstTextBaseline) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Deze kabel: \(Format.meters(session.totalLength))").font(Theme.lengthFont).monospacedDigit()
-                        Text(session.points.isEmpty ? "\(Format.count(session.runs.count, "kabel", "kabels")) in deze ruimte"
-                                                    : Format.count(session.points.count, "ankerpunt", "ankerpunten"))
-                            .font(Theme.labelFont).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Text(quote.map { Format.euro($0.price) } ?? "–").font(Theme.priceFont).monospacedDigit()
-                        .contentTransition(.numericText())
-                }
+                LiveCableTotal(session: session, live: session.live, cable: cable, reserve: reserve)
                 Toggle(isOn: $session.rightAngles) {
                     Text("Rechte hoeken: eerst omhoog of omlaag, dan opzij").font(Theme.labelFont)
                 }
@@ -456,12 +429,12 @@ struct RoomScreen: View {
                 Text(subtitle).font(Theme.labelFont).foregroundStyle(warning ? Theme.warning : .secondary).lineLimit(2)
             }
             Spacer()
-            Button("Wijzig", action: change).buttonStyle(.bordered).tint(Theme.accent)
+            Button("Wijzig", action: change).brandProminentButton(Theme.accent).buttonBorderShape(.capsule)
         }
     }
 
     private var cableRow: some View {
-        selectionRow(icon: { Image(systemName: "cable.connector").font(.title).foregroundStyle(Theme.run).frame(width: 44) },
+        selectionRow(icon: { if let cable { CablePhoto(cable: cable, size: 44) } },
                      title: cable?.name ?? "Kies een kabel",
                      subtitle: cable.map { "\($0.crossSection) · \(Format.euro($0.pricePerMeter)) per meter" } ?? "") {
             showCablePicker = true
@@ -485,6 +458,12 @@ struct RoomScreen: View {
                 Text(Format.count(placement.placed.count, "onderdeel", "onderdelen")).font(Theme.lengthFont)
                 Text("\(Format.count(session.runs.count, "kabel", "kabels")) · \(Format.meters(cableLength))")
                     .font(Theme.labelFont).foregroundStyle(.secondary).monospacedDigit()
+                // Roll advice for this room: how many rolls of which length the cables need.
+                let rollLines = roomLines.filter { $0.rollLength != nil }
+                if !rollLines.isEmpty {
+                    Text("Advies: \(Format.rolls(rollLines.flatMap(\.pieces)))")
+                        .font(Theme.labelFont.weight(.semibold)).foregroundStyle(Theme.accent).monospacedDigit()
+                }
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 0) {
@@ -605,15 +584,18 @@ struct RoomScreen: View {
             FixtureGeometry.size(frameMM: self.fixtureStore.fixture(id: item.fixtureId)?.frameMM)
         }
         let ends = session.runs.flatMap { [$0.points.first, $0.points.last].compactMap { $0 } }
+        let isUnit = { (item: PlacedFixture) in self.fixtureStore.fixture(id: item.fixtureId)?.isConsumerUnit == true }
+        // The consumer unit is where the cables start, not a part that needs a cable.
         let pending = placement.notCabled.filter { item in
-            !FixtureGeometry.anchors(transform: item.transform, size: size(item)).contains { anchor in
+            !isUnit(item) && !FixtureGeometry.anchors(transform: item.transform, size: size(item)).contains { anchor in
                 ends.contains { simd_distance($0, anchor.position) <= ConnectionSnapping.distance }
             }
         }
         let node = { (item: PlacedFixture) in RouteNode.fixture(transform: item.transform, size: size(item)) }
         let nodes = pending.map(node)
         let lastCabled = placement.cabled.last.flatMap { id in placement.placed.first { $0.id == id } }
-        let start = lastCabled.map(node) ?? session.startPoint.map(RouteNode.point)
+        let unit = placement.placed.first(where: isUnit)
+        let start = lastCabled.map(node) ?? unit.map(node) ?? session.startPoint.map(RouteNode.point)
         let routes = AutoRouter.chain(start: start, nodes: nodes, floorY: session.floorY)
         let order = AutoRouter.order(start: start, nodes: nodes)
         return (routes, order.map { pending[$0].id })
@@ -629,11 +611,11 @@ struct RoomScreen: View {
     private var autoHint: String {
         let count = session.proposedRoutes.count
         if count > 0 {
-            return "\(Format.count(count, "kabel", "kabels")) voorgesteld: controleer en tik op Kabels toevoegen"
+            return "\(Format.count(count, "kabel", "kabels")) voorgesteld · tik op Kabels toevoegen"
         }
         if placement.placed.isEmpty { return "Plaats eerst onderdelen bij stap 1" }
         if autoPlan.ids.isEmpty { return "Alle onderdelen hebben een kabel" }
-        return "Richt op de groepenkast en tik op + als startpunt"
+        return "Plaats een groepenkast bij stap 1, of tik op + op de plek van de groepenkast"
     }
 
     private func addAutoRoutes() {
@@ -783,5 +765,63 @@ private struct Crosshair: View {
         .shadow(color: .black.opacity(0.6), radius: 2)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// Height of the crosshair (or of the middle of the part preview) above the floor. Its own
+/// view: it follows the live cursor (about 15 times a second) without redrawing the screen.
+private struct LiveHeightLabel: View {
+    @ObservedObject var sessionLive: LiveValue<SIMD3<Float>>
+    @ObservedObject var placementLive: LiveValue<simd_float4x4>
+    let usePlacement: Bool
+    let floorY: Float?
+
+    var body: some View {
+        let point = usePlacement ? placementLive.value?.translation : sessionLive.value
+        Group {
+            if let height = FloorHeight.height(of: point, floorY: floorY) {
+                Label("\(Format.height(height)) boven de vloer", systemImage: "arrow.up.and.down")
+                    .foregroundStyle(Theme.pillText)
+            } else if point != nil {
+                Label("Richt even op de vloer voor de hoogte", systemImage: "arrow.down.to.line")
+                    .foregroundStyle(.white.opacity(0.8))
+            }
+        }
+        .font(.footnote.weight(.semibold))
+        .monospacedDigit()
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(Theme.pillBackground, in: Capsule())
+        // Above the crosshair: below it sit the controls and the bottom card (DESIGN.md: one
+        // card at the bottom), and the dashed height line runs down to the floor anyway.
+        .offset(y: -(Theme.crosshair / 2 + 26))
+        .allowsHitTesting(false)
+    }
+}
+
+/// Length and price of the cable being drawn by hand, including the live piece to the
+/// crosshair. Its own view so only this part follows the live cursor.
+private struct LiveCableTotal: View {
+    @ObservedObject var session: MeasureSession
+    @ObservedObject var live: LiveValue<SIMD3<Float>>
+    let cable: Cable?
+    let reserve: Double
+
+    var body: some View {
+        let quote = cable.flatMap { PricingCalculator.quote(for: $0, measured: session.totalLength, reserve: reserve) }
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Deze kabel: \(Format.meters(session.totalLength))").font(Theme.lengthFont).monospacedDigit()
+                Text(session.points.isEmpty ? "\(Format.count(session.runs.count, "kabel", "kabels")) in deze ruimte"
+                                            : Format.count(session.points.count, "ankerpunt", "ankerpunten"))
+                    .font(Theme.labelFont).foregroundStyle(.secondary)
+                if cable?.hasRolls == true, let quote {
+                    Text("Alleen deze kabel: \(Format.rolls(quote.pieces))")
+                        .font(Theme.labelFont).foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            Text(quote.map { Format.euro($0.price) } ?? "–").font(Theme.priceFont).monospacedDigit()
+                .contentTransition(.numericText())
+        }
     }
 }

@@ -26,6 +26,11 @@ backend: Supabase, auth, realtime, photo upload, pg_cron, Web Push, IndexedDB ou
   (reserve + 2 m connection per cable) is added up over all rooms and rounded once.
 - Not in the browser: placing switches, sockets and lights (needs the camera), the automatic cable
   route and the first-run intro (it is about the camera and placing parts).
+- Cables sold as separate roll products (Snelflex 3x2,5: rolls of 25, 50 and 100 m, each with
+  its own price) get a roll advice: the rolls with the lowest total price (`rollPlan` in
+  `src/lib/pricing.ts`, a port of `PricingCalculator.rollPlan`). The cart (`src/lib/bill.ts`) adds
+  up the required length of every cable of that type in all rooms, chooses the rolls once and
+  shows one line per roll size with its own article number and product page.
 - Own service worker (`src/service-worker.ts`): caches the build per version.
 
 ```sh

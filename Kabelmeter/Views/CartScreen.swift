@@ -15,7 +15,7 @@ struct CartScreen: View {
     @StateObject private var shop = WebShopCart()
 
     private var lines: [BillLine] {
-        Bill.lines(projects: projectStore.projects, cables: cableStore.cables, fixtures: fixtureStore.fixtures,
+        BillCache.lines(projects: projectStore.projects, cables: cableStore.cables, fixtures: fixtureStore.fixtures,
                    reserve: Double(reservePercent) / 100)
     }
 
@@ -59,10 +59,13 @@ struct CartScreen: View {
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
                         if incomplete > 0 {
-                            Label("\(incomplete) schakelaars of stopcontacten zijn niet compleet te bestellen; de ontbrekende onderdelen staan er niet bij.",
-                                  systemImage: "exclamationmark.triangle")
-                                .font(.footnote)
-                                .foregroundStyle(.orange)
+                            Label {
+                                Text("\(incomplete) schakelaars of stopcontacten zijn niet compleet te bestellen; de ontbrekende onderdelen staan er niet bij.")
+                                    .foregroundStyle(Theme.inkSecondary)
+                            } icon: {
+                                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning)
+                            }
+                            .font(.footnote)
                         }
                     }
                 }
@@ -70,9 +73,16 @@ struct CartScreen: View {
                 if !cables.isEmpty {
                     Section {
                         ForEach(cables) { line in row(line) }
-                        Stepper(value: $reservePercent, in: 0...30, step: 5) {
+                        if cables.contains(where: { $0.rollLength != nil }) {
+                            Text("Rollen gekozen op de laagste totaalprijs voor de lengte uit al je ruimtes samen.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
+                        HStack {
                             Text("Reserve \(reservePercent)% + \(Format.orderLength(PricingCalculator.connectionAllowance)) aansluiting per kabel")
                                 .font(.footnote)
+                            Spacer(minLength: 8)
+                            BrandStepper(value: $reservePercent, range: 0...30, step: 5,
+                                         accessibilityName: "Reserve in procent")
                         }
                     } header: {
                         Text("Kabel")
@@ -110,7 +120,11 @@ struct CartScreen: View {
             Group {
                 switch line.kind {
                 case .cable:
-                    Text("\(line.detail) · \(Format.pieces(line.pieces)) × \(Format.euro(line.unitPrice)) per meter")
+                    if let rollLength = line.rollLength {
+                        Text("\(line.detail) · \(line.rollCount) × \(Format.euro(PricingCalculator.roundToCents(line.unitPrice * rollLength))) per rol · art.nr. \(line.sku)")
+                    } else {
+                        Text("\(line.detail) · \(Format.pieces(line.pieces)) × \(Format.euro(line.unitPrice)) per meter")
+                    }
                 case .part:
                     Text("\(Format.quantity(line.quantity)) × \(Format.euro(line.unitPrice)) · art.nr. \(line.sku)")
                 }
@@ -136,6 +150,9 @@ struct CartScreen: View {
 
 /// Always-visible cart button with the total of all rooms.
 struct CartButton: View {
+    /// Compact: a round cart icon with a green count badge, for the crowded camera bar.
+    /// Otherwise the icon with the total price, which never wraps.
+    var compact = false
     @EnvironmentObject private var projectStore: ProjectStore
     @EnvironmentObject private var cableStore: CableStore
     @EnvironmentObject private var fixtureStore: FixtureStore
@@ -143,21 +160,44 @@ struct CartButton: View {
     @State private var showCart = false
 
     var body: some View {
-        let total = Bill.total(Bill.lines(projects: projectStore.projects, cables: cableStore.cables,
-                                          fixtures: fixtureStore.fixtures, reserve: Double(reservePercent) / 100))
+        let lines = BillCache.lines(projects: projectStore.projects, cables: cableStore.cables,
+                               fixtures: fixtureStore.fixtures, reserve: Double(reservePercent) / 100)
+        let total = Bill.total(lines)
         Button { showCart = true } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "cart.fill").foregroundStyle(Theme.accent)
-                Text(Format.euro(total)).monospacedDigit().contentTransition(.numericText())
-                    .animation(.snappy, value: total)
+            if compact {
+                Image(systemName: "cart.fill")
+                    .font(.headline)
+                    .foregroundStyle(Theme.accent)
+                    .frame(width: 44, height: 44)
+                    .surface(Circle())
+                    .overlay(alignment: .topTrailing) {
+                        if !lines.isEmpty {
+                            Text("\(lines.count)")
+                                .font(.caption2.weight(.heavy))
+                                .monospacedDigit()
+                                .foregroundStyle(Theme.onAccent)
+                                .padding(.horizontal, 5)
+                                .frame(minWidth: 20, minHeight: 20)
+                                .background(Theme.cta, in: Capsule())
+                                .offset(x: 4, y: -4)
+                        }
+                    }
+            } else {
+                HStack(spacing: 6) {
+                    Image(systemName: "cart.fill").foregroundStyle(Theme.accent)
+                    Text(Format.euro(total)).monospacedDigit().contentTransition(.numericText())
+                        .animation(.snappy, value: total)
+                }
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+                .fixedSize()
+                .padding(.horizontal, 14)
+                .frame(minHeight: 44)
+                .surface(Capsule())
             }
-            .font(.subheadline.weight(.semibold))
-            .padding(.horizontal, 14)
-            .frame(minHeight: 44)
-            .surface(Capsule())
         }
         .buttonStyle(CardButtonStyle())
-        .accessibilityLabel("Winkelwagen, \(Format.euro(total))")
+        .accessibilityLabel("Winkelwagen, \(lines.count) artikelen, \(Format.euro(total))")
         .sheet(isPresented: $showCart) { CartScreen() }
     }
 }

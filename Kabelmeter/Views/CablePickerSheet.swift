@@ -51,7 +51,7 @@ private struct CableRow: View {
                 Text(cable.name).font(.headline)
                 Text("\(cable.crossSection) · \(cable.use)").font(.subheadline).foregroundStyle(.secondary)
                 HStack(spacing: 6) {
-                    Text("\(Format.euro(cable.pricePerMeter)) per meter").font(.subheadline)
+                    Text("\(cable.hasRolls ? "vanaf " : "")\(Format.euro(cable.pricePerMeter)) per meter").font(.subheadline)
                     Text("· \(salesText)").font(.subheadline).foregroundStyle(.secondary)
                 }
                 Text(cable.stock).font(.caption).foregroundStyle(.secondary)
@@ -67,13 +67,15 @@ private struct CableRow: View {
     private var salesText: String {
         switch cable.sales {
         case .perMeter: "op lengte"
-        case let .fixedLengths(lengths): "rol " + lengths.sorted().map { Format.orderLength($0) }.joined(separator: ", ")
+        case let .fixedLengths(lengths):
+            (lengths.count == 1 ? "rol " : "rollen van ") + lengths.sorted().map { Format.orderLength($0) }.joined(separator: ", ")
         }
     }
 }
 
 struct CablePhoto: View {
     let cable: Cable
+    var size: CGFloat = 52
 
     var body: some View {
         Group {
@@ -85,8 +87,8 @@ struct CablePhoto: View {
                 placeholder
             }
         }
-        .frame(width: 52, height: 52)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: size * 0.2))
     }
 
     /// Photos fetched by scripts/scrape_elektramat.py ship in the bundle as <sku>.jpg,
@@ -109,7 +111,7 @@ struct SampleBadge: View {
             .font(.caption2.weight(.semibold))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(Theme.sampleBadge.opacity(0.85), in: Capsule())
+            .background(Theme.sampleBadge, in: Capsule())
             .foregroundStyle(.white)
     }
 }

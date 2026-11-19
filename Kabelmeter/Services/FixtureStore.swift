@@ -18,6 +18,8 @@ final class FixtureStore: ObservableObject {
                 fixtures += try FixtureCatalog.decodeLights(Data(contentsOf: lights))
             }
             if fixtures.isEmpty { loadError = "De lijst met schakelaars is leeg." }
+            // The generic consumer unit is always available, as the start of the cables.
+            fixtures.append(.consumerUnit)
         } catch {
             loadError = "Lijst met schakelaars kon niet worden gelezen."
         }

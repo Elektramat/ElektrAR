@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { billLines, billTotal, linePrice } from './bill';
-import type { Cable, SalesUnit } from './pricing';
+import { billLines, billTotal, linePrice, rollCount } from './bill';
+import type { Cable, CableRoll, SalesUnit } from './pricing';
 import { createRoom, createRun, parseRooms, roomCableLength, sortRooms, type Room } from './rooms';
 
 const perMeter: SalesUnit = { type: 'perMeter', step: 1, minimum: 1 };
@@ -74,6 +74,50 @@ describe('shared cart (Bill)', () => {
 		// b: (3 * 1,15 + 2) + (1 * 1,15 + 2) = 8,6 -> 9 m; a: (4 * 1,15 + 2) + (2 * 1,15 + 2) = 10,9 -> 11 m
 		expect(lines.map((l) => l.quantity)).toEqual([9, 11]);
 		expect(billTotal(lines)).toBe(9 * 2 + 11 * 1);
+	});
+
+	// Same case as BillTests.testRollCableBecomesOneLinePerRollSizeAcrossRooms.
+	it('chooses the rolls once for all rooms, one line per roll size', () => {
+		const roll = (lengthM: number, price: number): CableRoll => ({
+			lengthM,
+			sku: `R${lengthM}`,
+			price,
+			productUrl: `https://www.elektramat.nl/rol-${lengthM}`,
+			shopProductId: lengthM,
+			stock: null
+		});
+		const snelflex: Cable = {
+			...cable('S', 2.0877, { type: 'fixedLengths', lengthsM: [100, 50, 25] }),
+			rolls: [roll(100, 208.77), roll(50, 117.66), roll(25, 64.51)]
+		};
+		// Two rooms with 26 m each, no reserve: (26 + 2) * 2 = 56 m -> 50 + 25 (182,17) beats
+		// 100 (208,77); apart each would need a 50 m roll (235,32).
+		const lines = billLines([room('A', [['S', [26]]]), room('B', [['S', [26]]])], [snelflex], 0);
+		expect(lines.map((l) => l.sku)).toEqual(['R50', 'R25']);
+		expect(lines.map(rollCount)).toEqual([1, 1]);
+		expect(lines.map((l) => l.rollLength)).toEqual([50, 25]);
+		expect(lines.map((l) => l.productUrl)).toEqual([
+			'https://www.elektramat.nl/rol-50',
+			'https://www.elektramat.nl/rol-25'
+		]);
+		expect(billTotal(lines)).toBe(182.17);
+		expect(lines[0].rooms).toEqual(['A', 'B']);
+
+		// Same case as BillTests.testTwoRollsOfTheSameSizeAreOneShopLine: (90 + 2) * 2 = 184 m.
+		const only100: Cable = { ...snelflex, rolls: [roll(100, 208.77)] };
+		const two = billLines(
+			[
+				room('A', [
+					['S', [90]],
+					['S', [90]]
+				])
+			],
+			[only100],
+			0
+		);
+		expect(two).toHaveLength(1);
+		expect(rollCount(two[0])).toBe(2);
+		expect(billTotal(two)).toBe(417.54);
 	});
 
 	it('skips unknown cables and empty rooms', () => {
