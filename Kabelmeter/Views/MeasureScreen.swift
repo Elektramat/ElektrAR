@@ -157,7 +157,11 @@ struct MeasureScreen: View {
     private var fixtureChip: some View {
         Button { showFixturePicker = true } label: {
             HStack(spacing: 8) {
-                Image(systemName: fixture?.product == "stopcontact" ? "poweroutlet.type.f" : "lightswitch.on")
+                if let fixture {
+                    FixtureIcon(fixture: fixture, size: 36)
+                } else {
+                    Image(systemName: "lightswitch.on")
+                }
                 VStack(alignment: .leading, spacing: 0) {
                     Text(fixture?.title ?? "Kies schakelmateriaal").font(.subheadline.weight(.semibold)).lineLimit(1)
                     if let fixture {

@@ -33,3 +33,5 @@ One line each: what we chose and why.
 - Web app in `webapp/` without a build step (plain ES modules), with the pricing ported 1:1 and the same test cases; data is copied from the app by `scripts/sync_webapp_data.sh`.
 - Web AR uses WebXR (Android Chrome only; iPhone Safari has none). On iPhone the web app offers manual route input and AR Quick Look for the USDZ switches. three.js is loaded from a pinned CDN URL only when AR starts.
 - WebXR placements are simple 3D frames (sizes from the model manifest) instead of the USDZ models: three.js cannot reliably load these USDZ files.
+- The USDZ models keep their `preliminary:anchoring` (AR Quick Look needs it to snap to walls); the app strips the resulting AnchoringComponent after loading, because an anchor nested in our own AnchorEntity was not drawn. A model that fails to load shows as a plain white frame instead of nothing.
+- Product previews are PNGs rendered offline from the models (`scripts/render_fixture_previews.py`, reusing `preview.py`), 936 KB for 38 images, instead of rendering thumbnails on the device: same images in the app and the web app, and they can be checked without a device.

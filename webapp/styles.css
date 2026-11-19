@@ -11,6 +11,7 @@
   --warning: #9a5b00;
   --danger: #c4231b;
   --sample: #7b3fbf;
+  --preview-bg: #dbdbdb; /* light wall tone: white and black switches both read */
   --radius: 18px;
   --gap: 12px;
   --tap: 56px;
@@ -137,9 +138,11 @@ h3 { font-size: 1rem; margin: 0 0 6px; }
 /* Fixture detail */
 .fixture-head { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
 .fixture-icon {
-  width: 56px; height: 56px; flex: none; border-radius: 12px; background: var(--surface-2);
-  display: grid; place-items: center;
+  width: 56px; height: 56px; flex: none; border-radius: 12px; background: var(--preview-bg);
+  display: grid; place-items: center; overflow: hidden;
 }
+.preview { display: block; object-fit: contain; }
+.chip-icon .preview { border-radius: 8px; background: var(--preview-bg); }
 .parts { list-style: none; margin: 8px 0 0; padding: 0; }
 .parts li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid var(--border); font-size: 0.9rem; }
 .parts li > span:last-child { white-space: nowrap; }
@@ -215,7 +218,7 @@ body.in-ar #stage { visibility: hidden; }
   border: 0; border-bottom: 1px solid var(--border); background: none; text-align: left;
 }
 .pick img, .pick .thumb { width: 52px; height: 52px; flex: none; border-radius: 10px; object-fit: contain; background: #fff; }
-.pick .thumb { background: var(--surface-2); display: grid; place-items: center; }
+.pick .thumb { background: var(--preview-bg); display: grid; place-items: center; overflow: hidden; color: #333; }
 .pick-text { flex: 1; min-width: 0; }
 .pick-title { font-weight: 600; }
 .check { color: var(--accent); font-size: 1.3rem; }
@@ -228,3 +231,5 @@ body.in-ar #stage { visibility: hidden; }
   .price { font-size: 1.6rem; }
   .length { font-size: 1rem; }
 }
+
+.pick .thumb img { background: transparent; width: 100%; height: 100%; border-radius: 0; }

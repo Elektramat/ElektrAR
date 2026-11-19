@@ -14,6 +14,8 @@ enum Theme {
     static let crosshairInactive = Color.white.opacity(0.35)
     static let simulatedBackground = Color(white: 0.12)
     static let simulatedWall = Color(white: 0.22)
+    /// Behind the switch previews: a light wall tone, so white and black switches both read.
+    static let previewBackground = Color(white: 0.86)
 
     // AR entities
     static let arPoint = UIColor.white

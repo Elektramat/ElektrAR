@@ -68,6 +68,13 @@ function listTotal() {
 
 // MARK: Icons
 
+/** Rendered model preview (data/FixtureImages/<model>.png), or the drawn icon when it is missing. */
+function fixturePreview(f, size = 52) {
+  if (!f) return fixtureSvg(f, size * 0.6);
+  return `<img class="preview" src="data/FixtureImages/${encodeURIComponent(f.model)}.png" alt="" width="${size}" height="${size}" loading="lazy"
+    onerror="this.outerHTML=decodeURIComponent('${encodeURIComponent(fixtureSvg(f, size * 0.6))}')">`;
+}
+
 function fixtureSvg(f, size = 32) {
   const inner = f?.product === 'stopcontact'
     ? '<circle cx="16" cy="16" r="7.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="13" cy="16" r="1.3" fill="currentColor"/><circle cx="19" cy="16" r="1.3" fill="currentColor"/>'
@@ -87,7 +94,7 @@ function renderTop() {
   const placing = state.mode === 'place';
   const c = cable();
   const f = fixture();
-  $('#chipIcon').innerHTML = placing ? fixtureSvg(f, 24) : '🔌';
+  $('#chipIcon').innerHTML = placing ? fixturePreview(f, 36) : '🔌';
   $('#chipTitle').textContent = placing ? (f ? fixtureTitle(f) : 'Kies schakelmateriaal') : (c?.name ?? 'Kies een kabel');
   $('#chipSub').textContent = placing ? (f ? fixtureSubtitle(f) : '') : (c ? `${c.crossSection} · ${euro(c.pricePerMeter)}/m` : '');
   const count = state.cart.length;
@@ -178,7 +185,7 @@ function renderPlacePanel() {
       </div>`)
     .join('');
   panel.innerHTML = `<div class="card">
-      <div class="fixture-head"><div class="fixture-icon">${fixtureSvg(f, 36)}</div>
+      <div class="fixture-head"><div class="fixture-icon">${fixturePreview(f, 56)}</div>
         <div><div class="pick-title">${esc(fixtureTitle(f))}</div><div class="muted small">${esc(fixtureSubtitle(f))}</div>
         <div class="small ${f.complete ? '' : 'warn-text'}">${esc(fixturePrice(f))}</div></div></div>
       ${viewButton}
@@ -279,7 +286,7 @@ function renderPicker() {
         html += `<div class="group-title">${esc(line)}</div>`;
       }
       html += `<button type="button" class="pick" data-pick="${esc(f.id)}">
-          <span class="thumb">${fixtureSvg(f, 30)}</span>
+          <span class="thumb">${fixturePreview(f, 52)}</span>
           <span class="pick-text"><span class="pick-title">${esc(fixtureTitle(f))}</span><br>
             <span class="muted small">${esc(f.colour.replaceAll('-', ' '))}</span><br>
             <span class="small ${f.complete ? '' : 'warn-text'}">${esc(fixturePrice(f))}</span></span>
