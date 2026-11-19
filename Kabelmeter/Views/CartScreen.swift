@@ -73,9 +73,12 @@ struct CartScreen: View {
                 if !cables.isEmpty {
                     Section {
                         ForEach(cables) { line in row(line) }
-                        Stepper(value: $reservePercent, in: 0...30, step: 5) {
+                        HStack {
                             Text("Reserve \(reservePercent)% + \(Format.orderLength(PricingCalculator.connectionAllowance)) aansluiting per kabel")
                                 .font(.footnote)
+                            Spacer(minLength: 8)
+                            BrandStepper(value: $reservePercent, range: 0...30, step: 5,
+                                         accessibilityName: "Reserve in procent")
                         }
                     } header: {
                         Text("Kabel")

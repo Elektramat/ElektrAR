@@ -13,6 +13,7 @@ final class DesignRulesTests: XCTestCase {
         ("See-through button (use brandProminentButton)", #"\.buttonStyle\(\.bordered\)"#),
         ("Grey material (use .surface)", #"\b(regular|thin|thick|ultraThin|ultraThick)Material\b"#),
         ("See-through brand colour", #"Theme\.(accent|cta|brandSurface)\.opacity\("#),
+        ("Grey system stepper (use BrandStepper)", #"\bStepper\("#),
     ]
 
     func testViewsFollowDesignRules() throws {

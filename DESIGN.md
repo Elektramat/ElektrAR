@@ -32,6 +32,7 @@ Not allowed:
 - Main action: solid green, white text and icon (`.brandProminentButton(Theme.cta)`), at most one per screen.
 - Secondary on the camera image: white card, blue icon, black label (`CardButtonStyle`).
 - Every button in a row has the same height (44 pt in bars, 56 pt for the big actions).
+- − and +: `BrandStepper`, never the grey system `Stepper`. The pressed button turns solid blue with a white icon.
 
 ## Camera screens (AR)
 
