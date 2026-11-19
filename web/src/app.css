@@ -411,3 +411,88 @@ dialog::backdrop {
 	padding: 2px 6px;
 	border-radius: 999px;
 }
+
+/* Rooms and the shared cart */
+.cart-button {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0 14px;
+	flex: none;
+}
+.cart-total {
+	font-size: 0.95rem;
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+}
+.room-row {
+	display: grid;
+	grid-template-columns: 1fr var(--tap);
+	gap: 8px;
+	align-items: center;
+}
+.room-row + .room-row {
+	border-top: 1px solid var(--color-black-15);
+}
+.room-price {
+	margin-left: auto;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+.new-room {
+	display: grid;
+	gap: 10px;
+}
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.chip {
+	min-height: 40px;
+	padding: 0 14px;
+	border-radius: 999px;
+	border: 0;
+	background: var(--color-primary-10);
+	color: var(--color-primary);
+	font-weight: 700;
+}
+/* White on blue, never dark text on a blue fill. */
+.chip[aria-pressed='true'] {
+	background: var(--color-primary);
+	color: #fff;
+}
+.form-actions {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+}
+.cta.small {
+	width: auto;
+	height: var(--tap);
+	padding: 0 28px;
+}
+.room-head {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+.room-title {
+	font-family: var(--font-branded);
+	font-weight: 900;
+	font-size: 1.5rem;
+	margin: 0;
+}
+.sheet-section {
+	font-family: var(--font-branded);
+	margin: 8px 0 0;
+	font-size: 1rem;
+}
+.total small {
+	display: block;
+	font-weight: 500;
+}
+.line .link-button {
+	justify-self: start;
+}

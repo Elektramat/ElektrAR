@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { billedPieces, quote, type SalesUnit } from './pricing';
-import { euro, meters, orderLength, pieces } from './format';
+import { count, euro, meters, orderLength, pieces } from './format';
 import { parseCatalog } from './catalog';
-import { addTo, parseCart } from './cart.svelte';
 
 // The same file the Swift tests run (SharedPricingCasesTests), so both apps agree.
 const cases = JSON.parse(
@@ -53,6 +52,8 @@ describe('format', () => {
 		expect(orderLength(3.5)).toBe('3,5 m');
 		expect(pieces([100, 25])).toBe('100 m + 25 m');
 		expect(euro(9.9)).toMatch(/€\s9,90/);
+		expect(count(1, 'kabel', 'kabels')).toBe('1 kabel');
+		expect(count(3, 'kabel', 'kabels')).toBe('3 kabels');
 	});
 });
 
@@ -81,36 +82,5 @@ describe('catalog', () => {
 			parseCatalog([{ ...valid, sales: { type: 'perMeter', step: 0, minimum: 1 } }])
 		).toThrow();
 		expect(() => parseCatalog([valid, valid])).toThrow();
-	});
-});
-
-describe('cart', () => {
-	const cable = {
-		id: 'c1',
-		sku: 'S1',
-		name: 'Kabel',
-		crossSection: '3x1,5 mm²',
-		use: 'x',
-		pricePerMeter: 0.99,
-		sales: { type: 'perMeter', step: 1, minimum: 1 } as SalesUnit,
-		stock: 'x',
-		imageUrl: null,
-		productUrl: 'https://www.elektramat.nl/',
-		isSample: false
-	};
-	it('merges the same cable into one line', () => {
-		const items = addTo(addTo([], cable, 10), cable, 5);
-		expect(items).toHaveLength(1);
-		expect(items[0].meters).toBe(15);
-	});
-	it('ignores zero and invalid meters', () => {
-		expect(addTo([], cable, 0)).toEqual([]);
-		expect(addTo([], cable, Number.NaN)).toEqual([]);
-	});
-	it('drops broken stored data instead of crashing', () => {
-		expect(parseCart('not json')).toEqual([]);
-		expect(parseCart('{"a":1}')).toEqual([]);
-		expect(parseCart('[{"cableId":"x"}]')).toEqual([]);
-		expect(parseCart(null)).toEqual([]);
 	});
 });

@@ -58,3 +58,4 @@ One line each: what we chose and why.
 - A first-run intro explains the three steps (room, parts, cables) and asks for the camera only after that; "?" on the rooms screen shows it again.
 - Shared pricing cases in `shared/pricing-cases.json` run in both the Swift tests and the web app tests, so the two cannot drift apart on quantity or price.
 - The web app lives in `web/` (SvelteKit PWA, Pitstop stack); `webapp/` is the earlier plain version. Neither has rooms, parts or lights yet.
+- The SvelteKit web app (`web/`) follows rooms and the shared cart (d2a1ec9): rooms in localStorage, each cable a typed-in route; the cart is computed from all rooms like `Bill` (cables only), with the reserve stepper per cable in the cart. Placing parts, automatic routes and the camera intro stay native. The old separate web cart (`kabelmeter.cart.v1`) is no longer read, like the app dropped `CartStore`.
