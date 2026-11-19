@@ -25,6 +25,41 @@ SIZE_PX = 200
 DPI = 100
 
 
+def is_ceiling_light(path):
+    from pxr import Usd
+    stage = Usd.Stage.Open(str(path))  # keep the stage alive while reading its prim
+    return stage.GetDefaultPrim().GetCustomData().get("surface") == "ceiling"
+
+
+def render_ceiling(ax, path):
+    """Ceiling lights: turn the model so its front (+Z) points down, and look from below at
+    an angle, like the product photos. preview.render always looks at the front of a wall model."""
+    import numpy as np
+    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+    tris, cols = preview.load(str(path))
+    elev, azim = np.radians(-28), np.radians(-60)
+    view = np.array([np.cos(elev) * np.cos(azim), np.cos(elev) * np.sin(azim), np.sin(elev)])
+    light = view + np.array([-0.35, 0.1, -0.25]); light /= np.linalg.norm(light)
+    polys, colours = [], []
+    for t, (base, rough) in zip(tris, cols):
+        # model (x, y, z) -> plot (x, y, -z): the ceiling is at plot z = 0, the light hangs below it.
+        q = np.column_stack([t[:, 0], t[:, 1], -t[:, 2]])
+        # The mirror flips the winding, so flip the normal back to point outwards.
+        n = -np.cross(q[1] - q[0], q[2] - q[0]); ln = np.linalg.norm(n)
+        if ln < 1e-9:
+            continue
+        n /= ln
+        if np.dot(n, view) < -0.05:
+            continue  # back-face cull, like preview.render
+        d = max(np.dot(n, light), 0)
+        colours.append(np.clip(base * (0.42 + 0.58 * d), 0, 1))
+        polys.append(q)
+    ax.add_collection3d(Poly3DCollection(polys, facecolors=colours, edgecolors="none"))
+    ax.view_init(elev=-28, azim=-60)
+    ax.set_box_aspect((1, 1, 1)); ax.set_axis_off()
+    return tris
+
+
 def main():
     OUT.mkdir(exist_ok=True)
     models = sorted(MODELS.glob("*.usdz"))
@@ -36,10 +71,13 @@ def main():
         fig.patch.set_alpha(0)
         ax = fig.add_axes([0, 0, 1, 1], projection="3d")
         ax.patch.set_alpha(0)
-        preview.render(ax, str(path), "")
-        ax.view_init(elev=12, azim=-72)
+        if is_ceiling_light(path):
+            tris = render_ceiling(ax, path)
+        else:
+            preview.render(ax, str(path), "")
+            ax.view_init(elev=12, azim=-72)
+            tris, _ = preview.load(str(path))
         # Zoom to the model: half its largest size in mm, plus a margin for the 3D projection.
-        tris, _ = preview.load(str(path))
         lim = max(abs(v) for tri in tris for point in tri for v in point) * 0.95
         ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim); ax.set_zlim(-lim, lim)
         fig.savefig(OUT / f"{path.stem}.png", transparent=True)

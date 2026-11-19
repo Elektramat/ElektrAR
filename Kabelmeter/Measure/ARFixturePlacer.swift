@@ -261,13 +261,15 @@ final class ARFixturePlacer {
     private func loadTemplate(_ fixture: Fixture) async -> Entity {
         if let template = templates[fixture.model] { return template }
         let template: Entity
-        if fixture.shape == nil,
-           let url = Bundle.main.url(forResource: fixture.model, withExtension: "usdz")
+        // Switches, sockets and lights all have a bundled model (lights: light-<sku>.usdz from
+        // scripts/generate_light_models.py).
+        if let url = Bundle.main.url(forResource: fixture.model, withExtension: "usdz")
             ?? Bundle.main.url(forResource: fixture.model, withExtension: "usdz", subdirectory: "Models"),
            let loaded = try? await Entity(contentsOf: url) {
             template = Self.unanchored(loaded)
         } else if fixture.shape != nil {
-            // Lights have no 3D file: a stand-in shape of about the right size.
+            // A light without a model file: a stand-in shape of about the right size.
+            Self.logger.error("Light model \(fixture.model, privacy: .public) missing; showing a stand-in shape")
             template = Self.lightModel(for: fixture)
         } else {
             Self.logger.error("Model \(fixture.model, privacy: .public) could not be loaded; showing a plain frame")

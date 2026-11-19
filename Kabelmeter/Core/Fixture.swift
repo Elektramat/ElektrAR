@@ -12,8 +12,8 @@ nonisolated struct FixturePart: Codable, Equatable, Sendable {
 }
 
 /// A smart-home light that mounts on a wall or ceiling, from Resources/lights.json
-/// (made by scripts/scrape_lighting.py). There is no 3D model of the real product: the app
-/// shows a stand-in shape of about the right size.
+/// (made by scripts/scrape_lighting.py). The 3D model (Models/light-<sku>.usdz, made by
+/// scripts/generate_light_models.py) is indicative, not a CAD model of the real product.
 nonisolated struct LightProduct: Codable, Equatable, Sendable {
     let id: String
     let sku: String
@@ -23,7 +23,7 @@ nonisolated struct LightProduct: Codable, Equatable, Sendable {
     let surface: String
     /// "box", "cylinder", "disc", "recessed" or "surface".
     let shape: String
-    /// Width, height and depth of the stand-in in mm.
+    /// Width, height and depth of the light in mm (indicative).
     let sizeMM: [Double]
     /// Price incl. VAT.
     let price: Double
@@ -56,7 +56,8 @@ nonisolated struct Fixture: Codable, Identifiable, Equatable, Sendable {
     let frameMM: [Double]?
     /// Distance from the wall to the front in mm.
     let depthMM: Double?
-    /// Lights only: the stand-in shape ("box", "cylinder", "disc", "recessed", "surface").
+    /// Lights only: the shape family ("box", "cylinder", "disc", "recessed", "surface"). Picks
+    /// the generated model's design and the stand-in when the model file is missing.
     var shape: String? = nil
 
     var isLight: Bool { product == "lamp" }

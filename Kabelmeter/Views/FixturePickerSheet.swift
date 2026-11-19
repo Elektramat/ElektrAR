@@ -74,7 +74,8 @@ private struct FixtureRow: View {
 }
 
 /// Rendered preview of the 3D model (FixtureImages/<model>.png, made by
-/// scripts/render_fixture_previews.py), or a symbol when there is none.
+/// scripts/render_fixture_previews.py), for lights too. Falls back to the product photo of a
+/// light, then to a symbol.
 struct FixtureIcon: View {
     let fixture: Fixture
     var size: CGFloat = 52
@@ -97,14 +98,16 @@ struct FixtureIcon: View {
     }
 
     private static func preview(for fixture: Fixture) -> UIImage? {
-        if let sku = fixture.lightSku {
-            guard let path = Bundle.main.path(forResource: sku, ofType: "jpg")
-                ?? Bundle.main.path(forResource: sku, ofType: "jpg", inDirectory: "LightImages") else { return nil }
+        if let path = Bundle.main.path(forResource: fixture.model, ofType: "png")
+            ?? Bundle.main.path(forResource: fixture.model, ofType: "png", inDirectory: "FixtureImages") {
             return UIImage(contentsOfFile: path)
         }
-        guard let path = Bundle.main.path(forResource: fixture.model, ofType: "png")
-            ?? Bundle.main.path(forResource: fixture.model, ofType: "png", inDirectory: "FixtureImages") else { return nil }
-        return UIImage(contentsOfFile: path)
+        if let sku = fixture.lightSku,
+           let path = Bundle.main.path(forResource: sku, ofType: "jpg")
+            ?? Bundle.main.path(forResource: sku, ofType: "jpg", inDirectory: "LightImages") {
+            return UIImage(contentsOfFile: path)
+        }
+        return nil
     }
 }
 
