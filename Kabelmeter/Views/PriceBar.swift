@@ -69,6 +69,6 @@ struct PriceBar: View {
             .disabled(cartQuote == nil || cable == nil)
         }
         .padding(Theme.spacing)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .surface(RoundedRectangle(cornerRadius: Theme.corner))
     }
 }

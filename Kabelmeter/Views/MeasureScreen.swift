@@ -89,6 +89,8 @@ struct MeasureScreen: View {
         // appears only after the user knows why it is needed.
         if seenIntro {
             mainScreen
+                // Dark status bar text is unreadable on the camera image.
+                .statusBarHidden()
                 .fullScreenCover(isPresented: $showIntro) { IntroView { showIntro = false } }
         } else {
             IntroView {
@@ -128,7 +130,7 @@ struct MeasureScreen: View {
                 Text(toast)
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal, 16).padding(.vertical, 10)
-                    .background(.thickMaterial, in: Capsule())
+                    .surface(Capsule())
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .frame(maxHeight: .infinity, alignment: .top)
                     .padding(.top, 70)
@@ -216,7 +218,8 @@ struct MeasureScreen: View {
         }
         .pickerStyle(.segmented)
         .controlSize(.large)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 9))
+        .padding(3)
+        .surface(RoundedRectangle(cornerRadius: 11))
     }
 
     private var topBar: some View {
@@ -228,8 +231,9 @@ struct MeasureScreen: View {
             Button { showIntro = true } label: {
                 Image(systemName: "questionmark")
                     .font(.title3.weight(.semibold))
+                    .foregroundStyle(Theme.accent)
                     .frame(width: 48, height: 48)
-                    .background(.regularMaterial, in: Circle())
+                    .surface(Circle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Uitleg")
@@ -253,11 +257,11 @@ struct MeasureScreen: View {
                         Text(fixture.subtitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
-                Image(systemName: "chevron.down").font(.caption)
+                Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(Theme.accent)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 14)
             .frame(minHeight: 48)
-            .background(.regularMaterial, in: Capsule())
+            .surface(Capsule())
         }
         .buttonStyle(.plain)
         .disabled(fixtureStore.fixtures.isEmpty)
@@ -266,7 +270,7 @@ struct MeasureScreen: View {
     private var cableChip: some View {
         Button { showPicker = true } label: {
             HStack(spacing: 8) {
-                Image(systemName: "cable.connector")
+                Image(systemName: "cable.connector").foregroundStyle(Theme.accent)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(cable?.name ?? "Kies een kabel").font(.subheadline.weight(.semibold)).lineLimit(1)
                     if let cable {
@@ -274,11 +278,11 @@ struct MeasureScreen: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
-                Image(systemName: "chevron.down").font(.caption)
+                Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(Theme.accent)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 14)
             .frame(minHeight: 48)
-            .background(.regularMaterial, in: Capsule())
+            .surface(Capsule())
         }
         .buttonStyle(.plain)
         .disabled(cableStore.cables.isEmpty)
@@ -287,16 +291,17 @@ struct MeasureScreen: View {
     private var cartButton: some View {
         Button { showCart = true } label: {
             Image(systemName: "cart")
-                .font(.title3)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(Theme.accent)
                 .frame(width: 48, height: 48)
-                .background(.regularMaterial, in: Circle())
+                .surface(Circle())
                 .overlay(alignment: .topTrailing) {
                     if cartStore.count > 0 {
                         Text("\(cartStore.count)")
                             .font(.caption2.bold())
                             .foregroundStyle(Theme.onAccent)
                             .frame(minWidth: 18, minHeight: 18)
-                            .background(Theme.accent, in: Circle())
+                            .background(Theme.cta, in: Circle())
                     }
                 }
         }
@@ -321,14 +326,14 @@ struct MeasureScreen: View {
                 pill(message, color: Theme.warning)
             } else if isPlacing {
                 if let guide = placement.guide {
-                    pill(guide.label, color: Theme.accent)
+                    pill(guide.label, color: Color(Theme.Token.secondary))
                 } else if placement.placed.isEmpty {
                     pill("Richt op een muur en tik op +", color: .white)
                 }
             } else if session.isFinished {
                 pill("Meting klaar", color: .green)
             } else if let guide = session.guide {
-                pill(guide.label, color: Theme.accent)
+                pill(guide.label, color: Color(Theme.Token.secondary))
             } else if session.points.isEmpty {
                 pill(session.runs.isEmpty ? "Richt op het beginpunt en tik op +"
                                           : "Volgende kabel: richt op het beginpunt en tik op +", color: .white)
@@ -339,7 +344,7 @@ struct MeasureScreen: View {
                     .font(.callout.weight(.semibold))
                     .padding(.horizontal, 16)
                     .frame(minHeight: 44)
-                    .background(.regularMaterial, in: Capsule())
+                    .surface(Capsule())
                     .buttonStyle(.plain)
             }
 
@@ -432,20 +437,13 @@ struct MeasureScreen: View {
             Button("Gebruik demo-modus") { demoMode = true }
         }
         .padding(24)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .surface(RoundedRectangle(cornerRadius: Theme.corner))
         .padding(32)
     }
 
     private func controlButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: 2) {
-                Image(systemName: icon).font(.title3)
-                Text(title).font(.caption2).lineLimit(1).minimumScaleFactor(0.7)
-            }
-            .frame(width: Theme.tapTarget, height: Theme.tapTarget)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
-        }
-        .buttonStyle(.plain)
+        Button(action: action) { ControlLabel(title: title, icon: icon) }
+            .buttonStyle(CardButtonStyle())
     }
 
     // MARK: Actions
@@ -576,5 +574,27 @@ private struct SummarySheet: View {
             Spacer()
             Text(value).monospacedDigit().fontWeight(.semibold)
         }
+    }
+}
+
+/// White square button on the camera image: blue icon, dark label, light grey when disabled.
+private struct ControlLabel: View {
+    let title: String
+    let icon: String
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        VStack(spacing: 3) {
+            Image(systemName: icon)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(isEnabled ? Theme.accent : Theme.iconDisabled)
+            Text(title)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(isEnabled ? Theme.ink : Theme.iconDisabled)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(width: Theme.tapTarget + 8, height: Theme.tapTarget)
+        .surface(RoundedRectangle(cornerRadius: 14))
     }
 }

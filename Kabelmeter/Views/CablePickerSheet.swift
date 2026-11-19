@@ -97,8 +97,8 @@ struct CablePhoto: View {
 
     private var placeholder: some View {
         RoundedRectangle(cornerRadius: 10)
-            .fill(.quaternary)
-            .overlay(Image(systemName: "cable.connector").foregroundStyle(.secondary))
+            .fill(Theme.brandSurfaceSoft)
+            .overlay(Image(systemName: "cable.connector").foregroundStyle(Theme.accent))
     }
 }
 

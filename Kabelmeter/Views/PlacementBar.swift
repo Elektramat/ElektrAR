@@ -51,7 +51,7 @@ struct PlacementBar: View {
             }
         }
         .padding(Theme.spacing)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .surface(RoundedRectangle(cornerRadius: Theme.corner))
     }
 
     private var buttonTitle: String {

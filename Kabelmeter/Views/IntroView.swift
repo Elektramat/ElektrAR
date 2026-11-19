@@ -54,7 +54,7 @@ struct IntroView: View {
                 .foregroundStyle(.secondary)
                 .padding(.bottom, 8)
         }
-        .background(Color(.systemBackground))
+        .background(Theme.surface)
     }
 
     private var header: some View {

@@ -18,7 +18,17 @@ enum Theme {
         static let black75 = UIColor(hex: 0x404040)       // --color-black-75
         static let black25 = UIColor(hex: 0xBFBFBF)       // --color-black-25
         static let black5 = UIColor(hex: 0xF2F2F2)        // --color-black-5
+        static let black15 = UIColor(hex: 0xD9D9D9)       // --color-black-15
+        static let ink = UIColor(hex: 0x1A1A1A)
     }
+
+    // Surfaces. The app is light only, like the shop: white cards with a soft shadow on the
+    // camera image, brand blue for icons and selection, never blue on grey.
+    static let surface = Color.white
+    static let ink = Color(Token.ink)
+    static let inkSecondary = Color(Token.black75)
+    static let iconDisabled = Color(Token.black25)
+    static let hairline = Color(Token.black15)
 
     // Colors
     static let accent = Color(Token.primary)
@@ -37,7 +47,7 @@ enum Theme {
     static let simulatedBackground = Color(white: 0.12)
     static let simulatedWall = Color(white: 0.22)
     /// Behind the switch previews: a light wall tone, so white and black switches both read.
-    static let previewBackground = Color(white: 0.86)
+    static let previewBackground = Color(Token.black5)
 
     // AR entities: the light brand blue stands out on a camera image.
     static let arPoint = UIColor.white
@@ -71,5 +81,42 @@ extension UIColor {
     convenience init(hex: UInt32) {
         self.init(red: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255,
                   blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
+    }
+}
+
+extension View {
+    /// A white card on the camera image: solid white, soft shadow, dark text.
+    func surface<S: InsettableShape>(_ shape: S) -> some View {
+        self
+            .foregroundStyle(Theme.ink)
+            .background {
+                // Shadow on the card only, not on the text inside it.
+                shape.fill(Theme.surface)
+                    .shadow(color: .black.opacity(0.18), radius: 8, y: 2)
+            }
+            .overlay(shape.strokeBorder(Theme.hairline, lineWidth: 0.5))
+    }
+}
+
+/// No automatic dimming when disabled: the label shows its own disabled colors, so a
+/// white card stays white instead of turning see-through grey on the camera image.
+struct CardButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+enum BrandAppearance {
+    /// Segmented controls in brand blue with white text, instead of grey system segments.
+    @MainActor static func apply() {
+        let segmented = UISegmentedControl.appearance()
+        segmented.selectedSegmentTintColor = Theme.Token.primary
+        segmented.backgroundColor = .white
+        segmented.setTitleTextAttributes([.foregroundColor: UIColor.white,
+                                          .font: UIFont.systemFont(ofSize: 15, weight: .semibold)], for: .selected)
+        segmented.setTitleTextAttributes([.foregroundColor: Theme.Token.black75,
+                                          .font: UIFont.systemFont(ofSize: 15, weight: .medium)], for: .normal)
     }
 }

@@ -38,7 +38,7 @@ struct WebShopSheet: View {
             if let step { Text(step).foregroundStyle(.secondary) }
         }
         .padding(24)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .surface(RoundedRectangle(cornerRadius: Theme.corner))
     }
 
     private var failureBanner: some View {
