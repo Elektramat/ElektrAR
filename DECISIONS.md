@@ -28,4 +28,5 @@ One line each: what we chose and why.
 - Each placement is an `ARAnchor` named `fixture:<id>`: ARKit keeps it fixed in the room. The orientation is computed from the wall normal (+Z out of the wall, +Y up), so switches always hang upright.
 - Placements survive an app restart through an `ARWorldMap` in Documents, saved at most every 3 s while mapped, and when the app goes to the background or the AR view closes. On launch ARKit must recognise the room before they show; "Nieuwe ruimte" drops the saved room.
 - Demo-modus and AR have separate placement lists: their coordinates do not mix, and switching Demo-modus must not wipe the saved room.
-- Fixtures are not added to the cart yet: the cart is meter-based. Elektramat MCP cart integration is next.
+- Fixtures are not added to the cart yet: the cart is meter-based.
+- No Elektramat MCP cart: without a login `cable_create_order` returns only the generic cart URL (no cart id or session), so Safari would show an empty cart. Details in `RemoteCartService`.

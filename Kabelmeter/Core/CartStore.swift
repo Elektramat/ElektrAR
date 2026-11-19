@@ -88,6 +88,13 @@ struct LocalCartService: CartService {
 /// 2. Are decimal quantities allowed?
 /// 3. Is there a cart API that is reachable from outside?
 /// 4. How would the app link a cart to the customer's browser session or account?
+///
+/// Tried on 19 Nov 2026: the Elektramat MCP server (https://mcp.elektramat.nl/mcp, no login)
+/// has `cable_create_order(productId, amount, presetId)`, but without a login it returns only
+/// "https://www.elektramat.nl/checkout/cart" with no cart id, token or cookie, so the browser
+/// sees an empty cart. With an OAuth login it may land in the customer's own cart, but the
+/// server only accepts redirect URIs of known assistants and localhost; an iOS app needs
+/// Elektramat to allow its redirect. Ask the MCP team for that, or for a cart deep link.
 @MainActor
 struct RemoteCartService: CartService {
     func add(cable: Cable, meters: Double) throws {
