@@ -199,12 +199,7 @@ struct RoomScreen: View {
     /// Step tabs and, for cables, the automatic/manual choice: one row at the top of the card.
     private var cardHeader: some View {
         HStack(spacing: 8) {
-            Picker("Stap", selection: $step) {
-                Text("Onderdelen").tag(Step.parts)
-                Text("Kabels").tag(Step.cables)
-            }
-            .pickerStyle(.segmented)
-            .sensoryFeedback(.selection, trigger: step)
+            BrandTabs(selection: $step, options: [(Step.parts, "Onderdelen"), (Step.cables, "Kabels")])
 
             if step == .cables {
                 Menu {
@@ -219,8 +214,8 @@ struct RoomScreen: View {
                     }
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Theme.accent)
-                    .padding(.horizontal, 12)
-                    .frame(minHeight: 34)
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: 44)
                     .background(Theme.surface, in: Capsule())
                     .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
                 }

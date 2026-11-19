@@ -66,3 +66,39 @@ private struct StepperButtonStyle: ButtonStyle {
             .contentShape(Rectangle())
     }
 }
+
+/// Two or three tabs in Elektramat style with a fixed height (the system segmented control
+/// cannot be made taller): light grey track, the selected tab solid blue with white text.
+struct BrandTabs<Value: Hashable>: View {
+    @Binding var selection: Value
+    let options: [(value: Value, title: String)]
+    var height: CGFloat = 44
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(options, id: \.value) { option in
+                let selected = option.value == selection
+                Button {
+                    selection = option.value
+                } label: {
+                    Text(option.title)
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .foregroundStyle(selected ? Theme.onAccent : Theme.ink)
+                        .frame(maxWidth: .infinity, minHeight: height - 8)
+                        .background(selected ? Theme.accent : Color.clear,
+                                    in: RoundedRectangle(cornerRadius: Theme.buttonCorner - 3))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(CardButtonStyle())
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+        .padding(4)
+        .frame(height: height)
+        .background(Color(Theme.Token.black5), in: RoundedRectangle(cornerRadius: Theme.buttonCorner))
+        .animation(.snappy(duration: 0.2), value: selection)
+        .sensoryFeedback(.selection, trigger: selection)
+    }
+}
