@@ -1,7 +1,8 @@
 # Kabelmeter PWA
 
-The web version of the Kabelmeter, next to the iPhone app in `../Kabelmeter`. Pick a cable,
-enter the route lengths, see the price and add the length to a cart. Installable as a PWA and
+The web version of the Kabelmeter, next to the iPhone app in `../Kabelmeter`. Make rooms
+("Mijn ruimtes"), add cables to a room by picking a cable and entering the route lengths, and see
+one shared cart worked out from all rooms. Installable as a PWA and
 usable offline.
 
 Stack (the parts of the Pitstop stack this app needs): SvelteKit (Svelte 5) with TypeScript,
@@ -19,11 +20,17 @@ backend: Supabase, auth, realtime, photo upload, pg_cron, Web Push, IndexedDB ou
   with zod at load (`src/lib/catalog.ts`).
 - Same pricing as the app: `src/lib/pricing.ts` is a port of `PricingCalculator.swift`, and both
   run `../shared/pricing-cases.json`.
+- Rooms and the shared cart follow the iPhone app (`Project`, `Bill`): rooms are saved in
+  localStorage (`src/lib/rooms.ts`, store in `rooms.svelte.ts`); the cart is not stored but
+  computed from the rooms (`src/lib/bill.ts`): per cable type the required length of every cable
+  (reserve + 2 m connection per cable) is added up over all rooms and rounded once.
+- Not in the browser: placing switches, sockets and lights (needs the camera), the automatic cable
+  route and the first-run intro (it is about the camera and placing parts).
 - Cables sold as separate roll products (Snelflex 3x2,5: rolls of 25, 50 and 100 m, each with
   its own price) get a roll advice: the rolls with the lowest total price (`rollPlan` in
-  `src/lib/pricing.ts`, a port of `PricingCalculator.rollPlan`). The cart adds up the required
-  length of every route with that cable, chooses the rolls once and shows one line per roll size
-  with its own article number and product page.
+  `src/lib/pricing.ts`, a port of `PricingCalculator.rollPlan`). The cart (`src/lib/bill.ts`) adds
+  up the required length of every cable of that type in all rooms, chooses the rolls once and
+  shows one line per roll size with its own article number and product page.
 - Own service worker (`src/service-worker.ts`): caches the build per version.
 
 ```sh
@@ -36,4 +43,4 @@ pnpm lint
 pnpm build
 ```
 
-Not built: the real shop cart. "Bestel op elektramat.nl" opens the product page.
+Not built: the real shop cart. "Bekijk op elektramat.nl" opens the product page.
