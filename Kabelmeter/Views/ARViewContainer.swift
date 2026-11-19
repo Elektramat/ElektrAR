@@ -91,7 +91,7 @@ struct SimulatedMeasureView: View {
                     // Live preview (with a corner when drawing with right angles)
                     let preview = session.previewPoints
                     if preview.count >= 2 {
-                        context.stroke(polyline(preview), with: .color(Theme.accent.opacity(0.6)),
+                        context.stroke(polyline(preview), with: .color(Theme.run),
                                        style: StrokeStyle(lineWidth: 3, dash: [6, 4]))
                     }
 
@@ -166,7 +166,7 @@ struct SimulatedMeasureView: View {
         context.stroke(Path(roundedRect: rect, cornerRadius: size * 0.15), with: .color(.gray), lineWidth: 1)
         let inner = rect.insetBy(dx: size * 0.22, dy: size * 0.22)
         if fixtures.first(where: { $0.id == fixtureId })?.isLight == true {
-            context.fill(Path(ellipseIn: inner), with: .color(.yellow.opacity(0.85)))
+            context.fill(Path(ellipseIn: inner), with: .color(Theme.lightDot))
         } else if fixtures.first(where: { $0.id == fixtureId })?.product == "stopcontact" {
             context.stroke(Path(ellipseIn: inner), with: .color(.gray), lineWidth: 1.5)
         } else {

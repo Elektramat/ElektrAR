@@ -59,10 +59,13 @@ struct CartScreen: View {
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
                         if incomplete > 0 {
-                            Label("\(incomplete) schakelaars of stopcontacten zijn niet compleet te bestellen; de ontbrekende onderdelen staan er niet bij.",
-                                  systemImage: "exclamationmark.triangle")
-                                .font(.footnote)
-                                .foregroundStyle(.orange)
+                            Label {
+                                Text("\(incomplete) schakelaars of stopcontacten zijn niet compleet te bestellen; de ontbrekende onderdelen staan er niet bij.")
+                                    .foregroundStyle(Theme.inkSecondary)
+                            } icon: {
+                                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning)
+                            }
+                            .font(.footnote)
                         }
                     }
                 }

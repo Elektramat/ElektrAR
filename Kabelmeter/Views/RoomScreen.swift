@@ -77,9 +77,8 @@ struct RoomScreen: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 10) {
+                // DESIGN.md: one bar on top, one line of hint, one card at the bottom.
                 header
-                modePicker
-                if isEditing { stepPicker }
                 statusPills
                 Spacer()
                 if isEditing { controls }
@@ -172,44 +171,59 @@ struct RoomScreen: View {
                 .surface(Capsule())
 
             Spacer(minLength: 0)
+            editToggle
             CartButton()
         }
         .padding(.top, 4)
     }
 
-    private var modePicker: some View {
-        Picker("Modus", selection: $mode) {
-            Label("Bekijken", systemImage: "eye").tag(Mode.view)
-            Label("Bewerken", systemImage: "pencil").tag(Mode.edit)
+    /// "Bewerk" in view mode, "Klaar" in edit mode: replaces the Bekijken/Bewerken bar.
+    private var editToggle: some View {
+        Button {
+            mode = isEditing ? .view : .edit
+        } label: {
+            Label(isEditing ? "Klaar" : "Bewerk", systemImage: isEditing ? "checkmark" : "pencil")
+                .font(.headline)
+                .foregroundStyle(Theme.onAccent)
+                .padding(.horizontal, 16)
+                .frame(minHeight: 44)
+                .background(Theme.accent, in: Capsule())
         }
-        .pickerStyle(.segmented)
-        .controlSize(.large)
+        .buttonStyle(CardButtonStyle())
         .sensoryFeedback(.selection, trigger: mode)
-        .padding(3)
-        .surface(RoundedRectangle(cornerRadius: 11))
+        .accessibilityLabel(isEditing ? "Klaar met bewerken" : "Bewerk deze ruimte")
     }
 
-    /// Step 1 parts, step 2 cables (automatically or by hand).
-    private var stepPicker: some View {
-        VStack(spacing: 8) {
+    /// Step tabs and, for cables, the automatic/manual choice: one row at the top of the card.
+    private var cardHeader: some View {
+        HStack(spacing: 8) {
             Picker("Stap", selection: $step) {
-                Text("1  Onderdelen").tag(Step.parts)
-                Text("2  Kabels").tag(Step.cables)
+                Text("Onderdelen").tag(Step.parts)
+                Text("Kabels").tag(Step.cables)
             }
             .pickerStyle(.segmented)
             .sensoryFeedback(.selection, trigger: step)
-            .padding(3)
-            .surface(RoundedRectangle(cornerRadius: 11))
 
             if step == .cables {
-                Picker("Kabels", selection: $cableMode) {
-                    Text("Automatisch").tag(CableMode.auto)
-                    Text("Handmatig").tag(CableMode.manual)
+                Menu {
+                    Picker("Kabels trekken", selection: $cableMode) {
+                        Label("Automatisch", systemImage: "wand.and.stars").tag(CableMode.auto)
+                        Label("Handmatig", systemImage: "hand.point.up.left").tag(CableMode.manual)
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(cableMode == .auto ? "Automatisch" : "Handmatig")
+                        Image(systemName: "chevron.down").font(.caption.weight(.bold))
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.accent)
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 34)
+                    .background(Theme.surface, in: Capsule())
+                    .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
                 }
-                .pickerStyle(.segmented)
                 .sensoryFeedback(.selection, trigger: cableMode)
-                .padding(3)
-                .surface(RoundedRectangle(cornerRadius: 11))
+                .accessibilityLabel("Kabels trekken: \(cableMode == .auto ? "automatisch" : "handmatig")")
             }
         }
     }
@@ -218,7 +232,7 @@ struct RoomScreen: View {
     private var statusPills: some View {
         VStack(spacing: 6) {
             if placement.isRestoring {
-                pill("Kijk rustig rond: zodra de ruimte herkend is, komt je ontwerp terug", color: Theme.warning)
+                pill("Kijk rustig rond tot de ruimte herkend is", color: Theme.warning)
                 Button("Niet herkend? Toon hier") { placement.skipRestoreRequests.send() }
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(Theme.accent)
@@ -249,18 +263,26 @@ struct RoomScreen: View {
         case .cables:
             if cableMode == .auto { return (autoHint, session.proposedRoutes.isEmpty ? .white : Theme.proposed) }
             if let guide = session.guide { return (guide.label, Color(Theme.Token.secondary)) }
-            if session.points.isEmpty { return ("Begin bij een onderdeel of de groepenkast: richt en tik op +", .white) }
-            return ("Tik op + bij elke hoek; tik op Klaar bij het laatste onderdeel", .white)
+            if session.points.isEmpty { return ("Begin bij een onderdeel of de groepenkast en tik op +", .white) }
+            return ("Tik op + bij elke hoek, Klaar bij het laatste onderdeel", .white)
         }
     }
 
+    /// DESIGN.md: text on the camera image is white on a dark pill, one line. The role colour
+    /// only shows as a small dot in front of it.
     private func pill(_ text: String, color: Color) -> some View {
-        Text(text)
-            .font(.callout.weight(.medium))
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 14).padding(.vertical, 8)
-            .background(.black.opacity(0.55), in: Capsule())
-            .foregroundStyle(color)
+        HStack(spacing: 8) {
+            if color != .white {
+                Circle().fill(color).frame(width: 8, height: 8)
+            }
+            Text(text)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
+        .font(.callout.weight(.medium))
+        .foregroundStyle(Theme.pillText)
+        .padding(.horizontal, 14).padding(.vertical, 8)
+        .background(Theme.pillBackground, in: Capsule())
     }
 
     /// Height of the crosshair (or of the middle of the part preview) above the floor.
@@ -270,7 +292,7 @@ struct RoomScreen: View {
         Group {
             if let height = FloorHeight.height(of: point, floorY: session.floorY) {
                 Label("\(Format.height(height)) boven de vloer", systemImage: "arrow.up.and.down")
-                    .foregroundStyle(Theme.height)
+                    .foregroundStyle(Theme.pillText)
             } else if point != nil {
                 Label("Richt even op de vloer voor de hoogte", systemImage: "arrow.down.to.line")
                     .foregroundStyle(.white.opacity(0.8))
@@ -279,7 +301,7 @@ struct RoomScreen: View {
         .font(.footnote.weight(.semibold))
         .monospacedDigit()
         .padding(.horizontal, 10).padding(.vertical, 5)
-        .background(.black.opacity(0.55), in: Capsule())
+        .background(Theme.pillBackground, in: Capsule())
         .offset(y: Theme.crosshair + 8)
         .allowsHitTesting(false)
     }
@@ -375,6 +397,7 @@ struct RoomScreen: View {
     @ViewBuilder
     private var bottomCard: some View {
         VStack(alignment: .leading, spacing: 10) {
+            if isEditing { cardHeader }
             switch (mode, step, cableMode) {
             case (.view, _, _):
                 roomSummary
@@ -391,7 +414,7 @@ struct RoomScreen: View {
                             Text("Tik op + op de nieuwe plek").font(Theme.labelFont).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Button("Annuleer") { cancelMove() }.buttonStyle(.bordered).tint(Theme.accent)
+                        Button("Annuleer") { cancelMove() }.brandProminentButton(Theme.accent).buttonBorderShape(.capsule)
                     }
                 } else {
                     selectionRow(icon: { if let fixture { FixtureIcon(fixture: fixture, size: 44) } },
@@ -456,12 +479,12 @@ struct RoomScreen: View {
                 Text(subtitle).font(Theme.labelFont).foregroundStyle(warning ? Theme.warning : .secondary).lineLimit(2)
             }
             Spacer()
-            Button("Wijzig", action: change).buttonStyle(.bordered).tint(Theme.accent)
+            Button("Wijzig", action: change).brandProminentButton(Theme.accent).buttonBorderShape(.capsule)
         }
     }
 
     private var cableRow: some View {
-        selectionRow(icon: { Image(systemName: "cable.connector").font(.title).foregroundStyle(Theme.run).frame(width: 44) },
+        selectionRow(icon: { if let cable { CablePhoto(cable: cable, size: 44) } },
                      title: cable?.name ?? "Kies een kabel",
                      subtitle: cable.map { "\($0.crossSection) · \(Format.euro($0.pricePerMeter)) per meter" } ?? "") {
             showCablePicker = true

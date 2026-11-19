@@ -54,23 +54,30 @@ enum Theme {
     static let arSegment = Token.secondary
     static let arPreview = Token.secondary.withAlphaComponent(0.6)
     static let arGuide = UIColor.white.withAlphaComponent(0.5)
-    /// Cables that are already in the cart.
-    static let arRun = UIColor.systemTeal
+    // AR roles, only brand tokens (DESIGN.md). Lines and dots, never text.
+    /// Cables that are already in the cart: brand light blue.
+    static let arRun = Token.secondary
     /// Dotted height line from the crosshair to the floor.
-    static let arHeight = UIColor.systemYellow
+    static let arHeight = UIColor.white
     /// Dotted lines a part being placed lines up with.
-    static let arAlign = UIColor.systemCyan
-    static let align = Color.cyan
+    static let arAlign = Token.secondary
+    static let align = Color(Token.secondary)
     /// Edit mode: the selected fixture or cable.
-    static let arHighlight = UIColor.systemPink
-    /// Automatic mode: suggested cables and the start point.
-    static let arProposed = UIColor.systemPurple
-    static let arStart = UIColor.systemGreen
-    static let highlight = Color.pink
-    static let proposed = Color.purple
-    static let start = Color.green
-    static let run = Color.teal
-    static let height = Color.yellow
+    static let arHighlight = Token.warning
+    /// Automatic mode: suggested cables (brand blue) and the start point (green).
+    static let arProposed = Token.primary
+    static let arStart = Token.success
+    static let highlight = Color(Token.warning)
+    static let proposed = Color(Token.primary)
+    static let start = Color(Token.success)
+    static let run = Color(Token.secondary)
+    /// Height labels sit on a dark pill or the dark floor plan: white.
+    static let height = Color.white
+    /// A light in the simulated view and the floor plan.
+    static let lightDot = Color(Token.warning)
+    /// The one text colour on the camera image: white on a dark pill.
+    static let pillText = Color.white
+    static let pillBackground = Color.black.opacity(0.6)
 
     // Sizes (radius-xl = 0.75rem, radius-2xl = 1rem on the shop)
     static let spacing: CGFloat = 12

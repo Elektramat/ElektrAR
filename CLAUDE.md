@@ -1,5 +1,7 @@
 # Elektramat Kabelmeter: build brief for Claude
 
+**Design rules:** read `DESIGN.md` before changing any screen. Colours only from `Theme.swift`; `DesignRulesTests` enforces the checkable rules.
+
 You are building this iOS app from start to finish during a one-day hackathon. Read this whole file before writing code. Work autonomously, make sensible decisions, and only stop to ask the human when you are genuinely blocked (see "When to ask the human").
 
 The team is three people (two developers, one AI/data engineer). Hard deadline: feature freeze at 17:30, demo day ends 20:00. Time is the scarcest resource: prefer the simplest thing that works on a real device.

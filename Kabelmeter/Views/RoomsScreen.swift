@@ -120,7 +120,7 @@ private struct NewRoomSheet: View {
                         HStack {
                             ForEach(Self.suggestions, id: \.self) { suggestion in
                                 Button(suggestion) { name = suggestion }
-                                    .buttonStyle(.bordered)
+                                    .brandProminentButton(Theme.accent)
                             }
                         }
                     }

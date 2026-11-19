@@ -74,6 +74,7 @@ private struct CableRow: View {
 
 struct CablePhoto: View {
     let cable: Cable
+    var size: CGFloat = 52
 
     var body: some View {
         Group {
@@ -85,8 +86,8 @@ struct CablePhoto: View {
                 placeholder
             }
         }
-        .frame(width: 52, height: 52)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: size * 0.2))
     }
 
     /// Photos fetched by scripts/scrape_elektramat.py ship in the bundle as <sku>.jpg,
@@ -109,7 +110,7 @@ struct SampleBadge: View {
             .font(.caption2.weight(.semibold))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(Theme.sampleBadge.opacity(0.85), in: Capsule())
+            .background(Theme.sampleBadge, in: Capsule())
             .foregroundStyle(.white)
     }
 }
