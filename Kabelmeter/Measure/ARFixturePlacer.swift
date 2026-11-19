@@ -29,6 +29,10 @@ final class ARFixturePlacer {
     private var ghost: Entity?
     private var ghostModel: String?
     private var smoother = CursorSmoother(window: 4, jumpDistance: 0.15)
+    /// Last wall pose and when it was found: kept briefly when ARKit loses the wall for a
+    /// moment, so the "+" button does not flicker off (same idea as the measuring cursor).
+    private var lastPose: (pose: simd_float4x4, time: CFTimeInterval)?
+    private static let holdDuration: CFTimeInterval = 0.5
     private var subscriptions: Set<AnyCancellable> = []
     private var isDirty = false
     private var lastSave: CFTimeInterval = 0
@@ -71,9 +75,18 @@ final class ARFixturePlacer {
 
         var pose: simd_float4x4?
         if placement.isActive, !placement.isRestoring, isNormal, let frame {
-            pose = wallPose(camera: frame.camera)
+            let now = CACurrentMediaTime()
+            if let found = wallPose(camera: frame.camera) {
+                lastPose = (found, now)
+                pose = found
+            } else if let last = lastPose, now - last.time < Self.holdDuration {
+                pose = last.pose
+            } else {
+                smoother.reset()
+            }
         } else {
             smoother.reset()
+            lastPose = nil
         }
         if placement.cursor != pose { placement.cursor = pose }
         updateGhost(pose: pose, fixtureId: placement.isActive ? placement.selectedFixtureId : nil)
@@ -144,24 +157,40 @@ final class ARFixturePlacer {
     // MARK: Cursor and preview
 
     /// Pose on the wall under the crosshair, or nil when no wall is hit.
+    ///
+    /// Without LiDAR (iPhone 15 and other non-Pro models) a plain wall has few feature points,
+    /// so an estimated plane with `.vertical` alignment rarely comes back. Tries, in order:
+    /// 1. a detected wall within its bounds;
+    /// 2. an estimated surface of any alignment, kept only when its normal makes it a wall
+    ///    (WallPose rejects floors and ceilings);
+    /// 3. a detected wall extended infinitely (a wall ARKit saw only partly; past a corner
+    ///    this can hit the extension of another wall).
     private func wallPose(camera: ARCamera) -> simd_float4x4? {
         let bounds = arView.bounds
         guard bounds.width > 0, bounds.height > 0 else { return nil }
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
-        let hit = arView.raycast(from: center, allowing: .existingPlaneGeometry, alignment: .vertical).first
-            ?? arView.raycast(from: center, allowing: .estimatedPlane, alignment: .vertical).first
-            ?? arView.raycast(from: center, allowing: .existingPlaneInfinite, alignment: .vertical).first
-        guard let hit else {
-            smoother.reset()
-            return nil
-        }
-        let t = hit.worldTransform
-        let position = smoother.add(SIMD3(t.columns.3.x, t.columns.3.y, t.columns.3.z))
-        // The y axis of a plane (and of a raycast hit on it) is the surface normal.
-        let normalSource = (hit.anchor as? ARPlaneAnchor)?.transform ?? t
-        let normal = SIMD3(normalSource.columns.1.x, normalSource.columns.1.y, normalSource.columns.1.z)
         let cam = camera.transform.columns.3
-        return WallPose.make(position: position, normal: normal, cameraPosition: SIMD3(cam.x, cam.y, cam.z))
+        let cameraPosition = SIMD3(cam.x, cam.y, cam.z)
+        let queries: [(ARRaycastQuery.Target, ARRaycastQuery.TargetAlignment)] = [
+            (.existingPlaneGeometry, .vertical),
+            (.estimatedPlane, .any),
+            (.existingPlaneInfinite, .vertical),
+        ]
+        for (target, alignment) in queries {
+            for hit in arView.raycast(from: center, allowing: target, alignment: alignment) {
+                let t = hit.worldTransform
+                // The y axis of a plane (and of a raycast hit on it) is the surface normal.
+                let normalSource = (hit.anchor as? ARPlaneAnchor)?.transform ?? t
+                let normal = SIMD3(normalSource.columns.1.x, normalSource.columns.1.y, normalSource.columns.1.z)
+                let position = SIMD3(t.columns.3.x, t.columns.3.y, t.columns.3.z)
+                guard WallPose.make(position: position, normal: normal, cameraPosition: cameraPosition) != nil else {
+                    continue
+                }
+                return WallPose.make(position: smoother.add(position), normal: normal, cameraPosition: cameraPosition)
+            }
+        }
+        smoother.reset()
+        return nil
     }
 
     /// A see-through copy of the selected model at the crosshair.
