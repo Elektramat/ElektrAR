@@ -30,3 +30,6 @@ One line each: what we chose and why.
 - Demo-modus and AR have separate placement lists: their coordinates do not mix, and switching Demo-modus must not wipe the saved room.
 - Fixtures are not added to the cart yet: the cart is meter-based.
 - No Elektramat MCP cart: without a login `cable_create_order` returns only the generic cart URL (no cart id or session), so Safari would show an empty cart. Details in `RemoteCartService`.
+- Web app in `webapp/` without a build step (plain ES modules), with the pricing ported 1:1 and the same test cases; data is copied from the app by `scripts/sync_webapp_data.sh`.
+- Web AR uses WebXR (Android Chrome only; iPhone Safari has none). On iPhone the web app offers manual route input and AR Quick Look for the USDZ switches. three.js is loaded from a pinned CDN URL only when AR starts.
+- WebXR placements are simple 3D frames (sizes from the model manifest) instead of the USDZ models: three.js cannot reliably load these USDZ files.

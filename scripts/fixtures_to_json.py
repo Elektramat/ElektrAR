@@ -95,6 +95,8 @@ def main():
             "price": number(row["total_incl_btw"]) if complete else None,
             "parts": fixture_parts,
             "note": (row.get("notes") or "").strip() or None,
+            "frameMM": manifest.get("frame_mm", [80, 80]),
+            "depthMM": manifest.get("depth_from_wall_mm", 12),
         })
         used.add(model)
 
