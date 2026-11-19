@@ -7,7 +7,11 @@
 3. Step "2 Kabels", "Automatisch": aim at the electrical cabinet and tap "+". The app draws the cables (up, along the wall, down to each part). Tap "Kabels toevoegen".
 4. Or "Handmatig": tap "+" at a part, then aim at the next corner: the preview goes straight up and then sideways (right angles). Tap "+" at every corner and "Klaar" at the last part. Show the length and price while you move.
 5. Switch to "Bekijken" and tap a switch and a cable: show the info card with codes, height, meters and price.
-6. Tap the cart at the top right: the shared cart of all rooms, with "Bestel op elektramat.nl" per product.
+6. Tap the cart at the top right: the shared cart of all rooms. Tap "Zet in winkelwagen op elektramat.nl":
+   the app fills the real shop cart in an in-app web view and shows it. Needs internet. If it fails, the
+   yellow banner says which product and why; "Bekijk op elektramat.nl" still opens the product page in Safari.
+7. Lights: in step 1 tap "Wijzig", choose "Lamp" and e.g. a Calex wall light; aim at the wall and tap "+".
+   A ceiling spot is placed by aiming at the ceiling. Say that the 3D shapes of lights are indicative.
 
 Say: "Long distances can drift a few percent. That is what the reserve is for."
 

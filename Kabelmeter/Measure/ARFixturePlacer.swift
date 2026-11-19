@@ -31,6 +31,10 @@ final class ARFixturePlacer {
     private var ghost: Entity?
     private var ghostModel: String?
     private var smoother = CursorSmoother(window: 4, jumpDistance: 0.15)
+    /// Last wall pose and when it was found: kept briefly when ARKit loses the wall for a
+    /// moment, so the "+" button does not flicker off (same idea as the measuring cursor).
+    private var lastPose: (pose: simd_float4x4, time: CFTimeInterval)?
+    private static let holdDuration: CFTimeInterval = 0.5
     private var subscriptions: Set<AnyCancellable> = []
     private var isDirty = false
     private var lastSave: CFTimeInterval = 0
@@ -70,21 +74,33 @@ final class ARFixturePlacer {
         var pose: simd_float4x4?
         var guide: MeasureGuide?
         var alignment = Alignment.none
-        if placement.isActive, !placement.isRestoring, isNormal, let frame,
-           let raw = wallPose(camera: frame.camera) {
+        if placement.isActive, !placement.isRestoring, isNormal, let frame {
             let fixture = placement.selectedFixtureId.flatMap { fixtures[$0] }
-            let size = FixtureGeometry.size(frameMM: fixture?.frameMM)
-            var (snapped, kind) = ConnectionSnapping.snapFixture(pose: raw, size: size, to: connections)
-            if kind == nil {
-                // Not clicked onto something: line up with the other parts on this wall.
-                (snapped, alignment) = AlignmentSnapping.align(
-                    pose: snapped, others: placement.placed.map(\.transform), floorY: floorY,
-                    standardHeight: fixture.flatMap { FixtureGeometry.standardHeight(product: $0.product) })
+            let now = CACurrentMediaTime()
+            var raw: simd_float4x4?
+            if let found = surfacePose(camera: frame.camera, ceiling: fixture?.isCeiling == true) {
+                lastPose = (found, now)
+                raw = found
+            } else if let last = lastPose, now - last.time < Self.holdDuration {
+                raw = last.pose
+            } else {
+                smoother.reset()
             }
-            pose = snapped
-            guide = kind.map(MeasureGuide.init)
+            if let raw {
+                let size = FixtureGeometry.size(frameMM: fixture?.frameMM)
+                var (snapped, kind) = ConnectionSnapping.snapFixture(pose: raw, size: size, to: connections)
+                if kind == nil {
+                    // Not clicked onto something: line up with the other parts on this wall.
+                    (snapped, alignment) = AlignmentSnapping.align(
+                        pose: snapped, others: placement.placed.map(\.transform), floorY: floorY,
+                        standardHeight: fixture.flatMap { FixtureGeometry.standardHeight(product: $0.product) })
+                }
+                pose = snapped
+                guide = kind.map(MeasureGuide.init)
+            }
         } else {
             smoother.reset()
+            lastPose = nil
         }
         if placement.cursor != pose { placement.cursor = pose }
         if placement.guide != guide { placement.guide = guide }
@@ -142,25 +158,49 @@ final class ARFixturePlacer {
 
     // MARK: Cursor and preview
 
-    /// Pose on the wall under the crosshair, or nil when no wall is hit.
-    private func wallPose(camera: ARCamera) -> simd_float4x4? {
+    /// Pose on the wall (or, for a ceiling light, the ceiling) under the crosshair, or nil when none is hit.
+    ///
+    /// Without LiDAR (iPhone 15 and other non-Pro models) a plain wall has few feature points,
+    /// so an estimated plane with `.vertical` alignment rarely comes back. Tries, in order:
+    /// 1. a detected wall within its bounds;
+    /// 2. an estimated surface of any alignment, kept only when its normal makes it a wall
+    ///    (WallPose rejects floors and ceilings). For a ceiling light the same steps run on horizontal
+    ///    surfaces above the camera (CeilingPose);
+    /// 3. a detected wall extended infinitely (a wall ARKit saw only partly; past a corner
+    ///    this can hit the extension of another wall).
+    private func surfacePose(camera: ARCamera, ceiling: Bool) -> simd_float4x4? {
         let bounds = arView.bounds
         guard bounds.width > 0, bounds.height > 0 else { return nil }
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
-        let hit = arView.raycast(from: center, allowing: .existingPlaneGeometry, alignment: .vertical).first
-            ?? arView.raycast(from: center, allowing: .estimatedPlane, alignment: .vertical).first
-            ?? arView.raycast(from: center, allowing: .existingPlaneInfinite, alignment: .vertical).first
-        guard let hit else {
-            smoother.reset()
-            return nil
-        }
-        let t = hit.worldTransform
-        let position = smoother.add(SIMD3(t.columns.3.x, t.columns.3.y, t.columns.3.z))
-        // The y axis of a plane (and of a raycast hit on it) is the surface normal.
-        let normalSource = (hit.anchor as? ARPlaneAnchor)?.transform ?? t
-        let normal = SIMD3(normalSource.columns.1.x, normalSource.columns.1.y, normalSource.columns.1.z)
         let cam = camera.transform.columns.3
-        return WallPose.make(position: position, normal: normal, cameraPosition: SIMD3(cam.x, cam.y, cam.z))
+        let cameraPosition = SIMD3(cam.x, cam.y, cam.z)
+        let forward = -SIMD3(camera.transform.columns.2.x, camera.transform.columns.2.y, camera.transform.columns.2.z)
+        // A ceiling is a horizontal surface above the camera; a wall a vertical one.
+        let alignment: ARRaycastQuery.TargetAlignment = ceiling ? .horizontal : .vertical
+        let queries: [(ARRaycastQuery.Target, ARRaycastQuery.TargetAlignment)] = [
+            (.existingPlaneGeometry, alignment),
+            (.estimatedPlane, .any),
+            (.existingPlaneInfinite, alignment),
+        ]
+        func pose(position: SIMD3<Float>, normal: SIMD3<Float>) -> simd_float4x4? {
+            ceiling
+                ? CeilingPose.make(position: position, normal: normal, cameraPosition: cameraPosition,
+                                   cameraForward: forward)
+                : WallPose.make(position: position, normal: normal, cameraPosition: cameraPosition)
+        }
+        for (target, alignment) in queries {
+            for hit in arView.raycast(from: center, allowing: target, alignment: alignment) {
+                let t = hit.worldTransform
+                // The y axis of a plane (and of a raycast hit on it) is the surface normal.
+                let normalSource = (hit.anchor as? ARPlaneAnchor)?.transform ?? t
+                let normal = SIMD3(normalSource.columns.1.x, normalSource.columns.1.y, normalSource.columns.1.z)
+                let position = SIMD3(t.columns.3.x, t.columns.3.y, t.columns.3.z)
+                guard pose(position: position, normal: normal) != nil else { continue }
+                return pose(position: smoother.add(position), normal: normal)
+            }
+        }
+        smoother.reset()
+        return nil
     }
 
     /// A see-through copy of the selected model at the crosshair.
@@ -209,10 +249,16 @@ final class ARFixturePlacer {
     private func loadTemplate(_ fixture: Fixture) async -> Entity {
         if let template = templates[fixture.model] { return template }
         let template: Entity
+        // Switches, sockets and lights all have a bundled model (lights: light-<sku>.usdz from
+        // scripts/generate_light_models.py).
         if let url = Bundle.main.url(forResource: fixture.model, withExtension: "usdz")
             ?? Bundle.main.url(forResource: fixture.model, withExtension: "usdz", subdirectory: "Models"),
            let loaded = try? await Entity(contentsOf: url) {
             template = Self.unanchored(loaded)
+        } else if fixture.shape != nil {
+            // A light without a model file: a stand-in shape of about the right size.
+            Self.logger.error("Light model \(fixture.model, privacy: .public) missing; showing a stand-in shape")
+            template = Self.lightModel(for: fixture)
         } else {
             Self.logger.error("Model \(fixture.model, privacy: .public) could not be loaded; showing a plain frame")
             template = Self.fallbackModel(for: fixture)
@@ -240,6 +286,56 @@ final class ARFixturePlacer {
         for child in entity.children {
             removeAnchoring(child)
         }
+    }
+
+    /// A stand-in for a light, back on the wall or ceiling (z = 0), +Z out of the surface.
+    /// Not the real product: the shape and size are indicative.
+    private static func lightModel(for fixture: Fixture) -> Entity {
+        let frame = fixture.frameMM ?? [100, 100]
+        let width = Float(frame.first ?? 100) / 1000
+        let height = Float(frame.last ?? 100) / 1000
+        let depth = Float(fixture.depthMM ?? 50) / 1000
+        let dark = SimpleMaterial(color: UIColor(white: 0.12, alpha: 1), roughness: 0.5, isMetallic: false)
+        let white = SimpleMaterial(color: .white, roughness: 0.4, isMetallic: false)
+        let glow = UnlitMaterial(color: UIColor(red: 1, green: 0.93, blue: 0.75, alpha: 1))
+        let container = Entity()
+        // A cylinder's axis is +Y; turn it to +Z so it stands out of the surface.
+        let alongZ = simd_quatf(angle: .pi / 2, axis: [1, 0, 0])
+        switch fixture.shape {
+        case "cylinder":
+            let plate = ModelEntity(mesh: .generateBox(width: width * 0.7, height: height * 0.5, depth: 0.02),
+                                    materials: [dark])
+            plate.position.z = 0.01
+            let body = ModelEntity(mesh: .generateCylinder(height: height, radius: width / 2), materials: [dark])
+            body.position.z = max(depth - width / 2, 0.02)
+            container.addChild(plate)
+            container.addChild(body)
+        case "disc":
+            let disc = ModelEntity(mesh: .generateCylinder(height: depth, radius: width / 2), materials: [white])
+            disc.orientation = alongZ
+            disc.position.z = depth / 2
+            container.addChild(disc)
+        case "recessed":
+            let ring = ModelEntity(mesh: .generateCylinder(height: depth, radius: width / 2), materials: [white])
+            ring.orientation = alongZ
+            ring.position.z = depth / 2
+            let lens = ModelEntity(mesh: .generateCylinder(height: 0.002, radius: width * 0.32), materials: [glow])
+            lens.orientation = alongZ
+            lens.position.z = depth + 0.001
+            container.addChild(ring)
+            container.addChild(lens)
+        case "surface":
+            let body = ModelEntity(mesh: .generateBox(width: width, height: height, depth: depth, cornerRadius: depth / 2),
+                                   materials: [white])
+            body.position.z = depth / 2
+            container.addChild(body)
+        default:
+            let body = ModelEntity(mesh: .generateBox(width: width, height: height, depth: depth, cornerRadius: 0.006),
+                                   materials: [dark])
+            body.position.z = depth / 2
+            container.addChild(body)
+        }
+        return container
     }
 
     /// A white plate of the right size, back on the wall (z = 0), like the real models.

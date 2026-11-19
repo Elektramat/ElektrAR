@@ -23,7 +23,7 @@ Switch recognition, AI/vision calls, 3D overlay of new switches, accounts/login,
 
 - **Language/UI:** Swift 5.9+, SwiftUI. Minimum iOS 17.
 - **AR:** ARKit + RealityKit, using `ARView` wrapped in `UIViewRepresentable`. Do not use SceneKit or third-party AR packages.
-- **No external dependencies.** No network calls except opening a product URL in Safari.
+- **No external dependencies.** No network calls except elektramat.nl: the product page in Safari, and the shop cart in an in-app web view (decided by Jairo on 19 Nov 2026, see `WebShopCart`).
 - **UI language: Dutch** (all user-visible strings). **Code, comments, commit messages, docs: English.**
 - **Numbers:** format with `Locale(identifier: "nl_NL")` (comma decimals, euro). Internally always meters as `Double`.
 - **State:** `@Observable` / `ObservableObject`, whichever is simpler. No Core Data. Persist the cart with `UserDefaults` + `Codable`.
@@ -116,7 +116,7 @@ required = measured * (1 + reserve) + connectionAllowance
 
 ## 7. Cart
 
-- `CartService` protocol with `add(cable:meters:)`. Ship `LocalCartService` (in-app cart via `CartStore`). The cart screen lists items, quantity in meters, line price and total, and has a **"Bestel op elektramat.nl"** button that opens the product URL of the cable in Safari.
+- `CartService` protocol with `add(cable:meters:)`. Ship `LocalCartService` (in-app cart via `CartStore`). The cart screen lists items, quantity in meters, line price and total, and has a **"Zet in winkelmand op elektramat.nl"** button that fills the real shop cart through an in-app web view (`WebShopCart`), plus a per-item link that opens the product page in Safari.
 - Real cart integration (the webshop probably runs on Magento, which is unconfirmed) depends on an API we do not know yet. **Do not build a fake network client.** Leave a documented `RemoteCartService` stub with a TODO and the questions to ask: how is cable sold (per meter, per roll, cut to length), are decimal quantities allowed, is there a cart API, and how would a user's session be linked.
 - Show this note on the cart screen: *"Dit is een schatting. Controleer de lengte zelf en laat het aansluiten over aan een installateur."*
 
@@ -142,6 +142,9 @@ Mirror Apple's Measure app. Do **not** require tapping on the screen to place a 
 - Cart: small button with a badge at the top right, opens `CartScreen`.
 - Big tap targets, high contrast (this is used standing in a room or on a ladder), Dark Mode supported. All colors via `Theme.swift`.
 - No logos, no copied brand assets. If the team supplies design tokens later, only `Theme.swift` should need to change.
+- **Never black or dark text on a blue button, anywhere in the app.** Text and icons on a blue fill are white (`Theme.onAccent`). Use `.brandProminentButton()` (`Views/BrandButton.swift`) for a filled blue button, not a bare `.buttonStyle(.borderedProminent)`: the system picks the label color itself and that can be black. The same goes for selected segments, badges and any other blue surface. Check every new blue surface in a screenshot.
+- The square control buttons next to "+": when placing switches, only the undo and trash icons (no text); when measuring, the icon with a short title under it ("Terug", "Opnieuw", "Klaar"). Icons are always full brand color, also when disabled (no opacity). The title is always the accessibility label.
+- **Every interactive control reacts visibly and with a haptic on touch.** Custom buttons use `CardButtonStyle` (shrinks, darkens a little, light tap); never a bare `.buttonStyle(.plain)` on a standalone button. Steppers, segmented pickers and picker lists add `.sensoryFeedback(.selection, trigger:)`, and a number that changes rolls (`.contentTransition(.numericText())`), so the user sees the tap worked before the price changes.
 
 ## 10. Milestones and acceptance criteria
 

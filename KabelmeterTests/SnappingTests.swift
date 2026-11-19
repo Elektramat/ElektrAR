@@ -73,3 +73,14 @@ final class SnappingTests: XCTestCase {
         XCTAssertEqual(s.add([1, 0, 0]), [1, 0, 0])
     }
 }
+
+final class VerticalGuideTests: XCTestCase {
+    func testExactHeightFromRayWithoutAngleLimit() {
+        // Aim 5° beside the line: limited guide rejects it, unlimited returns the closest point.
+        let camera = SIMD3<Float>(0, 1.5, 2)
+        let dir = SIMD3<Float>(sin(5 * .pi / 180), 0, -cos(5 * .pi / 180))
+        XCTAssertNil(Snapping.pointOnVerticalGuide(rayOrigin: camera, rayDirection: dir, through: [0, 0, 0]))
+        let p = Snapping.pointOnVerticalGuide(rayOrigin: camera, rayDirection: dir, through: [0, 0, 0], maxAngle: nil)
+        XCTAssertEqual(p?.y ?? -1, 1.5, accuracy: 1e-4)
+    }
+}

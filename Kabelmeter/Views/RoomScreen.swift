@@ -1,4 +1,5 @@
 import ARKit
+import AVFoundation
 import Combine
 import SwiftUI
 import UIKit
@@ -33,6 +34,9 @@ struct RoomScreen: View {
     /// "Verplaats": the part taken off the wall; the next "+" puts it back, "Annuleer" restores it.
     @State private var moving: (fixtureId: String, oldPose: simd_float4x4)?
     @State private var toast: Toast?
+    @State private var cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
 
     private struct Toast: Equatable {
         let text: String
@@ -55,6 +59,10 @@ struct RoomScreen: View {
     /// The part the "+" places (shown as a see-through preview on the wall).
     private var fixture: Fixture? {
         fixtureStore.fixture(id: storedFixtureId) ?? fixtureStore.fixtures.first(where: \.complete) ?? fixtureStore.fixtures.first
+    }
+
+    private var cameraBlocked: Bool {
+        !useSimulated && (cameraStatus == .denied || cameraStatus == .restricted)
     }
 
     private var reserve: Double { Double(reservePercent) / 100 }
@@ -83,15 +91,19 @@ struct RoomScreen: View {
             if let toast {
                 Label(toast.text, systemImage: toast.success ? "checkmark.circle.fill" : "info.circle")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(toast.success ? Color.green : .primary)
+                    .foregroundStyle(toast.success ? Theme.cta : Theme.ink)
                     .padding(.horizontal, 16).padding(.vertical, 10)
-                    .background(.thickMaterial, in: Capsule())
+                    .surface(Capsule())
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .frame(maxHeight: .infinity, alignment: .top)
                     .padding(.top, 60)
             }
         }
+        .overlay { if cameraBlocked { cameraBlockedCard } }
+        // Dark status bar text is unreadable on the camera image.
+        .statusBarHidden()
         .onAppear(perform: load)
+        .onChange(of: scenePhase) { if $1 == .active { cameraStatus = AVCaptureDevice.authorizationStatus(for: .video) } }
         .onChange(of: mode) { sync() }
         .onChange(of: step) { sync() }
         .onChange(of: cableMode) { sync() }
@@ -146,17 +158,18 @@ struct RoomScreen: View {
             Button { dismiss() } label: {
                 Image(systemName: "chevron.left")
                     .font(.headline)
+                    .foregroundStyle(Theme.accent)
                     .frame(width: 44, height: 44)
-                    .background(.regularMaterial, in: Circle())
+                    .surface(Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(CardButtonStyle())
             .accessibilityLabel("Terug naar ruimtes")
 
             Text(room?.name ?? "Ruimte")
                 .font(.headline).lineLimit(1)
                 .padding(.horizontal, 14)
                 .frame(minHeight: 44)
-                .background(.regularMaterial, in: Capsule())
+                .surface(Capsule())
 
             Spacer(minLength: 0)
             CartButton()
@@ -171,7 +184,9 @@ struct RoomScreen: View {
         }
         .pickerStyle(.segmented)
         .controlSize(.large)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 9))
+        .sensoryFeedback(.selection, trigger: mode)
+        .padding(3)
+        .surface(RoundedRectangle(cornerRadius: 11))
     }
 
     /// Step 1 parts, step 2 cables (automatically or by hand).
@@ -182,7 +197,9 @@ struct RoomScreen: View {
                 Text("2  Kabels").tag(Step.cables)
             }
             .pickerStyle(.segmented)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 9))
+            .sensoryFeedback(.selection, trigger: step)
+            .padding(3)
+            .surface(RoundedRectangle(cornerRadius: 11))
 
             if step == .cables {
                 Picker("Kabels", selection: $cableMode) {
@@ -190,7 +207,9 @@ struct RoomScreen: View {
                     Text("Handmatig").tag(CableMode.manual)
                 }
                 .pickerStyle(.segmented)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 9))
+                .sensoryFeedback(.selection, trigger: cableMode)
+                .padding(3)
+                .surface(RoundedRectangle(cornerRadius: 11))
             }
         }
     }
@@ -202,10 +221,11 @@ struct RoomScreen: View {
                 pill("Kijk rustig rond: zodra de ruimte herkend is, komt je ontwerp terug", color: Theme.warning)
                 Button("Niet herkend? Toon hier") { placement.skipRestoreRequests.send() }
                     .font(.callout.weight(.semibold))
+                    .foregroundStyle(Theme.accent)
                     .padding(.horizontal, 16)
                     .frame(minHeight: 44)
-                    .background(.regularMaterial, in: Capsule())
-                    .buttonStyle(.plain)
+                    .surface(Capsule())
+                    .buttonStyle(CardButtonStyle())
             } else if let message = session.trackingMessage {
                 pill(message, color: Theme.warning)
             } else if let hint {
@@ -219,12 +239,16 @@ struct RoomScreen: View {
         switch step {
         case .parts:
             if moving != nil { return ("Richt op de nieuwe plek en tik op +", Theme.highlight) }
-            if let guide = placement.guide { return (guide.label, Theme.accent) }
+            if let guide = placement.guide { return (guide.label, Color(Theme.Token.secondary)) }
             if let label = placement.alignment.label { return (label, Theme.align) }
-            return placement.placed.isEmpty ? ("Richt op de muur waar het onderdeel komt en tik op +", .white) : nil
+            if placement.placed.isEmpty {
+                return (fixture?.isCeiling == true ? "Richt op het plafond waar de lamp komt en tik op +"
+                                                   : "Richt op de muur waar het onderdeel komt en tik op +", .white)
+            }
+            return nil
         case .cables:
             if cableMode == .auto { return (autoHint, session.proposedRoutes.isEmpty ? .white : Theme.proposed) }
-            if let guide = session.guide { return (guide.label, Theme.accent) }
+            if let guide = session.guide { return (guide.label, Color(Theme.Token.secondary)) }
             if session.points.isEmpty { return ("Begin bij een onderdeel of de groepenkast: richt en tik op +", .white) }
             return ("Tik op + bij elke hoek; tik op Klaar bij het laatste onderdeel", .white)
         }
@@ -298,26 +322,46 @@ struct RoomScreen: View {
     private func plusButton(enabled: Bool, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: "plus")
-                .font(.system(size: 34, weight: .bold))
+                .font(.system(size: 28, weight: .bold))
                 .frame(width: Theme.addButton, height: Theme.addButton)
                 .background(enabled ? Theme.accent : Theme.secondaryButton, in: Circle())
                 .foregroundStyle(Theme.onAccent)
                 .overlay(Circle().strokeBorder(.white.opacity(0.8), lineWidth: 3))
         }
+        .buttonStyle(CardButtonStyle())
         .disabled(!enabled)
         .accessibilityLabel(label)
     }
 
+    /// White square button with a blue icon and a short title; full color also when disabled,
+    /// so it never turns grey on the camera image. The title is the accessibility label too.
     private func controlButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(spacing: 2) {
-                Image(systemName: icon).font(.title3)
-                Text(title).font(.caption2).lineLimit(1).minimumScaleFactor(0.7)
+            VStack(spacing: 3) {
+                Image(systemName: icon).font(.title3.weight(.semibold)).foregroundStyle(Theme.accent)
+                Text(title).font(.caption2.weight(.semibold)).foregroundStyle(Theme.ink).lineLimit(1).minimumScaleFactor(0.7)
             }
-            .frame(width: Theme.tapTarget, height: Theme.tapTarget)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+            .frame(width: Theme.tapTarget + 8, height: Theme.tapTarget)
+            .surface(RoundedRectangle(cornerRadius: 14))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CardButtonStyle())
+        .accessibilityLabel(title)
+    }
+
+    private var cameraBlockedCard: some View {
+        VStack(spacing: Theme.spacing) {
+            Image(systemName: "camera.fill").font(.largeTitle).foregroundStyle(Theme.accent)
+            Text("Geen toegang tot de camera").font(.headline)
+            Text("De Kabelmeter gebruikt de camera om je ruimte te zien. Zet de camera aan in Instellingen.")
+                .font(.subheadline).multilineTextAlignment(.center).foregroundStyle(.secondary)
+            Button("Open Instellingen") {
+                if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+            }
+            .brandProminentButton()
+        }
+        .padding(24)
+        .surface(RoundedRectangle(cornerRadius: Theme.corner))
+        .padding(32)
     }
 
     // MARK: Bottom card
@@ -347,7 +391,7 @@ struct RoomScreen: View {
                             Text("Tik op + op de nieuwe plek").font(Theme.labelFont).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Button("Annuleer") { cancelMove() }.buttonStyle(.bordered)
+                        Button("Annuleer") { cancelMove() }.buttonStyle(.bordered).tint(Theme.accent)
                     }
                 } else {
                     selectionRow(icon: { if let fixture { FixtureIcon(fixture: fixture, size: 44) } },
@@ -374,6 +418,7 @@ struct RoomScreen: View {
                     Text("Rechte hoeken: eerst omhoog of omlaag, dan opzij").font(Theme.labelFont)
                 }
                 .tint(Theme.accent)
+                .sensoryFeedback(.selection, trigger: session.rightAngles)
             case (.edit, .cables, .auto):
                 cableRow
                 HStack(alignment: .firstTextBaseline) {
@@ -391,13 +436,14 @@ struct RoomScreen: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
                 }
-                .buttonStyle(.borderedProminent)
+                .brandProminentButton(Theme.cta)
+                .buttonBorderShape(.roundedRectangle(radius: Theme.buttonCorner))
                 .disabled(session.proposedRoutes.isEmpty || cable == nil)
             }
         }
-        .padding(Theme.spacing)
+        .padding(Theme.barPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .surface(RoundedRectangle(cornerRadius: Theme.corner))
     }
 
     /// What the "+" places or draws, with a button to change it.
@@ -410,7 +456,7 @@ struct RoomScreen: View {
                 Text(subtitle).font(Theme.labelFont).foregroundStyle(warning ? Theme.warning : .secondary).lineLimit(2)
             }
             Spacer()
-            Button("Wijzig", action: change).buttonStyle(.bordered)
+            Button("Wijzig", action: change).buttonStyle(.bordered).tint(Theme.accent)
         }
     }
 

@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-/// Loads fixtures.json (switches and sockets with a 3D model) from the app bundle.
+/// Loads fixtures.json (switches and sockets with a 3D model) and lights.json (wall and ceiling lights) from the app bundle.
 @MainActor
 final class FixtureStore: ObservableObject {
     @Published private(set) var fixtures: [Fixture] = []
@@ -14,6 +14,9 @@ final class FixtureStore: ObservableObject {
         }
         do {
             fixtures = try FixtureCatalog.decode(Data(contentsOf: url))
+            if let lights = bundle.url(forResource: "lights", withExtension: "json") {
+                fixtures += try FixtureCatalog.decodeLights(Data(contentsOf: lights))
+            }
             if fixtures.isEmpty { loadError = "De lijst met schakelaars is leeg." }
         } catch {
             loadError = "Lijst met schakelaars kon niet worden gelezen."

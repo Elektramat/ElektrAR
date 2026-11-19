@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Rendered preview of the 3D model (FixtureImages/<model>.png, made by
-/// scripts/render_fixture_previews.py), or a symbol when there is none.
+/// scripts/render_fixture_previews.py), for lights too. Falls back to the product photo of a
+/// light, then to a symbol.
 struct FixtureIcon: View {
     let fixture: Fixture
     var size: CGFloat = 52
@@ -14,7 +15,8 @@ struct FixtureIcon: View {
                 if let image = Self.preview(for: fixture) {
                     Image(uiImage: image).resizable().scaledToFit().padding(size * 0.04)
                 } else {
-                    Image(systemName: fixture.product == "stopcontact" ? "poweroutlet.type.f" : "lightswitch.on")
+                    Image(systemName: fixture.isLight ? "lightbulb"
+                          : fixture.product == "stopcontact" ? "poweroutlet.type.f" : "lightswitch.on")
                         .font(size > 40 ? .title3 : .body)
                         .foregroundStyle(.secondary)
                 }
@@ -23,15 +25,22 @@ struct FixtureIcon: View {
     }
 
     private static func preview(for fixture: Fixture) -> UIImage? {
-        guard let path = Bundle.main.path(forResource: fixture.model, ofType: "png")
-            ?? Bundle.main.path(forResource: fixture.model, ofType: "png", inDirectory: "FixtureImages") else { return nil }
-        return UIImage(contentsOfFile: path)
+        if let path = Bundle.main.path(forResource: fixture.model, ofType: "png")
+            ?? Bundle.main.path(forResource: fixture.model, ofType: "png", inDirectory: "FixtureImages") {
+            return UIImage(contentsOfFile: path)
+        }
+        if let sku = fixture.lightSku,
+           let path = Bundle.main.path(forResource: sku, ofType: "jpg")
+            ?? Bundle.main.path(forResource: sku, ofType: "jpg", inDirectory: "LightImages") {
+            return UIImage(contentsOfFile: path)
+        }
+        return nil
     }
 }
 
 enum FixtureText {
     static func price(_ fixture: Fixture) -> String {
-        if let price = fixture.price { return "\(Format.euro(price)) complete set" }
+        if let price = fixture.price { return fixture.isLight ? Format.euro(price) : "\(Format.euro(price)) complete set" }
         return "Niet compleet te bestellen"
     }
 }

@@ -11,3 +11,7 @@ Package.resolved
 .DS_Store
 # Python
 __pycache__/
+
+# Vercel CLI link
+.vercel/
+.env*

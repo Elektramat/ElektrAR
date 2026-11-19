@@ -81,3 +81,65 @@ final class MeasureSessionTests: XCTestCase {
         XCTAssertEqual(s.totalLength, 0)
     }
 }
+
+final class WebShopOrderTests: XCTestCase {
+    private func line(_ quantity: Double, sku: String = "401169628", shopProductId: Int? = nil) -> BillLine {
+        BillLine(kind: .cable, productId: sku, sku: sku, name: "YMvK kabel 3x1,5", detail: "3x1,5 mm²",
+                 unitPrice: 1.45, quantity: quantity, pieces: [quantity],
+                 productUrl: URL(string: "https://www.elektramat.nl/ymvk-kabel-3x1-5-per-meter/")!, isSample: false,
+                 shopProductId: shopProductId, rooms: ["Woonkamer"])
+    }
+
+    func testWholeMetersStayTheSame() {
+        XCTAssertEqual(WebShopOrder.lines(for: [line(10)]).map(\.quantity), [10])
+    }
+
+    func testFloatingPointNoiseDoesNotAddAMeter() {
+        XCTAssertEqual(WebShopOrder.lines(for: [line(10.000000001)]).map(\.quantity), [10])
+    }
+
+    func testPartialMeterRoundsUp() {
+        XCTAssertEqual(WebShopOrder.lines(for: [line(7.2)]).map(\.quantity), [8])
+    }
+
+    func testSkipsEmptyAndInvalidLengths() {
+        XCTAssertTrue(WebShopOrder.lines(for: [line(0), line(-1), line(.nan), line(.infinity)]).isEmpty)
+    }
+
+    func testKeepsOrderAndProductData() {
+        let lines = WebShopOrder.lines(for: [line(3, sku: "A"), line(12, sku: "B")])
+        XCTAssertEqual(lines.map(\.sku), ["A", "B"])
+        XCTAssertEqual(lines.map(\.quantity), [3, 12])
+        XCTAssertEqual(lines.first?.productUrl.host, "www.elektramat.nl")
+    }
+
+    func testPassesShopProductId() {
+        XCTAssertEqual(WebShopOrder.lines(for: [line(5, shopProductId: 610957), line(3)]).map(\.productId), [610957, nil])
+    }
+
+    // MARK: missing(_:before:after:)
+
+    private func shopLine(_ sku: String, _ quantity: Int) -> WebShopLine {
+        WebShopLine(sku: sku, name: sku, productUrl: URL(string: "https://www.elektramat.nl/")!,
+                    productId: 1, quantity: quantity)
+    }
+
+    func testAllArrivedIntoEmptyCart() {
+        XCTAssertTrue(WebShopOrder.missing([shopLine("A", 7)], before: [:], after: ["A": 7]).isEmpty)
+    }
+
+    func testCountsOnlyWhatWasAddedOnTopOfAnExistingLine() {
+        let result = WebShopOrder.missing([shopLine("A", 7)], before: ["A": 4], after: ["A": 8])
+        XCTAssertEqual(result, [.init(line: shopLine("A", 7), arrived: 4)])
+    }
+
+    func testNothingArrived() {
+        let result = WebShopOrder.missing([shopLine("A", 3), shopLine("B", 2)], before: ["B": 1], after: ["A": 3, "B": 1])
+        XCTAssertEqual(result, [.init(line: shopLine("B", 2), arrived: 0)])
+    }
+
+    func testSameSkuTwiceSharesWhatArrivedInOrder() {
+        let result = WebShopOrder.missing([shopLine("A", 3), shopLine("A", 4)], before: [:], after: ["A": 5])
+        XCTAssertEqual(result, [.init(line: shopLine("A", 4), arrived: 2)])
+    }
+}

@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Opens from the "+" in the placing mode (and from "Wissel" in the edit mode):
-/// first a switch or a socket, then the options grouped by brand.
+/// Opens from "Wijzig" in the parts step (and from "Wissel" in the info card):
+/// first a switch, socket or light, then the options grouped by brand.
 struct FixtureChooserSheet: View {
     let fixtures: [Fixture]
     /// The last chosen fixture, offered as a shortcut ("Nog een").
@@ -13,6 +13,7 @@ struct FixtureChooserSheet: View {
     private static let kinds: [(product: String, title: String, icon: String)] = [
         ("schakelaar", "Schakelaar", "lightswitch.on"),
         ("stopcontact", "Stopcontact", "poweroutlet.type.f"),
+        ("lamp", "Lamp", "lightbulb"),
     ]
 
     var body: some View {
@@ -101,8 +102,9 @@ private struct FixtureBrandList: View {
                             HStack(spacing: Theme.spacing) {
                                 FixtureIcon(fixture: fixture)
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(fixture.line).font(.headline)
-                                    Text(fixture.mounting == "opbouw" ? "\(fixture.colourName) · opbouw" : fixture.colourName)
+                                    Text(fixture.isLight ? fixture.productName : fixture.line).font(.headline).lineLimit(2)
+                                    Text(fixture.isLight ? "\(fixture.title) · \(fixture.isCeiling ? "plafond" : "wand")"
+                                         : fixture.mounting == "opbouw" ? "\(fixture.colourName) · opbouw" : fixture.colourName)
                                         .font(.subheadline).foregroundStyle(.secondary)
                                     Text(FixtureText.price(fixture)).font(.subheadline)
                                         .foregroundStyle(fixture.complete ? .primary : Theme.warning)
@@ -123,7 +125,7 @@ private struct FixtureBrandList: View {
         .overlay {
             if filtered.isEmpty { ContentUnavailableView.search(text: query) }
         }
-        .searchable(text: $query, prompt: "Zoek serie of kleur")
+        .searchable(text: $query, prompt: "Zoek serie, kleur of lamp")
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
     }

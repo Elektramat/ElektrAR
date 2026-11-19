@@ -87,7 +87,13 @@ def main():
         if index:
             time.sleep(DELAY_S)
         url = f"{BASE}{slug}/"
-        data = product_data(fetch(url).decode("utf-8"), url)
+        page = fetch(url).decode("utf-8")
+        data = product_data(page, url)
+        # The add-to-cart form posts the shop's internal product id, which differs from
+        # schema.org productID. The app posts it directly, without loading the page.
+        form_id = re.search(r'action="[^"]*/checkout/cart/add/[^"]*/product/(\d+)/"\s*id="product_addtocart_form"', page)
+        if not form_id:
+            sys.exit(f"{url}: no add-to-cart form on the page")
         offer = data.get("offers") or {}
         sku, name, price = data.get("sku"), data.get("name"), offer.get("price")
         image = data.get("image")
@@ -120,6 +126,7 @@ def main():
             "imageUrl": image,
             "productUrl": offer.get("url") or url,
             "isSample": False,
+            "shopProductId": int(form_id.group(1)),
         })
         print(f"{sku}  {display}  € {price}", file=sys.stderr)
 

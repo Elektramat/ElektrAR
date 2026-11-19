@@ -37,6 +37,8 @@ final class MeasureSession: ObservableObject {
     /// Height of the floor in world space, nil until ARKit has seen it.
     @Published var floorY: Float?
     @Published private(set) var isFinished = false
+    /// True when the device measures with LiDAR depth.
+    @Published var usesLiDAR = false
     /// Draw with right angles: from the last anchor first straight up or down, then sideways
     /// to the crosshair, the way cable runs along a wall. Off: a straight line.
     @Published var rightAngles = true

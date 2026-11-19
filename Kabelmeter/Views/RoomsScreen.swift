@@ -9,8 +9,20 @@ struct RoomsScreen: View {
     @State private var path: [UUID] = []
     @State private var showNewRoom = false
     @State private var roomToDelete: Project?
+    @AppStorage("seenIntro") private var seenIntro = false
+    @State private var showIntro = false
 
     var body: some View {
+        // First start: the intro comes before anything else, so the camera prompt
+        // appears only after the user knows why it is needed.
+        if seenIntro {
+            rooms.fullScreenCover(isPresented: $showIntro) { IntroView { showIntro = false } }
+        } else {
+            IntroView { seenIntro = true }
+        }
+    }
+
+    private var rooms: some View {
         NavigationStack(path: $path) {
             List {
                 if projectStore.projects.isEmpty {
@@ -29,6 +41,12 @@ struct RoomsScreen: View {
             }
             .navigationTitle("Mijn ruimtes")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showIntro = true } label: {
+                        Image(systemName: "questionmark.circle").font(.title3.weight(.semibold)).foregroundStyle(Theme.accent)
+                    }
+                    .accessibilityLabel("Uitleg")
+                }
                 ToolbarItem(placement: .topBarTrailing) { CartButton() }
             }
             .safeAreaInset(edge: .bottom) {
@@ -37,7 +55,8 @@ struct RoomsScreen: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
                 }
-                .buttonStyle(.borderedProminent)
+                .brandProminentButton(Theme.cta)
+                .buttonBorderShape(.roundedRectangle(radius: Theme.buttonCorner))
                 .padding(.horizontal, Theme.spacing)
                 .padding(.bottom, 4)
             }

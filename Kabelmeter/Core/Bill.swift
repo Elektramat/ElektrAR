@@ -23,6 +23,8 @@ nonisolated struct BillLine: Identifiable, Equatable, Sendable {
     var pieces: [Double]
     let productUrl: URL
     let isSample: Bool
+    /// The shop's internal product id, so `WebShopCart` can post the form without loading the page.
+    let shopProductId: Int?
     /// Names of the rooms this line comes from.
     var rooms: [String]
 
@@ -31,16 +33,16 @@ nonisolated struct BillLine: Identifiable, Equatable, Sendable {
 }
 
 /// The shared shopping list is not kept separately: it is worked out from the rooms, so it
-/// always matches what is designed.
+/// always matches what is designed. `WebShopCart` puts these lines into the real elektramat.nl
+/// cart through an in-app web view.
 ///
-/// TODO(open question): a real webshop cart. Tried on 19 Nov 2026: the Elektramat MCP server
-/// (https://mcp.elektramat.nl/mcp, no login) has `cable_create_order(productId, amount, presetId)`,
-/// but without a login it only returns "https://www.elektramat.nl/checkout/cart" with no cart id,
-/// token or cookie, so the browser sees an empty cart. With an OAuth login it may land in the
-/// customer's own cart, but the server only accepts redirect URIs of known assistants and
-/// localhost; an iOS app needs Elektramat to allow its redirect. Ask the MCP team for that, or
-/// for a cart deep link. Also still open: how cable is sold (per meter, per roll, cut to length)
-/// and whether decimal quantities are allowed.
+/// TODO(open question): a cart API with a hand-off to the customer's browser session or account.
+/// What we know (19 Nov 2026, from elektramat.nl): the shop runs on Magento with Hyvä; cable is
+/// sold per whole meter (minimum 1, no decimals) and as rolls and reels, which are separate
+/// products. The Elektramat MCP server (https://mcp.elektramat.nl/mcp, no login) has
+/// `cable_create_order`, but without a login it only returns the generic cart URL with no cart
+/// id or cookie, so Safari would show an empty cart. Ask the webshop team for a deep link
+/// (for example /kabelmeter/add?sku=…&qty=…) or a cart API.
 nonisolated enum Bill {
     /// Shopping list for `projects`. Cable: per cable type the measured length of every cable plus
     /// reserve and connection allowance (per cable), added up and then rounded once to how the
@@ -70,7 +72,8 @@ nonisolated enum Bill {
                 required[cable.id, default: 0] += PricingCalculator.requiredLength(measured: run.length, reserve: reserve)
                 add(BillLine(kind: .cable, productId: cable.id, sku: cable.sku, name: cable.name,
                              detail: cable.crossSection, unitPrice: cable.pricePerMeter, quantity: 0, pieces: [],
-                             productUrl: cable.productUrl, isSample: cable.isSample, rooms: [project.name]),
+                             productUrl: cable.productUrl, isSample: cable.isSample,
+                             shopProductId: cable.shopProductId, rooms: [project.name]),
                     room: project.name)
             }
             for placement in project.placements {
@@ -78,9 +81,10 @@ nonisolated enum Bill {
                 for part in fixture.parts {
                     guard let price = part.price, price >= 0 else { continue }
                     add(BillLine(kind: .part, productId: part.sku, sku: part.sku, name: part.description,
-                                 detail: "\(fixture.brand) \(fixture.line) · \(fixture.colourName)", unitPrice: price,
-                                 quantity: 1, pieces: [], productUrl: part.productUrl, isSample: false,
-                                 rooms: [project.name]),
+                                 detail: fixture.isLight ? "\(fixture.brand) · \(fixture.title)"
+                                                        : "\(fixture.brand) \(fixture.line) · \(fixture.colourName)",
+                                 unitPrice: price, quantity: 1, pieces: [], productUrl: part.productUrl, isSample: false,
+                                 shopProductId: part.shopProductId, rooms: [project.name]),
                         room: project.name)
                 }
             }

@@ -1,0 +1,23 @@
+{
+  "_comment": "Shared pricing cases. Both the Swift tests (KabelmeterTests) and the web tests (web/lib/pricing.test.ts) run these, so the iPhone app and the PWA compute the same quantity and price.",
+  "pieces": [
+    { "required": 10.000000001, "sales": { "type": "perMeter", "step": 1, "minimum": 1 }, "pieces": [10] },
+    { "required": 10.01, "sales": { "type": "perMeter", "step": 1, "minimum": 1 }, "pieces": [11] },
+    { "required": 3.2, "sales": { "type": "perMeter", "step": 0.5, "minimum": 1 }, "pieces": [3.5] },
+    { "required": 2.3, "sales": { "type": "perMeter", "step": 1, "minimum": 5 }, "pieces": [5] },
+    { "required": 13.5, "sales": { "type": "fixedLengths", "lengthsM": [10, 25, 50, 100] }, "pieces": [25] },
+    { "required": 50, "sales": { "type": "fixedLengths", "lengthsM": [100, 10, 50, 25] }, "pieces": [50] },
+    { "required": 120, "sales": { "type": "fixedLengths", "lengthsM": [10, 25, 50, 100] }, "pieces": [100, 10, 10] },
+    { "required": 140, "sales": { "type": "fixedLengths", "lengthsM": [25, 50, 100] }, "pieces": [100, 50] },
+    { "required": 200, "sales": { "type": "fixedLengths", "lengthsM": [10, 25, 50, 100] }, "pieces": [100, 100] },
+    { "required": 130, "sales": { "type": "fixedLengths", "lengthsM": [100] }, "pieces": [100, 100] }
+  ],
+  "quotes": [
+    { "measured": 0, "reserve": 0.15, "pricePerMeter": 0.99, "sales": { "type": "perMeter", "step": 1, "minimum": 1 }, "quote": null },
+    { "measured": 8, "reserve": 0, "pricePerMeter": 0.99, "sales": { "type": "perMeter", "step": 1, "minimum": 1 }, "quote": { "billedLength": 10, "price": 9.9 } },
+    { "measured": 7.4, "reserve": 0.15, "pricePerMeter": 0.99, "sales": { "type": "perMeter", "step": 1, "minimum": 1 }, "quote": { "billedLength": 11, "price": 10.89 } },
+    { "measured": 10, "reserve": 0.15, "pricePerMeter": 0.79, "sales": { "type": "fixedLengths", "lengthsM": [10, 25, 50, 100] }, "quote": { "billedLength": 25, "price": 19.75 } },
+    { "measured": 1000, "reserve": 0.15, "pricePerMeter": 1.49, "sales": { "type": "perMeter", "step": 1, "minimum": 1 }, "quote": { "billedLength": 1152, "price": 1716.48 } },
+    { "measured": 10, "reserve": 0.9, "pricePerMeter": 1, "sales": { "type": "perMeter", "step": 1, "minimum": 1 }, "quote": { "billedLength": 15, "price": 15 } }
+  ]
+}

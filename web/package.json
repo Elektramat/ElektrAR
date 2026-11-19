@@ -1,0 +1,48 @@
+{
+	"name": "kabelmeter-web",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
+	},
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test:unit": "vitest",
+		"test": "pnpm run test:unit --run && pnpm run test:e2e",
+		"test:e2e": "playwright test",
+		"lint": "prettier --check . && eslint .",
+		"format": "prettier --write .",
+		"predev": "node scripts/sync-catalog.mjs",
+		"prebuild": "node scripts/sync-catalog.mjs"
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@playwright/test": "^1.65.1",
+		"@sveltejs/adapter-vercel": "^7.0.3",
+		"@sveltejs/kit": "^3.2.0",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
+		"@types/node": "^26",
+		"eslint": "^10.15.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-svelte": "^3.24.1",
+		"globals": "^17.14.0",
+		"prettier": "^3.10.1",
+		"prettier-plugin-svelte": "^4.1.1",
+		"svelte": "^5.57.3",
+		"svelte-check": "^4.7.8",
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.72.2",
+		"vite": "^8.3.8",
+		"vitest": "^5.1.0"
+	},
+	"dependencies": {
+		"zod": "^4.6.7"
+	}
+}

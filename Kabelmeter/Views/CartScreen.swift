@@ -9,6 +9,10 @@ struct CartScreen: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @AppStorage("reservePercent") private var reservePercent = Int(PricingCalculator.defaultReserve * 100)
+    @State private var webShopLines: [WebShopLine] = []
+    @State private var showWebShop = false
+    /// Created with the cart screen and warmed up right away, so adding to the shop is faster.
+    @StateObject private var shop = WebShopCart()
 
     private var lines: [BillLine] {
         Bill.lines(projects: projectStore.projects, cables: cableStore.cables, fixtures: fixtureStore.fixtures,
@@ -36,6 +40,23 @@ struct CartScreen: View {
                             }
                             Spacer()
                             Text(Format.euro(Bill.total(lines))).font(.title.bold()).monospacedDigit()
+                        }
+                        // Sample cables have no real product page, so they stay out of the shop cart.
+                        let realLines = WebShopOrder.lines(for: lines.filter { !$0.isSample })
+                        Button {
+                            webShopLines = realLines
+                            showWebShop = true
+                        } label: {
+                            Label("Zet in winkelwagen op elektramat.nl", systemImage: "cart.badge.plus")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
+                        }
+                        .brandProminentButton(Theme.cta)
+                        .buttonBorderShape(.roundedRectangle(radius: Theme.buttonCorner))
+                        .disabled(realLines.isEmpty || showWebShop || shop.isBusy)
+                        if lines.contains(where: \.isSample) {
+                            Text("Voorbeeldkabels gaan niet mee naar de webshop.")
+                                .font(.footnote).foregroundStyle(.secondary)
                         }
                         if incomplete > 0 {
                             Label("\(incomplete) schakelaars of stopcontacten zijn niet compleet te bestellen; de ontbrekende onderdelen staan er niet bij.",
@@ -69,6 +90,8 @@ struct CartScreen: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .sheet(isPresented: $showWebShop) { WebShopSheet(lines: webShopLines, shop: shop) }
+            .onAppear { if !lines.isEmpty { shop.warmUp() } }
             .navigationTitle("Winkelwagen")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -97,10 +120,15 @@ struct CartScreen: View {
                 .font(.caption).foregroundStyle(.secondary)
             if line.isSample { SampleBadge() }
             Button { openURL(line.productUrl) } label: {
-                Label("Bestel op elektramat.nl", systemImage: "safari")
-                    .frame(maxWidth: .infinity, minHeight: 40)
+                HStack(spacing: 6) {
+                    Text("Bekijk op elektramat.nl")
+                    Image(systemName: "arrow.up.right")
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.accent)
+                .frame(minHeight: 40)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.borderless)
         }
         .padding(.vertical, 4)
     }
@@ -119,15 +147,16 @@ struct CartButton: View {
                                           fixtures: fixtureStore.fixtures, reserve: Double(reservePercent) / 100))
         Button { showCart = true } label: {
             HStack(spacing: 6) {
-                Image(systemName: "cart.fill")
+                Image(systemName: "cart.fill").foregroundStyle(Theme.accent)
                 Text(Format.euro(total)).monospacedDigit().contentTransition(.numericText())
+                    .animation(.snappy, value: total)
             }
             .font(.subheadline.weight(.semibold))
             .padding(.horizontal, 14)
             .frame(minHeight: 44)
-            .background(.regularMaterial, in: Capsule())
+            .surface(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CardButtonStyle())
         .accessibilityLabel("Winkelwagen, \(Format.euro(total))")
         .sheet(isPresented: $showCart) { CartScreen() }
     }

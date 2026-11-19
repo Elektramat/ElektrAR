@@ -56,7 +56,11 @@ struct InfoCard: View {
                     Text(fixture?.title ?? "Onbekend onderdeel").font(.title3.bold())
                     if let fixture {
                         Text(fixture.subtitle).font(.subheadline).foregroundStyle(.secondary)
-                        Text(fixture.productName).font(.subheadline).foregroundStyle(.secondary)
+                        if !fixture.isLight {
+                            Text(fixture.productName).font(.subheadline).foregroundStyle(.secondary)
+                        } else {
+                            Text(fixture.isCeiling ? "Plafond" : "Wand").font(.subheadline).foregroundStyle(.secondary)
+                        }
                     }
                 }
             }

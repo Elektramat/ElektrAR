@@ -25,6 +25,31 @@ nonisolated enum WallPose {
     }
 }
 
+/// Pose math for putting a light flat on a ceiling.
+nonisolated enum CeilingPose {
+    /// Surfaces whose normal is less vertical than this are walls, not ceilings.
+    static let minNormalY: Float = 0.7
+    /// A ceiling must be at least this far above the camera, so a table or the floor is not one.
+    static let minHeightAboveCamera: Float = 0.3
+
+    /// A transform at `position` with +Z pointing down out of the ceiling and +Y along the
+    /// horizontal direction the camera looks, so the light turns with the user. The models
+    /// have their back at z = 0, like the wall models. Nil when the surface is not a ceiling
+    /// above the camera.
+    static func make(position: SIMD3<Float>, normal: SIMD3<Float>, cameraPosition: SIMD3<Float>,
+                     cameraForward: SIMD3<Float>, offset: Float = 0.0005) -> simd_float4x4? {
+        guard simd_length(normal) > 1e-6, abs(simd_normalize(normal).y) >= minNormalY,
+              position.y - cameraPosition.y >= minHeightAboveCamera else { return nil }
+        let z = SIMD3<Float>(0, -1, 0)
+        var forward = SIMD3<Float>(cameraForward.x, 0, cameraForward.z)
+        // Looking straight up: no horizontal direction, so face along -Z.
+        forward = simd_length(forward) > 1e-4 ? simd_normalize(forward) : SIMD3<Float>(0, 0, -1)
+        let x = simd_cross(forward, z)
+        let p = position + z * offset
+        return simd_float4x4(columns: (SIMD4(x, 0), SIMD4(forward, 0), SIMD4(z, 0), SIMD4(p, 1)))
+    }
+}
+
 nonisolated struct PlacedFixture: Identifiable, Equatable, Sendable {
     let id: UUID
     let fixtureId: String
