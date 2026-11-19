@@ -28,6 +28,7 @@ struct MeasureScreen: View {
     @State private var mode: Mode = .measure
     @State private var showFixturePicker = false
     @State private var confirmClear = false
+    @State private var showEasterEgg = false
 
     private var cable: Cable? {
         cableStore.cables.first { $0.id == storedCableId } ?? cableStore.cables.first
@@ -217,10 +218,12 @@ struct MeasureScreen: View {
     private var statusText: some View {
         VStack(spacing: 6) {
             // Long-press the title to toggle Demo-modus (hidden fallback for the stage).
-            Text(demoMode ? "Kabelmeter · Demo" : "Kabelmeter")
+            // Triple-tap: team easter egg, not saved, gone after a restart.
+            Text((demoMode ? "Kabelmeter · Demo" : "Kabelmeter") + (showEasterEgg ? " 🍆" : ""))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.8))
                 .shadow(radius: 2)
+                .onTapGesture(count: 3) { showEasterEgg.toggle() }
                 .onLongPressGesture(minimumDuration: 0.8) { toggleDemoMode() }
 
             if let error = isPlacing ? fixtureStore.loadError : cableStore.loadError {
