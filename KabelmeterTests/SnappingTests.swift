@@ -73,3 +73,46 @@ final class SnappingTests: XCTestCase {
         XCTAssertEqual(s.add([1, 0, 0]), [1, 0, 0])
     }
 }
+
+final class RouteModeTests: XCTestCase {
+    func testAlongWallAddsVerticalAndHorizontal() {
+        let a = SIMD3<Float>(0, 0, 0), b = SIMD3<Float>(3, 4, 0)
+        XCTAssertEqual(MeasureMath.segmentLength(a, b, mode: .straight), 5, accuracy: 1e-5)
+        XCTAssertEqual(MeasureMath.segmentLength(a, b, mode: .alongWall), 7, accuracy: 1e-5)
+    }
+
+    func testAlongWallHorizontalPartIsNotAxisDependent() {
+        // World x/z axes are arbitrary; a level diagonal stays its true length.
+        XCTAssertEqual(MeasureMath.segmentLength([0, 0, 0], [3, 0, 4], mode: .alongWall), 5, accuracy: 1e-5)
+    }
+
+    func testLegsAlongWallGoVerticalFirst() {
+        let legs = MeasureMath.legs([0, 0, 0], [2, 1, 0], mode: .alongWall)
+        XCTAssertEqual(legs.count, 2)
+        XCTAssertEqual(legs[0].1, SIMD3<Float>(0, 1, 0))
+        XCTAssertEqual(legs[1].1, SIMD3<Float>(2, 1, 0))
+    }
+
+    func testLegsSkipZeroLengthLeg() {
+        XCTAssertEqual(MeasureMath.legs([0, 0, 0], [0, 2, 0], mode: .alongWall).count, 1)
+    }
+
+    @MainActor
+    func testSessionUsesMode() {
+        let s = MeasureSession()
+        s.cursor = [0, 0, 0]; s.addPoint()
+        s.cursor = [3, 4, 0]; s.addPoint()
+        XCTAssertEqual(s.confirmedLength, 7, accuracy: 1e-5)
+        s.mode = .straight
+        XCTAssertEqual(s.confirmedLength, 5, accuracy: 1e-5)
+    }
+
+    func testExactHeightFromRayWithoutAngleLimit() {
+        // Aim 5° beside the line: limited guide rejects it, unlimited returns the closest point.
+        let camera = SIMD3<Float>(0, 1.5, 2)
+        let dir = SIMD3<Float>(sin(5 * .pi / 180), 0, -cos(5 * .pi / 180))
+        XCTAssertNil(Snapping.pointOnVerticalGuide(rayOrigin: camera, rayDirection: dir, through: [0, 0, 0]))
+        let p = Snapping.pointOnVerticalGuide(rayOrigin: camera, rayDirection: dir, through: [0, 0, 0], maxAngle: nil)
+        XCTAssertEqual(p?.y ?? -1, 1.5, accuracy: 1e-4)
+    }
+}

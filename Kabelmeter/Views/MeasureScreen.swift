@@ -1,4 +1,5 @@
 import ARKit
+import AVFoundation
 import SwiftUI
 import UIKit
 
@@ -11,11 +12,16 @@ struct MeasureScreen: View {
     @AppStorage("reservePercent") private var reservePercent = Int(PricingCalculator.defaultReserve * 100)
     @AppStorage("demoMode") private var demoMode = false
     @AppStorage("selectedCableId") private var storedCableId = ""
+    @AppStorage("routeMode") private var routeMode = RouteMode.alongWall.rawValue
 
     @State private var showPicker = false
     @State private var showCart = false
     @State private var showSummary = false
     @State private var toast: String?
+    @State private var confirmClear = false
+    @State private var cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
 
     private var cable: Cable? {
         cableStore.cables.first { $0.id == storedCableId } ?? cableStore.cables.first
@@ -29,10 +35,28 @@ struct MeasureScreen: View {
         #endif
     }
 
+    /// Live price, including the preview segment to the crosshair.
     private var quote: Quote? {
         cable.flatMap {
             PricingCalculator.quote(for: $0, measured: session.totalLength, reserve: Double(reservePercent) / 100)
         }
+    }
+
+    /// What goes into the cart: only the confirmed points, never the live preview.
+    private var cartQuote: Quote? {
+        guard session.points.count >= 2 else { return nil }
+        return cable.flatMap {
+            PricingCalculator.quote(for: $0, measured: session.confirmedLength, reserve: Double(reservePercent) / 100)
+        }
+    }
+
+    private var cameraBlocked: Bool {
+        !useSimulated && (cameraStatus == .denied || cameraStatus == .restricted)
+    }
+
+    private var modeBinding: Binding<RouteMode> {
+        Binding(get: { RouteMode(rawValue: routeMode) ?? .alongWall },
+                set: { routeMode = $0.rawValue; session.mode = $0 })
     }
 
     var body: some View {
@@ -46,8 +70,8 @@ struct MeasureScreen: View {
                 statusText
                 Spacer()
                 controls
-                PriceBar(cable: cable, measured: session.totalLength, quote: quote,
-                         reservePercent: $reservePercent, onAddToCart: addToCart)
+                PriceBar(cable: cable, measured: session.totalLength, quote: quote, cartQuote: cartQuote,
+                         mode: modeBinding, reservePercent: $reservePercent, onAddToCart: addToCart)
             }
             .padding(.horizontal, Theme.spacing)
             .padding(.bottom, 4)
@@ -62,14 +86,20 @@ struct MeasureScreen: View {
                     .padding(.top, 70)
             }
         }
+        .overlay { if cameraBlocked { cameraBlockedCard } }
+        .onAppear { session.mode = RouteMode(rawValue: routeMode) ?? .alongWall }
         .onChange(of: useSimulated) { session.reset() }
+        .onChange(of: scenePhase) { if $1 == .active { cameraStatus = AVCaptureDevice.authorizationStatus(for: .video) } }
+        .confirmationDialog("Alle punten wissen?", isPresented: $confirmClear, titleVisibility: .visible) {
+            Button("Wis alles", role: .destructive) { session.reset() }
+        }
         .sheet(isPresented: $showPicker) {
             CablePickerSheet(cables: cableStore.cables, selectedId: Binding(
                 get: { cable?.id }, set: { storedCableId = $0 ?? "" }))
         }
         .sheet(isPresented: $showCart) { CartScreen() }
         .sheet(isPresented: $showSummary) {
-            SummarySheet(cable: cable, quote: quote, onAdd: { addToCart(); showSummary = false },
+            SummarySheet(cable: cable, quote: cartQuote, onAdd: { addToCart(); showSummary = false },
                          onContinue: { session.resume(); showSummary = false })
                 .presentationDetents([.medium])
         }
@@ -136,7 +166,7 @@ struct MeasureScreen: View {
     private var statusText: some View {
         VStack(spacing: 6) {
             // Long-press the title to toggle Demo-modus (hidden fallback for the stage).
-            Text(demoMode ? "Kabelmeter · Demo" : "Kabelmeter")
+            Text(titleText)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.8))
                 .shadow(radius: 2)
@@ -169,9 +199,9 @@ struct MeasureScreen: View {
 
     private var controls: some View {
         HStack(alignment: .center, spacing: Theme.spacing) {
-            controlButton("Ongedaan maken", icon: "arrow.uturn.backward") { session.undo() }
+            controlButton("Terug", icon: "arrow.uturn.backward") { session.undo() }
                 .disabled(session.points.isEmpty)
-            controlButton("Opnieuw", icon: "arrow.counterclockwise") { session.reset() }
+            controlButton("Wis alles", icon: "trash") { confirmClear = true }
                 .disabled(session.points.isEmpty)
 
             Button(action: addPoint) {
@@ -191,6 +221,28 @@ struct MeasureScreen: View {
             }
             .disabled(!session.canFinish)
         }
+    }
+
+    private var titleText: String {
+        if useSimulated { return "Kabelmeter · Demo" }
+        return session.usesLiDAR ? "Kabelmeter · LiDAR" : "Kabelmeter"
+    }
+
+    private var cameraBlockedCard: some View {
+        VStack(spacing: Theme.spacing) {
+            Image(systemName: "camera.fill").font(.largeTitle)
+            Text("Geen toegang tot de camera").font(.headline)
+            Text("De Kabelmeter gebruikt de camera om afstanden te meten. Zet de camera aan in Instellingen.")
+                .font(.subheadline).multilineTextAlignment(.center).foregroundStyle(.secondary)
+            Button("Open Instellingen") {
+                if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+            }
+            .buttonStyle(.borderedProminent)
+            Button("Gebruik demo-modus") { demoMode = true }
+        }
+        .padding(24)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.corner))
+        .padding(32)
     }
 
     private func controlButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
@@ -214,7 +266,7 @@ struct MeasureScreen: View {
     }
 
     private func addToCart() {
-        guard let cable, let quote else { return }
+        guard let cable, let quote = cartQuote else { return }
         do {
             try LocalCartService(store: cartStore).add(cable: cable, meters: quote.billedLength)
             UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -272,7 +324,7 @@ private struct SummarySheet: View {
                 row("Te bestellen", Format.pieces(quote.pieces))
                 row("Prijs", Format.euro(quote.price))
             }
-            Text("Over lange afstanden kan de meting een paar procent afwijken. Daarom rekenen we met reserve. Dit is een schatting: laat het aansluiten over aan een installateur.")
+            Text("Over lange afstanden kan de meting een paar procent afwijken. Daarom rekenen we met reserve. Deze app berekent alleen een geschatte hoeveelheid materiaal. Het is geen installatieadvies. Laat de aansluiting op de groepenkast en de keuze van draaddikte en beveiliging over aan een erkend installateur.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
             Spacer(minLength: 0)

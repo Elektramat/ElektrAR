@@ -4,15 +4,24 @@ import QuartzCore
 import RealityKit
 import UIKit
 
-/// Real measuring with ARKit + RealityKit. Raycasts from the screen center a few
-/// times per second and draws points, segments and the live preview segment.
+/// Real measuring with ARKit + RealityKit. A few times per second it finds the world
+/// point under the crosshair and draws points, segments and the live preview.
+///
+/// Two paths:
+/// - LiDAR (Pro models): read the smoothed LiDAR depth at the crosshair, then raycast
+///   against the estimated surface (which also uses LiDAR). Works on plain walls.
+/// - No LiDAR: raycast against detected planes, then estimated planes, then detected
+///   walls extended infinitely.
+/// Both: snapped vertical segments take their height from the camera ray, not from
+/// the hit depth.
 @MainActor
 final class ARMeasureProvider: MeasureProvider {
     let arView: ARView
 
     private weak var session: MeasureSession?
     private let root = AnchorEntity(world: .zero)
-    private let preview: ModelEntity
+    private let previewLegs: [ModelEntity]
+    private var hasLiDAR = false
     private let verticalGuide: ModelEntity
     private var smoother = CursorSmoother()
     private var lastHitTime: CFTimeInterval = 0
@@ -29,9 +38,11 @@ final class ARMeasureProvider: MeasureProvider {
     init() {
         arView = ARView(frame: .zero, cameraMode: .ar, automaticallyConfigureSession: false)
         arView.renderOptions.insert(.disableMotionBlur)
-        preview = Self.makeSegmentEntity(color: Theme.arPreview)
-        preview.isEnabled = false
-        root.addChild(preview)
+        previewLegs = (0..<2).map { _ in Self.makeSegmentEntity(color: Theme.arPreview) }
+        for leg in previewLegs {
+            leg.isEnabled = false
+            root.addChild(leg)
+        }
         verticalGuide = Self.makeSegmentEntity(color: Theme.arGuide, thickness: 0.002)
         verticalGuide.isEnabled = false
         root.addChild(verticalGuide)
@@ -53,16 +64,21 @@ final class ARMeasureProvider: MeasureProvider {
         }
         let config = ARWorldTrackingConfiguration()
         config.planeDetection = [.horizontal, .vertical]
-        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+        hasLiDAR = ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh)
+        if hasLiDAR {
             config.sceneReconstruction = .mesh
         }
+        if ARWorldTrackingConfiguration.supportsFrameSemantics(.smoothedSceneDepth) {
+            config.frameSemantics.insert(.smoothedSceneDepth)
+        }
+        session.usesLiDAR = hasLiDAR
         arView.session.run(config)
 
         updateSubscription = arView.scene.subscribe(to: SceneEvents.Update.self) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
         }
-        pointsSubscription = session.$points.sink { [weak self] points in
-            self?.render(points: points)
+        pointsSubscription = session.$points.combineLatest(session.$mode).sink { [weak self] points, mode in
+            self?.render(points: points, mode: mode)
         }
     }
 
@@ -86,22 +102,39 @@ final class ARMeasureProvider: MeasureProvider {
         var guide: MeasureGuide?
 
         if message == nil {
-            var raw = raycastFromCenter()
-            // No surface hit: aim along the vertical line through the last point.
-            if raw == nil, let last, let ray = rayFromCenter(),
-               let onGuide = Snapping.pointOnVerticalGuide(rayOrigin: ray.origin, rayDirection: ray.direction,
-                                                           through: last) {
-                raw = onGuide
+            let ray = rayFromCenter()
+            var candidate: SIMD3<Float>?
+            if let frame, hasLiDAR {
+                candidate = depthPoint(frame: frame, ray: ray) ?? raycastFromCenter()
+            } else {
+                candidate = raycastFromCenter()
             }
 
-            if let raw {
+            if let hit = candidate {
                 lastHitTime = now
-                let smooth = smoother.add(raw)
                 if let last {
-                    (cursor, guide) = Snapping.snap(smooth, from: last)
-                } else {
-                    cursor = smooth
+                    var (snapped, snapGuide) = Snapping.snap(hit, from: last)
+                    // Vertical: the height comes from where the ray passes the vertical line,
+                    // which does not depend on the (often wrong) depth of the hit.
+                    if snapGuide == .vertical, let ray,
+                       let exact = Snapping.pointOnVerticalGuide(rayOrigin: ray.origin, rayDirection: ray.direction,
+                                                                 through: last, maxAngle: nil) {
+                        snapped = exact
+                    }
+                    candidate = snapped
+                    guide = snapGuide
                 }
+            } else if let last, let ray,
+                      let onGuide = Snapping.pointOnVerticalGuide(rayOrigin: ray.origin, rayDirection: ray.direction,
+                                                                  through: last) {
+                // No surface hit: aim along the vertical line through the last point.
+                lastHitTime = now
+                candidate = onGuide
+                guide = .vertical
+            }
+
+            if let candidate {
+                cursor = smoother.add(candidate)
                 if let light = frame?.lightEstimate, light.ambientIntensity < Self.darkThreshold {
                     message = TrackingText.tooDark
                 }
@@ -119,7 +152,7 @@ final class ARMeasureProvider: MeasureProvider {
         if session.trackingMessage != message { session.trackingMessage = message }
         if session.guide != guide { session.guide = guide }
         session.cursor = cursor
-        updatePreview(from: last, to: cursor)
+        updatePreview(from: last, to: cursor, mode: session.mode)
         updateVerticalGuide(through: guide == .vertical ? last : nil)
     }
 
@@ -135,14 +168,69 @@ final class ARMeasureProvider: MeasureProvider {
         let bounds = arView.bounds
         guard bounds.width > 0, bounds.height > 0 else { return nil }
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
-        // 1. Detected plane within its bounds (most accurate).
-        // 2. Estimated surface (uses LiDAR depth on Pro models).
-        // 3. Detected plane extended infinitely: a wall ARKit only saw partly.
-        let hit = arView.raycast(from: center, allowing: .existingPlaneGeometry, alignment: .any).first
-            ?? arView.raycast(from: center, allowing: .estimatedPlane, alignment: .any).first
-            ?? arView.raycast(from: center, allowing: .existingPlaneInfinite, alignment: .vertical).first
+        let hit: ARRaycastResult?
+        if hasLiDAR {
+            // The estimated surface uses the LiDAR mesh and depth: best first.
+            hit = arView.raycast(from: center, allowing: .estimatedPlane, alignment: .any).first
+                ?? arView.raycast(from: center, allowing: .existingPlaneGeometry, alignment: .any).first
+        } else {
+            // 1. Detected plane within its bounds (most accurate without depth).
+            // 2. Estimated surface from feature points.
+            // 3. Detected wall extended infinitely: a wall ARKit only saw partly.
+            //    Risk: past a corner this can hit the extension of another wall.
+            hit = arView.raycast(from: center, allowing: .existingPlaneGeometry, alignment: .any).first
+                ?? arView.raycast(from: center, allowing: .estimatedPlane, alignment: .any).first
+                ?? arView.raycast(from: center, allowing: .existingPlaneInfinite, alignment: .vertical).first
+        }
         guard let t = hit?.worldTransform else { return nil }
         return SIMD3(t.columns.3.x, t.columns.3.y, t.columns.3.z)
+    }
+
+    /// LiDAR: the world point at the crosshair from the smoothed depth map. Uses the
+    /// 3x3 center pixels with high confidence; nil when too few are reliable.
+    private func depthPoint(frame: ARFrame,
+                            ray: (origin: SIMD3<Float>, direction: SIMD3<Float>)?) -> SIMD3<Float>? {
+        guard let ray, let depth = frame.smoothedSceneDepth ?? frame.sceneDepth,
+              let confidence = depth.confidenceMap else { return nil }
+        let map = depth.depthMap
+        guard CVPixelBufferGetPixelFormatType(map) == kCVPixelFormatType_DepthFloat32 else { return nil }
+        CVPixelBufferLockBaseAddress(map, .readOnly)
+        CVPixelBufferLockBaseAddress(confidence, .readOnly)
+        defer {
+            CVPixelBufferUnlockBaseAddress(map, .readOnly)
+            CVPixelBufferUnlockBaseAddress(confidence, .readOnly)
+        }
+        guard let depthBase = CVPixelBufferGetBaseAddress(map),
+              let confidenceBase = CVPixelBufferGetBaseAddress(confidence) else { return nil }
+        let width = CVPixelBufferGetWidth(map), height = CVPixelBufferGetHeight(map)
+        guard width > 2, height > 2,
+              CVPixelBufferGetWidth(confidence) == width, CVPixelBufferGetHeight(confidence) == height else { return nil }
+        let depthRow = CVPixelBufferGetBytesPerRow(map)
+        let confidenceRow = CVPixelBufferGetBytesPerRow(confidence)
+
+        var sum: Float = 0
+        var count = 0
+        for dy in -1...1 {
+            for dx in -1...1 {
+                let x = width / 2 + dx, y = height / 2 + dy
+                let level = confidenceBase.load(fromByteOffset: y * confidenceRow + x, as: UInt8.self)
+                guard level >= UInt8(ARConfidenceLevel.high.rawValue) else { continue }
+                let d = depthBase.load(fromByteOffset: y * depthRow + x * 4, as: Float32.self)
+                if d.isFinite, d > 0.1, d < 5 {
+                    sum += d
+                    count += 1
+                }
+            }
+        }
+        guard count >= 5 else { return nil }
+
+        // Depth is the distance along the camera's viewing axis, not along the ray.
+        let c = frame.camera.transform.columns.2
+        let forward = -SIMD3(c.x, c.y, c.z)
+        let direction = simd_normalize(ray.direction)
+        let cosine = simd_dot(direction, forward)
+        guard cosine > 0.2 else { return nil }
+        return ray.origin + direction * ((sum / Float(count)) / cosine)
     }
 
     private func rayFromCenter() -> (origin: SIMD3<Float>, direction: SIMD3<Float>)? {
@@ -153,7 +241,7 @@ final class ARMeasureProvider: MeasureProvider {
 
     // MARK: Drawing
 
-    private func render(points: [SIMD3<Float>]) {
+    private func render(points: [SIMD3<Float>], mode: RouteMode) {
         placed.forEach { $0.removeFromParent() }
         placed.removeAll()
         for point in points {
@@ -164,20 +252,25 @@ final class ARMeasureProvider: MeasureProvider {
             placed.append(dot)
         }
         for (a, b) in zip(points, points.dropFirst()) {
-            let segment = Self.makeSegmentEntity(color: Theme.arSegment)
-            Self.place(segment, from: a, to: b)
-            root.addChild(segment)
-            placed.append(segment)
+            for (from, to) in MeasureMath.legs(a, b, mode: mode) {
+                let segment = Self.makeSegmentEntity(color: Theme.arSegment)
+                Self.place(segment, from: from, to: to)
+                root.addChild(segment)
+                placed.append(segment)
+            }
         }
     }
 
-    private func updatePreview(from start: SIMD3<Float>?, to end: SIMD3<Float>?) {
-        guard let start, let end, simd_distance(start, end) > 0.005 else {
-            preview.isEnabled = false
-            return
+    private func updatePreview(from start: SIMD3<Float>?, to end: SIMD3<Float>?, mode: RouteMode) {
+        let legs = (start != nil && end != nil) ? MeasureMath.legs(start!, end!, mode: mode) : []
+        for (index, entity) in previewLegs.enumerated() {
+            if index < legs.count {
+                Self.place(entity, from: legs[index].0, to: legs[index].1)
+                entity.isEnabled = true
+            } else {
+                entity.isEnabled = false
+            }
         }
-        Self.place(preview, from: start, to: end)
-        preview.isEnabled = true
     }
 
     /// A long thin line through the last point while the cursor is snapped to vertical.

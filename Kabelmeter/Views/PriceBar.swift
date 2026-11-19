@@ -4,7 +4,11 @@ import SwiftUI
 struct PriceBar: View {
     let cable: Cable?
     let measured: Double
+    /// Live quote, including the preview segment to the crosshair.
     let quote: Quote?
+    /// Quote of the confirmed points only; this is what goes into the cart.
+    let cartQuote: Quote?
+    @Binding var mode: RouteMode
     @Binding var reservePercent: Int
     let onAddToCart: () -> Void
 
@@ -34,18 +38,25 @@ struct PriceBar: View {
                 }
             }
 
+            Picker("Route", selection: $mode) {
+                Text("Langs de muur").tag(RouteMode.alongWall)
+                Text("Rechte lijn").tag(RouteMode.straight)
+            }
+            .pickerStyle(.segmented)
+
             Stepper(value: $reservePercent, in: 0...30, step: 5) {
                 Text("Reserve \(reservePercent)% + \(Format.orderLength(PricingCalculator.connectionAllowance)) aansluiting")
                     .font(Theme.labelFont)
             }
 
             Button(action: onAddToCart) {
-                Label("Voeg toe aan winkelmand", systemImage: "cart.badge.plus")
+                Label(cartQuote.map { "Voeg \(Format.pieces($0.pieces)) toe aan winkelmand" }
+                      ?? "Zet minstens 2 punten", systemImage: "cart.badge.plus")
                     .font(.headline)
                     .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
             }
             .buttonStyle(.borderedProminent)
-            .disabled(quote == nil || cable == nil)
+            .disabled(cartQuote == nil || cable == nil)
         }
         .padding(Theme.spacing)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.corner))

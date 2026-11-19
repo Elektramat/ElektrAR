@@ -38,8 +38,12 @@ nonisolated enum Snapping {
     /// The point on the vertical line through `last` that the camera ray aims at,
     /// or nil when the ray does not pass close to that line. Lets the user measure a
     /// height on a wall that ARKit has not detected.
+    /// With `maxAngle` nil there is no limit: then it returns the closest point on the
+    /// line to the ray, which gives an exact height once the cursor is snapped vertical
+    /// (the depth of a wall hit without LiDAR is often wrong, the ray direction is not).
     static func pointOnVerticalGuide(rayOrigin o: SIMD3<Float>, rayDirection direction: SIMD3<Float>,
-                                     through last: SIMD3<Float>) -> SIMD3<Float>? {
+                                     through last: SIMD3<Float>,
+                                     maxAngle: Float? = guideAngle) -> SIMD3<Float>? {
         let d = simd_normalize(direction)
         let up = SIMD3<Float>(0, 1, 0)
         let w0 = o - last
@@ -53,7 +57,7 @@ nonisolated enum Snapping {
         guard t > 0.1 else { return nil }
         let onLine = last + up * s
         let onRay = o + d * t
-        guard simd_distance(onLine, onRay) / t <= tan(guideAngle) else { return nil }
+        if let maxAngle, simd_distance(onLine, onRay) / t > tan(maxAngle) { return nil }
         return onLine
     }
 }

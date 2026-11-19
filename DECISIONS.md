@@ -21,3 +21,8 @@ One line each: what we chose and why.
 - Only "per meter" products (whole meters, minimum 1, as the shop's quantity field allows). Rolls and reels are separate products with their own price, so `fixedLengths` is not used yet.
 - Price per meter including VAT: the app shows a consumer price.
 - Photos ship in the bundle as `<sku>.jpg` (JPEG, 300 px, 164 KB in total) instead of loading from the site: the demo must work without Wi-Fi.
+- "Langs de muur" is the default route mode: each segment counts horizontal distance + height difference, and is drawn as a vertical then a horizontal leg. A straight 45° line undercounts a wall route by ~30%, more than the reserve. "Rechte lijn" stays available.
+- The cart only takes the confirmed points (at least 2). The live price still includes the preview to the crosshair.
+- A segment snapped to vertical takes its height from where the camera ray passes the vertical line, not from the hit depth (which is often wrong on plain walls without LiDAR).
+- LiDAR devices read the smoothed LiDAR depth at the crosshair first (3x3 center pixels, high confidence only), then raycast the estimated surface; no infinite-plane fallback. Devices without LiDAR keep plane → estimated → infinite wall.
+- Camera denied shows a card with "Open Instellingen" and "Gebruik demo-modus" instead of a black screen.

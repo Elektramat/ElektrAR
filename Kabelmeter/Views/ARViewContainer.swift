@@ -42,18 +42,23 @@ struct SimulatedMeasureView: View {
                                       width: 4.6 * scale + 40, height: 2.6 * scale)
                     context.fill(Path(wall), with: .color(Theme.simulatedWall))
 
-                    // Confirmed segments
+                    // Confirmed segments (as legs along the wall in that mode)
                     var path = Path()
-                    for (i, p) in session.points.enumerated() {
-                        i == 0 ? path.move(to: map(p)) : path.addLine(to: map(p))
+                    for (a, b) in zip(session.points, session.points.dropFirst()) {
+                        for (from, to) in MeasureMath.legs(a, b, mode: session.mode) {
+                            path.move(to: map(from))
+                            path.addLine(to: map(to))
+                        }
                     }
                     context.stroke(path, with: .color(Theme.accent), lineWidth: 4)
 
                     // Live preview segment
                     if !session.isFinished, let last = session.points.last, let cursor = session.cursor {
                         var preview = Path()
-                        preview.move(to: map(last))
-                        preview.addLine(to: map(cursor))
+                        for (from, to) in MeasureMath.legs(last, cursor, mode: session.mode) {
+                            preview.move(to: map(from))
+                            preview.addLine(to: map(to))
+                        }
                         context.stroke(preview, with: .color(Theme.accent.opacity(0.6)),
                                        style: StrokeStyle(lineWidth: 3, dash: [6, 4]))
                     }
