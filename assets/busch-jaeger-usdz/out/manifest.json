@@ -1,0 +1,610 @@
+[
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Busch-Duro 2000 SI",
+    "line_id": "busch-duro-2000-si",
+    "colour": "creme",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      81,
+      81
+    ],
+    "depth_from_wall_mm": 18.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_busch-duro-2000-si_creme_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Busch-Duro 2000 SI",
+    "line_id": "busch-duro-2000-si",
+    "colour": "creme",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      81,
+      81
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_busch-duro-2000-si_creme_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Reflex SI",
+    "line_id": "reflex-si",
+    "colour": "alpinwit",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      81,
+      81
+    ],
+    "depth_from_wall_mm": 18.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_reflex-si_alpinwit_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Reflex SI",
+    "line_id": "reflex-si",
+    "colour": "alpinwit",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      81,
+      81
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_reflex-si_alpinwit_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Busch-art linear",
+    "line_id": "art-linear",
+    "colour": "zwart-mat",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      85,
+      85
+    ],
+    "depth_from_wall_mm": 16.2,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_art-linear_zwart-mat_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Busch-art linear",
+    "line_id": "art-linear",
+    "colour": "zwart-mat",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      85,
+      85
+    ],
+    "depth_from_wall_mm": 14.1,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_art-linear_zwart-mat_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Busch-art linear",
+    "line_id": "art-linear",
+    "colour": "studiowit",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      85,
+      85
+    ],
+    "depth_from_wall_mm": 16.2,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_art-linear_studiowit_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Busch-art linear",
+    "line_id": "art-linear",
+    "colour": "studiowit",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      85,
+      85
+    ],
+    "depth_from_wall_mm": 14.1,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_art-linear_studiowit_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "line_id": "future-linear",
+    "colour": "zwart-mat",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      80,
+      80
+    ],
+    "depth_from_wall_mm": 17.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_future-linear_zwart-mat_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "line_id": "future-linear",
+    "colour": "zwart-mat",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      80,
+      80
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_future-linear_zwart-mat_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "line_id": "future-linear",
+    "colour": "antraciet",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      80,
+      80
+    ],
+    "depth_from_wall_mm": 17.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_future-linear_antraciet_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "line_id": "future-linear",
+    "colour": "antraciet",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      80,
+      80
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_future-linear_antraciet_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "line_id": "future-linear",
+    "colour": "aluzilver",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      80,
+      80
+    ],
+    "depth_from_wall_mm": 17.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_future-linear_aluzilver_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "line_id": "future-linear",
+    "colour": "aluzilver",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      80,
+      80
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_future-linear_aluzilver_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "line_id": "future-linear",
+    "colour": "studiowit",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      80,
+      80
+    ],
+    "depth_from_wall_mm": 17.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_future-linear_studiowit_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "line_id": "future-linear",
+    "colour": "studiowit",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      80,
+      80
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_future-linear_studiowit_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "line_id": "future-linear",
+    "colour": "studiowit-mat",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      80,
+      80
+    ],
+    "depth_from_wall_mm": 17.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_future-linear_studiowit-mat_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "line_id": "future-linear",
+    "colour": "studiowit-mat",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      80,
+      80
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_future-linear_studiowit-mat_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Busch-balance SI",
+    "line_id": "busch-balance-si",
+    "colour": "zuiver-wit",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      81,
+      81
+    ],
+    "depth_from_wall_mm": 18.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_busch-balance-si_zuiver-wit_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Busch-balance SI",
+    "line_id": "busch-balance-si",
+    "colour": "zuiver-wit",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      81,
+      81
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_busch-balance-si_zuiver-wit_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Busch-balance SI",
+    "line_id": "busch-balance-si",
+    "colour": "mat-zwart",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      81,
+      81
+    ],
+    "depth_from_wall_mm": 18.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_busch-balance-si_mat-zwart_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Busch-balance SI",
+    "line_id": "busch-balance-si",
+    "colour": "mat-zwart",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      81,
+      81
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_busch-balance-si_mat-zwart_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "solo",
+    "line_id": "solo",
+    "colour": "studiowit",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      87,
+      87
+    ],
+    "depth_from_wall_mm": 17.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_solo_studiowit_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "solo",
+    "line_id": "solo",
+    "colour": "studiowit",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      87,
+      87
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_solo_studiowit_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "line_id": "carat",
+    "colour": "ivoorwit",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      107,
+      107
+    ],
+    "depth_from_wall_mm": 17.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_carat_ivoorwit_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "line_id": "carat",
+    "colour": "ivoorwit",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      107,
+      107
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_carat_ivoorwit_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "line_id": "carat",
+    "colour": "studiowit",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      107,
+      107
+    ],
+    "depth_from_wall_mm": 17.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_carat_studiowit_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "line_id": "carat",
+    "colour": "studiowit",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      107,
+      107
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_carat_studiowit_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "line_id": "carat",
+    "colour": "antraciet",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      107,
+      107
+    ],
+    "depth_from_wall_mm": 17.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_carat_antraciet_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "line_id": "carat",
+    "colour": "antraciet",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      107,
+      107
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_carat_antraciet_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Busch-axcent",
+    "line_id": "busch-axcent",
+    "colour": "studiowit",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      91,
+      91
+    ],
+    "depth_from_wall_mm": 17.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_busch-axcent_studiowit_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Busch-axcent",
+    "line_id": "busch-axcent",
+    "colour": "studiowit",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      91,
+      91
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_busch-axcent_studiowit_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "alpha",
+    "line_id": "alpha",
+    "colour": "studiowit",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "inbouw",
+    "frame_mm": [
+      81,
+      81
+    ],
+    "depth_from_wall_mm": 18.0,
+    "dimensions_approximate": true,
+    "file": "busch-jaeger_alpha_studiowit_schakelaar.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "alpha",
+    "line_id": "alpha",
+    "colour": "studiowit",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "inbouw",
+    "frame_mm": [
+      81,
+      81
+    ],
+    "depth_from_wall_mm": 14.0,
+    "dimensions_approximate": true,
+    "file": "busch-jaeger_alpha_studiowit_stopcontact.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Reflex SI",
+    "line_id": "reflex-si",
+    "colour": "alpinwit",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "opbouw",
+    "frame_mm": [
+      81,
+      85
+    ],
+    "depth_from_wall_mm": 50,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_reflex-si_alpinwit_schakelaar_opbouw.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "Reflex SI",
+    "line_id": "reflex-si",
+    "colour": "alpinwit",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "opbouw",
+    "frame_mm": [
+      81,
+      85
+    ],
+    "depth_from_wall_mm": 46,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_reflex-si_alpinwit_stopcontact_opbouw.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "line_id": "future-linear",
+    "colour": "studiowit",
+    "product": "Wipschakelaar 1-voudig",
+    "product_id": "schakelaar",
+    "mounting": "opbouw",
+    "frame_mm": [
+      80,
+      85
+    ],
+    "depth_from_wall_mm": 49,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_future-linear_studiowit_schakelaar_opbouw.usdz"
+  },
+  {
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "line_id": "future-linear",
+    "colour": "studiowit",
+    "product": "Wandcontactdoos 1-voudig met randaarde",
+    "product_id": "stopcontact",
+    "mounting": "opbouw",
+    "frame_mm": [
+      80,
+      85
+    ],
+    "depth_from_wall_mm": 46,
+    "dimensions_approximate": false,
+    "file": "busch-jaeger_future-linear_studiowit_stopcontact_opbouw.usdz"
+  }
+]
