@@ -45,6 +45,7 @@ struct PriceBar: View {
                 Text("Rechte lijn").tag(RouteMode.straight)
             }
             .pickerStyle(.segmented)
+            .controlSize(.large)   // a bigger tap target, used standing in a room
             if earlierRuns > 0 {
                 Label(earlierRuns == 1 ? "1 kabel al in winkelmand" : "\(earlierRuns) kabels al in winkelmand",
                       systemImage: "checkmark.circle")
