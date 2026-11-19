@@ -38,7 +38,7 @@ struct CartScreen: View {
                                         .font(.subheadline).foregroundStyle(.secondary)
                                     Stepper(value: Binding(get: { Int(item.quantity) },
                                                            set: { cart.setQuantity($0, for: item.id) }),
-                                            in: 0...99) {
+                                            in: 1...99) {   // removing is the trash button
                                         Text("\(Format.quantity(item.quantity)) × \(Format.euro(item.unitPrice))")
                                             .monospacedDigit()
                                             .contentTransition(.numericText(value: item.quantity))
@@ -48,19 +48,33 @@ struct CartScreen: View {
                                 }
                                 if item.isSample { SampleBadge() }
                                 // A light text link with its own space, not a second filled button
-                                // right under the stepper.
-                                Button {
-                                    openURL(item.productUrl)
-                                } label: {
-                                    HStack(spacing: 6) {
-                                        Text("Bekijk op elektramat.nl")
-                                        Image(systemName: "arrow.up.right")
+                                // right under the stepper; the trash button removes the whole line.
+                                HStack {
+                                    Button {
+                                        openURL(item.productUrl)
+                                    } label: {
+                                        HStack(spacing: 6) {
+                                            Text("Bekijk op elektramat.nl")
+                                            Image(systemName: "arrow.up.right")
+                                        }
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(Theme.accent)
+                                        .frame(minHeight: 44)
                                     }
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(Theme.accent)
-                                    .frame(minHeight: 44)
+                                    .buttonStyle(.borderless)
+                                    Spacer()
+                                    Button {
+                                        withAnimation { cart.remove(id: item.id) }
+                                    } label: {
+                                        Image(systemName: "trash")
+                                            .font(.title3.weight(.semibold))
+                                            .foregroundStyle(Theme.alert)
+                                            .frame(width: 44, height: 44)
+                                            .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(CardButtonStyle())
+                                    .accessibilityLabel("Verwijder \(item.name)")
                                 }
-                                .buttonStyle(.borderless)
                                 .padding(.top, 4)
                             }
                             .padding(.vertical, 8)

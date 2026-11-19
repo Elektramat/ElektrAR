@@ -136,6 +136,13 @@ final class CartStore: ObservableObject {
         save()
     }
 
+    /// Removes one line, for the trash button on a cart row.
+    func remove(id: UUID) {
+        guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+        items.remove(at: index)
+        save()
+    }
+
     func remove(atOffsets offsets: IndexSet) {
         items = items.enumerated().filter { !offsets.contains($0.offset) }.map(\.element)
         save()

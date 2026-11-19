@@ -94,6 +94,26 @@ final class CartStoreTests: XCTestCase {
                               pricePerMeter: 0.99, sales: .perMeter(step: 1, minimum: 1), stock: "x",
                               imageUrl: nil, productUrl: URL(string: "https://www.elektramat.nl")!, isSample: true)
 
+    func testRemoveByIdRemovesOnlyThatLineAndPersists() {
+        let store = CartStore(defaults: defaults)
+        store.add(cable: cable, meters: 10)
+        let other = Cable(id: "c2", sku: "S2", name: "Andere kabel", crossSection: "3x2,5 mm²", use: "x",
+                          pricePerMeter: 1.49, sales: .perMeter(step: 1, minimum: 1), stock: "x",
+                          imageUrl: nil, productUrl: URL(string: "https://www.elektramat.nl")!, isSample: true)
+        store.add(cable: other, meters: 5)
+        let first = try! XCTUnwrap(store.items.first)
+        store.remove(id: first.id)
+        XCTAssertEqual(store.items.map(\.name), ["Andere kabel"])
+        XCTAssertEqual(CartStore(defaults: defaults).items.map(\.name), ["Andere kabel"])
+    }
+
+    func testRemoveUnknownIdChangesNothing() {
+        let store = CartStore(defaults: defaults)
+        store.add(cable: cable, meters: 10)
+        store.remove(id: UUID())
+        XCTAssertEqual(store.items.count, 1)
+    }
+
     func testAddSameCableMergesMeters() {
         let store = CartStore(defaults: defaults)
         store.add(cable: cable, meters: 10)
