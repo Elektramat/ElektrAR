@@ -1,0 +1,41 @@
+model_file;line;colour;product;mounting;complete;total_incl_btw;total_excl_btw;opbouwbak_sku;afdekraam_sku;basiselement_sku;wip_sku;stopcontact_sku;notes
+busch-jaeger_busch-duro-2000-si_creme_schakelaar.usdz;Busch-Duro 2000 SI;creme;schakelaar;inbouw;ja;11.86;9.8;;401340408;401039326;401340410;;
+busch-jaeger_busch-duro-2000-si_creme_stopcontact.usdz;Busch-Duro 2000 SI;creme;stopcontact;inbouw;ja;7.08;5.85;;401340408;;;401340086;
+busch-jaeger_reflex-si_alpinwit_schakelaar.usdz;Reflex SI;alpinwit;schakelaar;inbouw;ja;11.59;9.58;;401039771;401039326;401039719;;"Only Reflex SI single rocker in stock is 2546-214 (screw-fixed version); check it fits 2000/6 USR before ordering."
+busch-jaeger_reflex-si_alpinwit_stopcontact.usdz;Reflex SI;alpinwit;stopcontact;inbouw;ja;6.9;5.7;;401039771;;;401340085;
+busch-jaeger_art-linear_zwart-mat_schakelaar.usdz;Busch-art linear;zwart-mat;schakelaar;inbouw;ja;23.4;19.34;;401321084;401039326;401321092;;
+busch-jaeger_art-linear_zwart-mat_stopcontact.usdz;Busch-art linear;zwart-mat;stopcontact;inbouw;ja;19.84;16.4;;401321084;;;401321089;
+busch-jaeger_art-linear_studiowit_schakelaar.usdz;Busch-art linear;studiowit;schakelaar;inbouw;ja;18.48;15.27;;401321067;401039326;401321075;;
+busch-jaeger_art-linear_studiowit_stopcontact.usdz;Busch-art linear;studiowit;stopcontact;inbouw;ja;16.39;13.54;;401321067;;;401321072;
+busch-jaeger_future-linear_zwart-mat_schakelaar.usdz;future linear;zwart-mat;schakelaar;inbouw;ja;20.53;16.96;;401011349;401039326;401167137;;
+busch-jaeger_future-linear_zwart-mat_stopcontact.usdz;future linear;zwart-mat;stopcontact;inbouw;ja;18.75;15.49;;401011349;;;401145230;
+busch-jaeger_future-linear_antraciet_schakelaar.usdz;future linear;antraciet;schakelaar;inbouw;ja;18.1;14.96;;401039240;401039326;401039201;;
+busch-jaeger_future-linear_antraciet_stopcontact.usdz;future linear;antraciet;stopcontact;inbouw;ja;15.48;12.8;;401039240;;;401039228;
+busch-jaeger_future-linear_aluzilver_schakelaar.usdz;future linear;aluzilver;schakelaar;inbouw;ja;21.4;17.69;;401039254;401039326;401039205;;
+busch-jaeger_future-linear_aluzilver_stopcontact.usdz;future linear;aluzilver;stopcontact;inbouw;ja;19.25;15.91;;401039254;;;401039227;
+busch-jaeger_future-linear_studiowit_schakelaar.usdz;future linear;studiowit;schakelaar;inbouw;ja;13.48;11.14;;401039245;401039326;401039206;;
+busch-jaeger_future-linear_studiowit_stopcontact.usdz;future linear;studiowit;stopcontact;inbouw;ja;9.69;8.01;;401039245;;;401039231;
+busch-jaeger_future-linear_studiowit-mat_schakelaar.usdz;future linear;studiowit-mat;schakelaar;inbouw;ja;21.59;17.84;;401167134;401039326;401167136;;
+busch-jaeger_future-linear_studiowit-mat_stopcontact.usdz;future linear;studiowit-mat;stopcontact;inbouw;ja;18.32;15.14;;401167134;;;401024158;
+busch-jaeger_busch-balance-si_zuiver-wit_schakelaar.usdz;Busch-balance SI;zuiver-wit;schakelaar;inbouw;ja;10.97;9.06;;401077046;401039326;401077054;;
+busch-jaeger_busch-balance-si_zuiver-wit_stopcontact.usdz;Busch-balance SI;zuiver-wit;stopcontact;inbouw;ja;6.82;5.63;;401077046;;;401077096;
+busch-jaeger_busch-balance-si_mat-zwart_schakelaar.usdz;Busch-balance SI;mat-zwart;schakelaar;inbouw;ja;12.56;10.38;;401333543;401039326;401333557;;
+busch-jaeger_busch-balance-si_mat-zwart_stopcontact.usdz;Busch-balance SI;mat-zwart;stopcontact;inbouw;ja;9.91;8.19;;401333543;;;401333585;
+busch-jaeger_solo_studiowit_schakelaar.usdz;solo;studiowit;schakelaar;inbouw;ja;15.01;12.4;;401039221;401039326;401039206;;
+busch-jaeger_solo_studiowit_stopcontact.usdz;solo;studiowit;stopcontact;inbouw;ja;11.22;9.27;;401039221;;;401039231;
+busch-jaeger_carat_witglas-studiowit_schakelaar.usdz;carat;witglas-studiowit;schakelaar;inbouw;ja;44.2;36.53;;401018044;401039326;401039206;;
+busch-jaeger_carat_witglas-studiowit_stopcontact.usdz;carat;witglas-studiowit;stopcontact;inbouw;ja;40.41;33.4;;401018044;;;401039231;
+busch-jaeger_carat_witglas-ivoorwit_schakelaar.usdz;carat;witglas-ivoorwit;schakelaar;inbouw;nee;;;;401018044;401039326;n/a;;"No single ivoorwit rocker (1786-82) on elektramat.nl; only the series rocker 1785-82."
+busch-jaeger_carat_witglas-ivoorwit_stopcontact.usdz;carat;witglas-ivoorwit;stopcontact;inbouw;ja;82.43;68.13;;401018044;;;401298445;Only ivoorwit socket with a price is the 2x USB version (20 EUCB2USB-82).
+busch-jaeger_carat_glaszwart-antraciet_schakelaar.usdz;carat;glaszwart-antraciet;schakelaar;inbouw;ja;47.2;39.01;;401167664;401039326;401039201;;
+busch-jaeger_carat_glaszwart-antraciet_stopcontact.usdz;carat;glaszwart-antraciet;stopcontact;inbouw;ja;44.58;36.85;;401167664;;;401039228;
+busch-jaeger_carat_rvs-studiowit_schakelaar.usdz;carat;rvs-studiowit;schakelaar;inbouw;ja;44.2;36.53;;401039101;401039326;401039206;;
+busch-jaeger_carat_rvs-studiowit_stopcontact.usdz;carat;rvs-studiowit;stopcontact;inbouw;ja;40.41;33.4;;401039101;;;401039231;
+busch-jaeger_busch-axcent_studiowit_schakelaar.usdz;Busch-axcent;studiowit;schakelaar;inbouw;ja;16.8;13.88;;401040082;401039326;401039206;;
+busch-jaeger_busch-axcent_studiowit_stopcontact.usdz;Busch-axcent;studiowit;stopcontact;inbouw;ja;13.01;10.75;;401040082;;;401039231;
+busch-jaeger_alpha_studiowit_schakelaar.usdz;alpha;studiowit;schakelaar;inbouw;nee;;;;n/a;401039326;n/a;;No alpha 1-voudig frame or single rocker on elektramat.nl (only 2-/3-voudig frames).
+busch-jaeger_alpha_studiowit_stopcontact.usdz;alpha;studiowit;stopcontact;inbouw;nee;;;;n/a;;;401039552;"No alpha 1-voudig frame on elektramat.nl. Socket title reads 'Z/RA'; check whether this is a version without randaarde."
+busch-jaeger_reflex-si_alpinwit_schakelaar_opbouw.usdz;Reflex SI;alpinwit;schakelaar;opbouw;nee;;;n/a;401039771;401039326;401039719;;"Only Reflex SI single rocker in stock is 2546-214 (screw-fixed version); check it fits 2000/6 USR before ordering. | Reflex SI 1-voudig opbouwbak (1701-214) not orderable on elektramat.nl; 2-/3-voudig only."
+busch-jaeger_reflex-si_alpinwit_stopcontact_opbouw.usdz;Reflex SI;alpinwit;stopcontact;opbouw;nee;;;n/a;401039771;;;401340085;"Reflex SI 1-voudig opbouwbak (1701-214) not orderable on elektramat.nl; 2-/3-voudig only."
+busch-jaeger_future-linear_studiowit_schakelaar_opbouw.usdz;future linear;studiowit;schakelaar;opbouw;ja;25.51;21.08;401050981;401039245;401039326;401039206;;
+busch-jaeger_future-linear_studiowit_stopcontact_opbouw.usdz;future linear;studiowit;stopcontact;opbouw;ja;21.72;17.95;401050981;401039245;;;401039231;

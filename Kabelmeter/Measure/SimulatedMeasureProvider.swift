@@ -14,11 +14,13 @@ final class SimulatedMeasureProvider: ObservableObject, MeasureProvider {
     private static let speed: Float = 0.35 // meters per second
 
     private weak var session: MeasureSession?
+    private weak var placement: PlacementSession?
     private var timer: AnyCancellable?
     private var travelled: Float = 0
 
-    func start(session: MeasureSession) {
+    func start(session: MeasureSession, placement: PlacementSession) {
         self.session = session
+        self.placement = placement
         session.trackingMessage = nil
         timer = Timer.publish(every: 1.0 / 15, on: .main, in: .common)
             .autoconnect()
@@ -33,7 +35,17 @@ final class SimulatedMeasureProvider: ObservableObject, MeasureProvider {
         travelled += Self.speed / 15
         let total = Float(MeasureMath.pathLength(Self.route))
         if travelled > total { travelled = 0 }
-        session?.cursor = Self.position(at: travelled)
+        let position = Self.position(at: travelled)
+        if let placement, placement.isActive {
+            // The simulated wall is the x/y plane facing +z: identity rotation.
+            var pose = matrix_identity_float4x4
+            pose.columns.3 = SIMD4(position, 1)
+            placement.cursor = pose
+            session?.cursor = nil
+        } else {
+            placement?.cursor = nil
+            session?.cursor = position
+        }
     }
 
     static func position(at distance: Float) -> SIMD3<Float> {

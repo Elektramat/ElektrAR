@@ -6,6 +6,7 @@ import UIKit
 
 /// Real measuring with ARKit + RealityKit. A few times per second it finds the world
 /// point under the crosshair and draws points, segments and the live preview.
+/// In the "Schakelaars plaatsen" mode it hands the crosshair to `ARFixturePlacer`.
 ///
 /// Two paths:
 /// - LiDAR (Pro models): read the smoothed LiDAR depth at the crosshair, then raycast
@@ -19,6 +20,9 @@ final class ARMeasureProvider: MeasureProvider {
     let arView: ARView
 
     private weak var session: MeasureSession?
+    private weak var placement: PlacementSession?
+    private let placer: ARFixturePlacer
+    private var newRoomSubscription: AnyCancellable?
     private let root = AnchorEntity(world: .zero)
     private let previewLegs: [ModelEntity]
     private var hasLiDAR = false
@@ -35,9 +39,10 @@ final class ARMeasureProvider: MeasureProvider {
     /// ARKit ambient intensity in lumen; ~1000 is a well lit room.
     private static let darkThreshold: CGFloat = 150
 
-    init() {
+    init(fixtures: [Fixture]) {
         arView = ARView(frame: .zero, cameraMode: .ar, automaticallyConfigureSession: false)
         arView.renderOptions.insert(.disableMotionBlur)
+        placer = ARFixturePlacer(arView: arView, fixtures: fixtures)
         previewLegs = (0..<2).map { _ in Self.makeSegmentEntity(color: Theme.arPreview) }
         for leg in previewLegs {
             leg.isEnabled = false
@@ -56,23 +61,19 @@ final class ARMeasureProvider: MeasureProvider {
         arView.addSubview(coaching)
     }
 
-    func start(session: MeasureSession) {
+    func start(session: MeasureSession, placement: PlacementSession) {
         self.session = session
+        self.placement = placement
         guard ARWorldTrackingConfiguration.isSupported else {
             session.trackingMessage = TrackingText.unavailable
             return
         }
-        let config = ARWorldTrackingConfiguration()
-        config.planeDetection = [.horizontal, .vertical]
+        let config = Self.makeConfiguration()
         hasLiDAR = ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh)
-        if hasLiDAR {
-            config.sceneReconstruction = .mesh
-        }
-        if ARWorldTrackingConfiguration.supportsFrameSemantics(.smoothedSceneDepth) {
-            config.frameSemantics.insert(.smoothedSceneDepth)
-        }
         session.usesLiDAR = hasLiDAR
+        placer.prepare(config, placement: placement)
         arView.session.run(config)
+        newRoomSubscription = placement.newRoomRequests.sink { [weak self] in self?.startNewRoom() }
 
         updateSubscription = arView.scene.subscribe(to: SceneEvents.Update.self) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
@@ -85,7 +86,30 @@ final class ARMeasureProvider: MeasureProvider {
     func stop() {
         updateSubscription?.cancel()
         pointsSubscription?.cancel()
+        newRoomSubscription?.cancel()
+        placer.flush()
         arView.session.pause()
+    }
+
+    private static func makeConfiguration() -> ARWorldTrackingConfiguration {
+        let config = ARWorldTrackingConfiguration()
+        config.planeDetection = [.horizontal, .vertical]
+        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+            config.sceneReconstruction = .mesh
+        }
+        if ARWorldTrackingConfiguration.supportsFrameSemantics(.smoothedSceneDepth) {
+            config.frameSemantics.insert(.smoothedSceneDepth)
+        }
+        return config
+    }
+
+    /// Drops the saved room and starts tracking from scratch. Measured points belong
+    /// to the old coordinate system, so they go too.
+    private func startNewRoom() {
+        placer.removeAll()
+        smoother.reset()
+        session?.reset()
+        arView.session.run(Self.makeConfiguration(), options: [.resetTracking, .removeExistingAnchors])
     }
 
     // MARK: Per-frame work (throttled)
@@ -96,6 +120,21 @@ final class ARMeasureProvider: MeasureProvider {
         lastTick = now
 
         let frame = arView.session.currentFrame
+        placer.tick(frame: frame)
+
+        // Placing switches: the placer owns the crosshair, measuring pauses.
+        if let placement, placement.isActive {
+            let message = Self.message(for: frame?.camera.trackingState)
+                ?? (placement.cursor == nil ? TrackingText.aimAtWall : nil)
+            if session.trackingMessage != message { session.trackingMessage = message }
+            if session.guide != nil { session.guide = nil }
+            if session.cursor != nil { session.cursor = nil }
+            smoother.reset()
+            updatePreview(from: nil, to: nil, mode: session.mode)
+            updateVerticalGuide(through: nil)
+            return
+        }
+
         let last = session.isFinished ? nil : session.points.last
         var message = Self.message(for: frame?.camera.trackingState)
         var cursor: SIMD3<Float>?
@@ -159,6 +198,7 @@ final class ARMeasureProvider: MeasureProvider {
     private static func message(for state: ARCamera.TrackingState?) -> String? {
         switch state {
         case .normal: return nil
+        case .limited(.relocalizing): return TrackingText.relocalizing
         case .limited(.insufficientFeatures): return TrackingText.aimAtSurface
         case .limited, .notAvailable, .none: return TrackingText.moveSlowly
         }

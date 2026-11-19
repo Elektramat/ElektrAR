@@ -15,6 +15,13 @@
 
 Say: "Long distances can drift a few percent. That is what the reserve is for."
 
+## Extra: switches on the wall (30 seconds)
+
+1. Tap "Schakelaars plaatsen". Tap the chip at the top and pick e.g. future linear studiowit, Schakelaar.
+2. Aim at the wall where the switch goes (about 1,05 m high): a see-through switch follows the crosshair. Tap "+".
+3. Pick a socket and place it too. The bar shows the number placed and the price of the complete sets.
+4. Walk around: the switches stay on the wall. Close and reopen the app, aim at the same wall: they come back.
+
 ## Fallback (Demo-modus)
 
 If tracking misbehaves on stage: long-press the "Kabelmeter" title until "Demo-modus aan" appears.

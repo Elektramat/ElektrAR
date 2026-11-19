@@ -88,6 +88,13 @@ struct LocalCartService: CartService {
 /// products. For the demo, `WebShopCart` posts the product form inside an in-app web view.
 /// Still to ask e-commerce/dev: is there a cart API reachable from outside, and how would the
 /// app link a cart to the customer's Safari session or account (for example a deep link)?
+///
+/// Tried on 19 Nov 2026: the Elektramat MCP server (https://mcp.elektramat.nl/mcp, no login)
+/// has `cable_create_order(productId, amount, presetId)`, but without a login it returns only
+/// "https://www.elektramat.nl/checkout/cart" with no cart id, token or cookie, so the browser
+/// sees an empty cart. With an OAuth login it may land in the customer's own cart, but the
+/// server only accepts redirect URIs of known assistants and localhost; an iOS app needs
+/// Elektramat to allow its redirect. Ask the MCP team for that, or for a cart deep link.
 @MainActor
 struct RemoteCartService: CartService {
     func add(cable: Cable, meters: Double) throws {

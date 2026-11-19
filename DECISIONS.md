@@ -28,3 +28,12 @@ One line each: what we chose and why.
 - Camera denied shows a card with "Open Instellingen" and "Gebruik demo-modus" instead of a black screen.
 - Real shop cart through an in-app web view (`WebShopCart`) at Jairo's request: the shop only accepts its product form with a session form key, so a Safari link cannot fill the cart. Tested with curl on 19 Nov 2026: 7 m YMvK 3x1,5 landed in a guest cart. The cart lives in the app's web view, not in Safari. Production needs a deep link or cart API from the webshop team.
 - The app checks every added line through Magento's customer section (`/customer/section/load/?sections=cart`) and shows which cable failed and why, instead of assuming success.
+- Switch placement is a second mode on the same screen ("Kabel meten" / "Schakelaars plaatsen") and reuses the crosshair and "+" button, so the Measure-app flow stays the same.
+- Switch and socket data comes from `assets/sku_mapping.csv` + `sku_parts.csv` via `scripts/fixtures_to_json.py` into one `fixtures.json`; the app does not parse CSV.
+- The 8 carat rows name models that do not exist (frame material + insert colour, e.g. `witglas-studiowit`); they use the model with the same insert colour (`carat_studiowit`). The frame material is not shown in 3D.
+- Fixtures that are not completely orderable (5 of 40) can still be placed, marked "Niet compleet te bestellen" and left out of the total.
+- Each placement is an `ARAnchor` named `fixture:<id>`: ARKit keeps it fixed in the room. The orientation is computed from the wall normal (+Z out of the wall, +Y up), so switches always hang upright.
+- Placements survive an app restart through an `ARWorldMap` in Documents, saved at most every 3 s while mapped, and when the app goes to the background or the AR view closes. On launch ARKit must recognise the room before they show; "Nieuwe ruimte" drops the saved room.
+- Demo-modus and AR have separate placement lists: their coordinates do not mix, and switching Demo-modus must not wipe the saved room.
+- Fixtures are not added to the cart yet: the cart is meter-based.
+- No Elektramat MCP cart: without a login `cable_create_order` returns only the generic cart URL (no cart id or session), so Safari would show an empty cart. Details in `RemoteCartService`.
