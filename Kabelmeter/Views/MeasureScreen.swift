@@ -369,9 +369,9 @@ struct MeasureScreen: View {
 
     private var placementControls: some View {
         HStack(alignment: .center, spacing: Theme.spacing) {
-            controlButton("Ongedaan maken", icon: "arrow.uturn.backward") { placement.undo() }
+            controlButton("Ongedaan maken", icon: "arrow.uturn.backward", showsTitle: false) { placement.undo() }
                 .disabled(placement.placed.isEmpty)
-            controlButton("Wis alles", icon: "trash") { confirmClear = true }
+            controlButton("Wis alles", icon: "trash", showsTitle: false) { confirmClear = true }
                 .disabled(placement.placed.isEmpty)
 
             Button(action: placeFixture) {
@@ -442,8 +442,11 @@ struct MeasureScreen: View {
         .padding(32)
     }
 
-    private func controlButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) { ControlLabel(icon: icon) }
+    /// Measuring shows a short title under the icon (Terug, Opnieuw, Klaar); placing shows only
+    /// the undo and trash icons. The title is always the accessibility label.
+    private func controlButton(_ title: String, icon: String, showsTitle: Bool = true,
+                               action: @escaping () -> Void) -> some View {
+        Button(action: action) { ControlLabel(icon: icon, title: showsTitle ? title : nil) }
             .buttonStyle(CardButtonStyle())
             .accessibilityLabel(title)
     }
@@ -585,12 +588,23 @@ private struct SummarySheet: View {
 /// fit ("Ongedaan ma…"). The title stays as the accessibility label.
 private struct ControlLabel: View {
     let icon: String
+    var title: String?
 
+    /// Full color, also when disabled: a disabled button does nothing when tapped.
     var body: some View {
-        Image(systemName: icon)
-            .font(.title2.weight(.semibold))
-            .foregroundStyle(Theme.accent)
-            .frame(width: Theme.tapTarget, height: Theme.tapTarget)
-            .surface(RoundedRectangle(cornerRadius: 14))
+        VStack(spacing: 3) {
+            Image(systemName: icon)
+                .font((title == nil ? Font.title2 : .title3).weight(.semibold))
+                .foregroundStyle(Theme.accent)
+            if let title {
+                Text(title)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(Theme.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+        }
+        .frame(width: Theme.tapTarget + (title == nil ? 0 : 8), height: Theme.tapTarget)
+        .surface(RoundedRectangle(cornerRadius: 14))
     }
 }

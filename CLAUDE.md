@@ -143,7 +143,7 @@ Mirror Apple's Measure app. Do **not** require tapping on the screen to place a 
 - Big tap targets, high contrast (this is used standing in a room or on a ladder), Dark Mode supported. All colors via `Theme.swift`.
 - No logos, no copied brand assets. If the team supplies design tokens later, only `Theme.swift` should need to change.
 - **Never black or dark text on a blue button, anywhere in the app.** Text and icons on a blue fill are white (`Theme.onAccent`). Use `.brandProminentButton()` (`Views/BrandButton.swift`) for a filled blue button, not a bare `.buttonStyle(.borderedProminent)`: the system picks the label color itself and that can be black. The same goes for selected segments, badges and any other blue surface. Check every new blue surface in a screenshot.
-- The small square control buttons next to "+" (undo, trash, reset, done) show only their icon, no text. Keep the title as the accessibility label.
+- The square control buttons next to "+": when placing switches, only the undo and trash icons (no text); when measuring, the icon with a short title under it ("Terug", "Opnieuw", "Klaar"). Icons are always full brand color, also when disabled (no opacity). The title is always the accessibility label.
 
 ## 10. Milestones and acceptance criteria
 
