@@ -577,7 +577,8 @@ private struct SummarySheet: View {
     }
 }
 
-/// White square button on the camera image: blue icon, dark label, light grey when disabled.
+/// White square button on the camera image: Elektramat-blue icon and black label; when
+/// disabled the same colors, lighter, so it never turns grey.
 private struct ControlLabel: View {
     let title: String
     let icon: String
@@ -587,10 +588,10 @@ private struct ControlLabel: View {
         VStack(spacing: 3) {
             Image(systemName: icon)
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(isEnabled ? Theme.accent : Theme.iconDisabled)
+                .foregroundStyle(Theme.accent.opacity(isEnabled ? 1 : 0.4))
             Text(title)
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(isEnabled ? Theme.ink : Theme.iconDisabled)
+                .foregroundStyle(Theme.ink.opacity(isEnabled ? 1 : 0.4))
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }

@@ -116,7 +116,7 @@ enum BrandAppearance {
         segmented.backgroundColor = .white
         segmented.setTitleTextAttributes([.foregroundColor: UIColor.white,
                                           .font: UIFont.systemFont(ofSize: 15, weight: .semibold)], for: .selected)
-        segmented.setTitleTextAttributes([.foregroundColor: Theme.Token.black75,
+        segmented.setTitleTextAttributes([.foregroundColor: Theme.Token.ink,
                                           .font: UIFont.systemFont(ofSize: 15, weight: .medium)], for: .normal)
     }
 }
