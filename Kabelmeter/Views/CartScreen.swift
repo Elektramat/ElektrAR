@@ -21,7 +21,7 @@ struct CartScreen: View {
                 } else {
                     Section {
                         ForEach(cart.items) { item in
-                            VStack(alignment: .leading, spacing: 6) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 HStack(alignment: .firstTextBaseline) {
                                     Text(item.name).font(.headline)
                                     Spacer()
@@ -42,15 +42,23 @@ struct CartScreen: View {
                                     }
                                 }
                                 if item.isSample { SampleBadge() }
+                                // A light text link with its own space, not a second filled button
+                                // right under the stepper.
                                 Button {
                                     openURL(item.productUrl)
                                 } label: {
-                                    Label("Bekijk op elektramat.nl", systemImage: "safari")
-                                        .frame(maxWidth: .infinity, minHeight: 44)
+                                    HStack(spacing: 6) {
+                                        Text("Bekijk op elektramat.nl")
+                                        Image(systemName: "arrow.up.right")
+                                    }
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Theme.accent)
+                                    .frame(minHeight: 44)
                                 }
-                                .buttonStyle(.bordered)
+                                .buttonStyle(.borderless)
+                                .padding(.top, 4)
                             }
-                            .padding(.vertical, 4)
+                            .padding(.vertical, 8)
                         }
                         .onDelete { cart.remove(atOffsets: $0) }
                     }
