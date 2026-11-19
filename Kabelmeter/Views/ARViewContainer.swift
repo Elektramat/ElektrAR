@@ -5,11 +5,13 @@ import SwiftUI
 /// so it is created once and stopped when the view goes away.
 struct ARViewContainer: UIViewRepresentable {
     let session: MeasureSession
+    let placement: PlacementSession
+    let fixtures: [Fixture]
 
-    func makeCoordinator() -> ARMeasureProvider { ARMeasureProvider() }
+    func makeCoordinator() -> ARMeasureProvider { ARMeasureProvider(fixtures: fixtures) }
 
     func makeUIView(context: Context) -> ARView {
-        context.coordinator.start(session: session)
+        context.coordinator.start(session: session, placement: placement)
         return context.coordinator.arView
     }
 
@@ -24,6 +26,8 @@ struct ARViewContainer: UIViewRepresentable {
 /// the measured points and the crosshair position from the simulated provider.
 struct SimulatedMeasureView: View {
     @ObservedObject var session: MeasureSession
+    @ObservedObject var placement: PlacementSession
+    let fixtures: [Fixture]
     @StateObject private var provider = SimulatedMeasureProvider()
 
     var body: some View {
@@ -63,6 +67,17 @@ struct SimulatedMeasureView: View {
                         context.fill(Path(ellipseIn: CGRect(x: c.x - 6, y: c.y - 6, width: 12, height: 12)),
                                      with: .color(.white))
                     }
+
+                    // Placed switches and sockets, drawn larger than real size so they stay visible.
+                    for item in placement.placed {
+                        drawFixture(item.fixtureId, at: map(item.position), size: 0.12 * scale, in: &context)
+                    }
+                    if placement.isActive, let pose = placement.cursor, let id = placement.selectedFixtureId {
+                        var ghost = context
+                        ghost.opacity = 0.5
+                        drawFixture(id, at: map(SIMD3(pose.columns.3.x, pose.columns.3.y, pose.columns.3.z)),
+                                    size: 0.12 * scale, in: &ghost)
+                    }
                 }
 
                 // The crosshair of MeasureScreen sits in the middle; here we show where it "points".
@@ -79,7 +94,19 @@ struct SimulatedMeasureView: View {
                     .position(x: geo.size.width / 2, y: geo.size.height * 0.30)
             }
         }
-        .onAppear { provider.start(session: session) }
+        .onAppear { provider.start(session: session, placement: placement) }
         .onDisappear { provider.stop() }
+    }
+
+    private func drawFixture(_ fixtureId: String, at center: CGPoint, size: CGFloat, in context: inout GraphicsContext) {
+        let rect = CGRect(x: center.x - size / 2, y: center.y - size / 2, width: size, height: size)
+        context.fill(Path(roundedRect: rect, cornerRadius: size * 0.15), with: .color(.white))
+        context.stroke(Path(roundedRect: rect, cornerRadius: size * 0.15), with: .color(.gray), lineWidth: 1)
+        let inner = rect.insetBy(dx: size * 0.22, dy: size * 0.22)
+        if fixtures.first(where: { $0.id == fixtureId })?.product == "stopcontact" {
+            context.stroke(Path(ellipseIn: inner), with: .color(.gray), lineWidth: 1.5)
+        } else {
+            context.stroke(Path(roundedRect: inner, cornerRadius: 2), with: .color(.gray), lineWidth: 1.5)
+        }
     }
 }

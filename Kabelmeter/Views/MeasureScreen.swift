@@ -3,23 +3,45 @@ import SwiftUI
 import UIKit
 
 /// The one main screen: camera + crosshair, cable chip, controls and the price bar.
+/// A second mode places switches and sockets on the walls.
 struct MeasureScreen: View {
+    enum Mode: Hashable { case measure, place }
+
     @EnvironmentObject private var cableStore: CableStore
     @EnvironmentObject private var cartStore: CartStore
+    @EnvironmentObject private var fixtureStore: FixtureStore
     @StateObject private var session = MeasureSession()
+    /// Separate placements for AR and Demo-modus: their coordinates do not mix, and
+    /// switching Demo-modus must not wipe the placements saved with the room.
+    @StateObject private var arPlacement = PlacementSession()
+    @StateObject private var simulatedPlacement = PlacementSession()
 
     @AppStorage("reservePercent") private var reservePercent = Int(PricingCalculator.defaultReserve * 100)
     @AppStorage("demoMode") private var demoMode = false
     @AppStorage("selectedCableId") private var storedCableId = ""
+    @AppStorage("selectedFixtureId") private var storedFixtureId = ""
 
     @State private var showPicker = false
     @State private var showCart = false
     @State private var showSummary = false
     @State private var toast: String?
+    @State private var mode: Mode = .measure
+    @State private var showFixturePicker = false
+    @State private var confirmClear = false
 
     private var cable: Cable? {
         cableStore.cables.first { $0.id == storedCableId } ?? cableStore.cables.first
     }
+
+    private var fixture: Fixture? {
+        fixtureStore.fixture(id: storedFixtureId)
+            ?? fixtureStore.fixtures.first(where: \.complete)
+            ?? fixtureStore.fixtures.first
+    }
+
+    private var placement: PlacementSession { useSimulated ? simulatedPlacement : arPlacement }
+
+    private var isPlacing: Bool { mode == .place }
 
     private var useSimulated: Bool {
         #if targetEnvironment(simulator)
@@ -43,11 +65,17 @@ struct MeasureScreen: View {
 
             VStack(spacing: Theme.spacing) {
                 topBar
+                modePicker
                 statusText
                 Spacer()
                 controls
-                PriceBar(cable: cable, measured: session.totalLength, quote: quote,
-                         reservePercent: $reservePercent, onAddToCart: addToCart)
+                if isPlacing {
+                    PlacementBar(fixture: fixture, placedCount: placement.placed.count,
+                                 total: placement.total(in: fixtureStore.fixtures), persists: !useSimulated)
+                } else {
+                    PriceBar(cable: cable, measured: session.totalLength, quote: quote,
+                             reservePercent: $reservePercent, onAddToCart: addToCart)
+                }
             }
             .padding(.horizontal, Theme.spacing)
             .padding(.bottom, 4)
@@ -62,7 +90,21 @@ struct MeasureScreen: View {
                     .padding(.top, 70)
             }
         }
-        .onChange(of: useSimulated) { session.reset() }
+        .onChange(of: useSimulated) {
+            session.reset()
+            syncPlacement()
+        }
+        .onChange(of: mode) { syncPlacement() }
+        .onChange(of: fixture?.id) { syncPlacement() }
+        .onAppear { syncPlacement() }
+        .sheet(isPresented: $showFixturePicker) {
+            FixturePickerSheet(fixtures: fixtureStore.fixtures, selectedId: Binding(
+                get: { fixture?.id }, set: { storedFixtureId = $0 ?? "" }))
+        }
+        .confirmationDialog("Alle geplaatste schakelaars en stopcontacten wissen?",
+                            isPresented: $confirmClear, titleVisibility: .visible) {
+            Button("Wis alles", role: .destructive) { placement.clearAll() }
+        }
         .sheet(isPresented: $showPicker) {
             CablePickerSheet(cables: cableStore.cables, selectedId: Binding(
                 get: { cable?.id }, set: { storedCableId = $0 ?? "" }))
@@ -81,56 +123,95 @@ struct MeasureScreen: View {
     private var measureLayer: some View {
         Group {
             if useSimulated {
-                SimulatedMeasureView(session: session)
+                SimulatedMeasureView(session: session, placement: simulatedPlacement,
+                                     fixtures: fixtureStore.fixtures)
             } else {
-                ARViewContainer(session: session)
+                ARViewContainer(session: session, placement: arPlacement, fixtures: fixtureStore.fixtures)
             }
         }
-        .overlay { Crosshair(active: session.canAddPoint) }
+        .overlay { Crosshair(active: isPlacing ? placement.canPlace : session.canAddPoint) }
+    }
+
+    private var modePicker: some View {
+        Picker("Modus", selection: $mode) {
+            Text("Kabel meten").tag(Mode.measure)
+            Text("Schakelaars plaatsen").tag(Mode.place)
+        }
+        .pickerStyle(.segmented)
+        .controlSize(.large)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 9))
     }
 
     private var topBar: some View {
         HStack(spacing: 8) {
-            Button { showPicker = true } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "cable.connector")
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(cable?.name ?? "Kies een kabel").font(.subheadline.weight(.semibold)).lineLimit(1)
-                        if let cable {
-                            Text("\(cable.crossSection) · \(Format.euro(cable.pricePerMeter))/m")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                    Image(systemName: "chevron.down").font(.caption)
-                }
-                .padding(.horizontal, 12)
-                .frame(minHeight: 48)
-                .background(.regularMaterial, in: Capsule())
-            }
-            .buttonStyle(.plain)
-            .disabled(cableStore.cables.isEmpty)
+            if isPlacing { fixtureChip } else { cableChip }
 
             Spacer(minLength: 0)
 
-            Button { showCart = true } label: {
-                Image(systemName: "cart")
-                    .font(.title3)
-                    .frame(width: 48, height: 48)
-                    .background(.regularMaterial, in: Circle())
-                    .overlay(alignment: .topTrailing) {
-                        if cartStore.count > 0 {
-                            Text("\(cartStore.count)")
-                                .font(.caption2.bold())
-                                .foregroundStyle(Theme.onAccent)
-                                .frame(minWidth: 18, minHeight: 18)
-                                .background(Theme.accent, in: Circle())
-                        }
-                    }
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Winkelmand, \(cartStore.count) artikelen")
+            cartButton
         }
         .padding(.top, 4)
+    }
+
+    private var fixtureChip: some View {
+        Button { showFixturePicker = true } label: {
+            HStack(spacing: 8) {
+                Image(systemName: fixture?.product == "stopcontact" ? "poweroutlet.type.f" : "lightswitch.on")
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(fixture?.title ?? "Kies schakelmateriaal").font(.subheadline.weight(.semibold)).lineLimit(1)
+                    if let fixture {
+                        Text(fixture.subtitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                }
+                Image(systemName: "chevron.down").font(.caption)
+            }
+            .padding(.horizontal, 12)
+            .frame(minHeight: 48)
+            .background(.regularMaterial, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(fixtureStore.fixtures.isEmpty)
+    }
+
+    private var cableChip: some View {
+        Button { showPicker = true } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "cable.connector")
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(cable?.name ?? "Kies een kabel").font(.subheadline.weight(.semibold)).lineLimit(1)
+                    if let cable {
+                        Text("\(cable.crossSection) · \(Format.euro(cable.pricePerMeter))/m")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                Image(systemName: "chevron.down").font(.caption)
+            }
+            .padding(.horizontal, 12)
+            .frame(minHeight: 48)
+            .background(.regularMaterial, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(cableStore.cables.isEmpty)
+    }
+
+    private var cartButton: some View {
+        Button { showCart = true } label: {
+            Image(systemName: "cart")
+                .font(.title3)
+                .frame(width: 48, height: 48)
+                .background(.regularMaterial, in: Circle())
+                .overlay(alignment: .topTrailing) {
+                    if cartStore.count > 0 {
+                        Text("\(cartStore.count)")
+                            .font(.caption2.bold())
+                            .foregroundStyle(Theme.onAccent)
+                            .frame(minWidth: 18, minHeight: 18)
+                            .background(Theme.accent, in: Circle())
+                    }
+                }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Winkelmand, \(cartStore.count) artikelen")
     }
 
     private var statusText: some View {
@@ -142,10 +223,12 @@ struct MeasureScreen: View {
                 .shadow(radius: 2)
                 .onLongPressGesture(minimumDuration: 0.8) { toggleDemoMode() }
 
-            if let error = cableStore.loadError {
+            if let error = isPlacing ? fixtureStore.loadError : cableStore.loadError {
                 pill(error, color: .red)
             } else if let message = session.trackingMessage {
                 pill(message, color: Theme.warning)
+            } else if isPlacing {
+                if placement.placed.isEmpty { pill("Richt op een muur en tik op +", color: .white) }
             } else if session.isFinished {
                 pill("Meting klaar", color: .green)
             } else if let guide = session.guide {
@@ -154,7 +237,16 @@ struct MeasureScreen: View {
                 pill("Richt op het beginpunt en tik op +", color: .white)
             }
 
-            if cable?.isSample == true { SampleBadge() }
+            if placement.isRestoring {
+                Button("Nieuwe ruimte") { placement.startNewRoom() }
+                    .font(.callout.weight(.semibold))
+                    .padding(.horizontal, 16)
+                    .frame(minHeight: 44)
+                    .background(.regularMaterial, in: Capsule())
+                    .buttonStyle(.plain)
+            }
+
+            if !isPlacing, cable?.isSample == true { SampleBadge() }
         }
     }
 
@@ -167,7 +259,36 @@ struct MeasureScreen: View {
             .foregroundStyle(color)
     }
 
+    @ViewBuilder
     private var controls: some View {
+        if isPlacing { placementControls } else { measureControls }
+    }
+
+    private var placementControls: some View {
+        HStack(alignment: .center, spacing: Theme.spacing) {
+            controlButton("Ongedaan maken", icon: "arrow.uturn.backward") { placement.undo() }
+                .disabled(placement.placed.isEmpty)
+            controlButton("Wis alles", icon: "trash") { confirmClear = true }
+                .disabled(placement.placed.isEmpty)
+
+            Button(action: placeFixture) {
+                Image(systemName: "plus")
+                    .font(.system(size: 34, weight: .bold))
+                    .frame(width: Theme.addButton, height: Theme.addButton)
+                    .background(placement.canPlace && fixture != nil ? Theme.accent : Theme.secondaryButton,
+                                in: Circle())
+                    .foregroundStyle(Theme.onAccent)
+                    .overlay(Circle().strokeBorder(.white.opacity(0.8), lineWidth: 3))
+            }
+            .disabled(!placement.canPlace || fixture == nil)
+            .accessibilityLabel("Plaats \(fixture?.title ?? "schakelaar")")
+
+            // Keeps the "+" in the same spot as in the measuring mode.
+            Color.clear.frame(width: Theme.tapTarget, height: Theme.tapTarget)
+        }
+    }
+
+    private var measureControls: some View {
         HStack(alignment: .center, spacing: Theme.spacing) {
             controlButton("Ongedaan maken", icon: "arrow.uturn.backward") { session.undo() }
                 .disabled(session.points.isEmpty)
@@ -211,6 +332,21 @@ struct MeasureScreen: View {
         if session.addPoint() {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
         }
+    }
+
+    private func placeFixture() {
+        guard let fixture else { return }
+        if placement.place(fixture.id) {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        }
+    }
+
+    /// Tells the active placement session the mode and the selected fixture; the other one stays idle.
+    private func syncPlacement() {
+        arPlacement.isActive = isPlacing && !useSimulated
+        simulatedPlacement.isActive = isPlacing && useSimulated
+        arPlacement.selectedFixtureId = fixture?.id
+        simulatedPlacement.selectedFixtureId = fixture?.id
     }
 
     private func addToCart() {

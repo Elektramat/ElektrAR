@@ -21,3 +21,11 @@ One line each: what we chose and why.
 - Only "per meter" products (whole meters, minimum 1, as the shop's quantity field allows). Rolls and reels are separate products with their own price, so `fixedLengths` is not used yet.
 - Price per meter including VAT: the app shows a consumer price.
 - Photos ship in the bundle as `<sku>.jpg` (JPEG, 300 px, 164 KB in total) instead of loading from the site: the demo must work without Wi-Fi.
+- Switch placement is a second mode on the same screen ("Kabel meten" / "Schakelaars plaatsen") and reuses the crosshair and "+" button, so the Measure-app flow stays the same.
+- Switch and socket data comes from `assets/sku_mapping.csv` + `sku_parts.csv` via `scripts/fixtures_to_json.py` into one `fixtures.json`; the app does not parse CSV.
+- The 8 carat rows name models that do not exist (frame material + insert colour, e.g. `witglas-studiowit`); they use the model with the same insert colour (`carat_studiowit`). The frame material is not shown in 3D.
+- Fixtures that are not completely orderable (5 of 40) can still be placed, marked "Niet compleet te bestellen" and left out of the total.
+- Each placement is an `ARAnchor` named `fixture:<id>`: ARKit keeps it fixed in the room. The orientation is computed from the wall normal (+Z out of the wall, +Y up), so switches always hang upright.
+- Placements survive an app restart through an `ARWorldMap` in Documents, saved at most every 3 s while mapped, and when the app goes to the background or the AR view closes. On launch ARKit must recognise the room before they show; "Nieuwe ruimte" drops the saved room.
+- Demo-modus and AR have separate placement lists: their coordinates do not mix, and switching Demo-modus must not wipe the saved room.
+- Fixtures are not added to the cart yet: the cart is meter-based. Elektramat MCP cart integration is next.
