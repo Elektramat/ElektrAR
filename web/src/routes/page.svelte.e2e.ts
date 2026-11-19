@@ -44,3 +44,31 @@ test('cart survives a reload', async ({ page }) => {
 	await page.reload();
 	await expect(page.getByRole('button', { name: /Winkelmand, 1 artikelen/ })).toBeVisible();
 });
+
+test('advises the cheapest rolls for a roll cable and lists each roll in the cart', async ({
+	page
+}) => {
+	await page.goto('/');
+	await page.getByRole('button', { name: /Wijzig kabel/ }).click();
+	await page.getByLabel('Zoek kabel').fill('snelflex');
+	const row = page.getByRole('button', { name: /Snelflex/ });
+	await expect(row).toContainText('vanaf € 2,09 per meter · rollen van 25 m, 50 m, 100 m');
+	await row.click();
+
+	// 50 m → 50 × 1,15 + 2 = 59,5 m → 50 + 25 m (€ 182,17) is cheaper than 100 m (€ 208,77).
+	await page.getByLabel('Stuk 1', { exact: true }).fill('50');
+	await expect(page.getByText('Rollen: 1 × 50 m + 1 × 25 m')).toBeVisible();
+	await expect(page.getByTestId('price')).toHaveText(/182,17/);
+
+	await page.getByRole('button', { name: 'Voeg 1 × 50 m + 1 × 25 m toe aan winkelmand' }).click();
+	await page.getByRole('button', { name: /Winkelmand, 1 artikelen/ }).click();
+	const dialog = page.getByRole('dialog');
+	await expect(dialog).toContainText('art.nr. 401170092');
+	await expect(dialog).toContainText('art.nr. 401241845');
+	await expect(
+		page.getByRole('link', { name: 'Bestel rol 50 m op elektramat.nl' })
+	).toHaveAttribute('href', /per-rol-50-meter/);
+	await expect(
+		page.getByRole('link', { name: 'Bestel rol 25 m op elektramat.nl' })
+	).toHaveAttribute('href', /per-rol-25-meter/);
+});
