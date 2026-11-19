@@ -1,0 +1,283 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { cables } from '#lib/catalog.ts';
+	import { cart, linePrice } from '#lib/cart.svelte.ts';
+	import { euro, meters, orderLength, pieces } from '#lib/format.ts';
+	import { CONNECTION_ALLOWANCE, DEFAULT_RESERVE, quote } from '#lib/pricing.ts';
+
+	const DISCLAIMER =
+		'Dit is een schatting. Controleer de lengte zelf en laat het aansluiten over aan een installateur.';
+	const CABLE_KEY = 'kabelmeter.cable';
+
+	type Segment = { id: number; text: string };
+
+	/** "2,5" and "2.5" both work; empty or invalid gives null. */
+	function parseMeters(text: string): number | null {
+		const trimmed = text.trim().replace(',', '.');
+		if (trimmed === '') return null;
+		const value = Number(trimmed);
+		return Number.isFinite(value) && value >= 0 && value <= 10_000 ? value : null;
+	}
+
+	let cableId = $state(cables[0].id);
+	let segments = $state<Segment[]>([{ id: 1, text: '' }]);
+	let reservePercent = $state(Math.round(DEFAULT_RESERVE * 100));
+	let query = $state('');
+	let pickerOpen = $state(false);
+	let toast = $state<string | null>(null);
+	let isIOS = $state(false);
+	let cartDialog: HTMLDialogElement | undefined = $state();
+	let nextId = 2;
+
+	onMount(() => {
+		cart.load();
+		isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+		const saved = localStorage.getItem(CABLE_KEY);
+		if (saved && cables.some((c) => c.id === saved)) cableId = saved;
+	});
+
+	const cable = $derived(cables.find((c) => c.id === cableId) ?? cables[0]);
+	const measured = $derived(segments.reduce((sum, s) => sum + (parseMeters(s.text) ?? 0), 0));
+	const result = $derived(quote(cable, measured, reservePercent / 100));
+	const hasSample = cables.some((c) => c.isSample);
+	const filtered = $derived.by(() => {
+		const q = query.trim().toLowerCase();
+		if (!q) return cables;
+		return cables.filter((c) =>
+			[c.name, c.crossSection, c.use].some((v) => v.toLowerCase().includes(q))
+		);
+	});
+
+	function chooseCable(id: string) {
+		cableId = id;
+		localStorage.setItem(CABLE_KEY, id);
+		pickerOpen = false;
+		query = '';
+	}
+
+	function addSegment() {
+		segments.push({ id: nextId++, text: '' });
+	}
+
+	function removeSegment(id: number) {
+		segments =
+			segments.length === 1
+				? [{ id: segments[0].id, text: '' }]
+				: segments.filter((s) => s.id !== id);
+	}
+
+	function show(message: string) {
+		toast = message;
+		setTimeout(() => {
+			if (toast === message) toast = null;
+		}, 2200);
+	}
+
+	function addToCart() {
+		if (!result) return;
+		cart.add(cable, result.billedLength);
+		show(`${orderLength(result.billedLength)} ${cable.name} toegevoegd`);
+	}
+</script>
+
+<div class="app">
+	<header class="header">
+		<div>
+			<p class="brand-small">Elektramat</p>
+			<h1 class="brand">Kabelmeter</h1>
+			<p class="tagline">
+				Nooit te weinig of te veel kabel. Vul je route in en de juiste lengte staat in je
+				winkelmand.
+			</p>
+		</div>
+		<button
+			class="icon-button"
+			aria-label={`Winkelmand, ${cart.items.length} artikelen`}
+			onclick={() => cartDialog?.showModal()}
+		>
+			<span aria-hidden="true">🛒</span>
+			{#if cart.items.length > 0}<span class="badge">{cart.items.length}</span>{/if}
+		</button>
+	</header>
+
+	<main>
+		<section class="card" aria-labelledby="kabel">
+			<h2 id="kabel"><span class="step">1</span>Kies je kabel</h2>
+			{#if !pickerOpen}
+				<button
+					class="cable-row"
+					onclick={() => (pickerOpen = true)}
+					aria-label={`Gekozen: ${cable.name}. Wijzig kabel`}
+				>
+					<img class="cable-photo" src={`/cables/${cable.sku}.jpg`} alt="" width="56" height="56" />
+					<div>
+						<p class="cable-name">{cable.name}</p>
+						<p class="cable-meta">
+							{cable.crossSection} · {euro(cable.pricePerMeter)} per meter · {cable.stock}
+						</p>
+						{#if cable.isSample}<span class="sample">Voorbeelddata</span>{/if}
+					</div>
+					<span class="selected">Wijzig</span>
+				</button>
+			{:else}
+				<!-- svelte-ignore a11y_autofocus -->
+				<input
+					class="search"
+					type="search"
+					placeholder="Zoek kabel"
+					aria-label="Zoek kabel"
+					bind:value={query}
+					autofocus
+				/>
+				{#if filtered.length === 0}
+					<p class="muted">Geen kabel gevonden voor “{query}”.</p>
+				{/if}
+				{#each filtered as c (c.id)}
+					<button
+						class="cable-row"
+						onclick={() => chooseCable(c.id)}
+						aria-pressed={c.id === cableId}
+					>
+						<img class="cable-photo" src={`/cables/${c.sku}.jpg`} alt="" width="56" height="56" />
+						<div>
+							<p class="cable-name">{c.name}</p>
+							<p class="cable-meta">{c.crossSection} · {euro(c.pricePerMeter)} per meter</p>
+						</div>
+						{#if c.id === cableId}<span class="selected">✓</span>{/if}
+					</button>
+				{/each}
+			{/if}
+		</section>
+
+		<section class="card" aria-labelledby="route">
+			<h2 id="route"><span class="step">2</span>Vul de lengte van je route in</h2>
+			<p class="muted" style="margin-bottom: 12px">
+				Meet langs de muur: omhoog, opzij en omlaag apart. Per stuk in meters.
+			</p>
+			{#each segments as s, index (s.id)}
+				{@const invalid = s.text.trim() !== '' && parseMeters(s.text) === null}
+				<div class="segment">
+					<label for={`seg-${s.id}`}>Stuk {index + 1}</label>
+					<input
+						id={`seg-${s.id}`}
+						inputmode="decimal"
+						placeholder="0,0"
+						autocomplete="off"
+						aria-invalid={invalid}
+						bind:value={s.text}
+					/>
+					<button
+						class="ghost"
+						aria-label={`Verwijder stuk ${index + 1}`}
+						onclick={() => removeSegment(s.id)}
+					>
+						✕
+					</button>
+				</div>
+			{/each}
+			<button class="link-button" onclick={addSegment}>+ Stuk toevoegen</button>
+			<div class="note">
+				{#if isIOS}
+					Meten met de camera kan in de Kabelmeter-app voor iPhone. Safari op de iPhone ondersteunt
+					geen AR-meting in de browser.
+				{:else}
+					Meten met de camera kan in de Kabelmeter-app voor iPhone. In de browser vul je de lengte
+					zelf in.
+				{/if}
+			</div>
+		</section>
+
+		<section class="card" aria-labelledby="bestel">
+			<h2 id="bestel"><span class="step">3</span>Bestel de juiste lengte</h2>
+			<p class="muted">
+				We rekenen {reservePercent}% reserve en {orderLength(CONNECTION_ALLOWANCE)} voor de aansluitingen,
+				afgerond zoals de kabel verkocht wordt. {DISCLAIMER}
+			</p>
+			{#if hasSample}
+				<p class="muted">
+					<span class="sample">Voorbeelddata</span> Sommige prijzen zijn voorbeelden.
+				</p>
+			{/if}
+		</section>
+	</main>
+
+	<div class="price-bar" role="region" aria-label="Prijs">
+		<div class="price-inner">
+			<div class="price-top">
+				<div class="lengths" aria-live="polite">
+					<p>Gemeten: {meters(measured)}</p>
+					<p>Te bestellen: {result ? pieces(result.pieces) : '–'}</p>
+				</div>
+				<div class="price" aria-live="polite" data-testid="price">
+					{#if result}
+						{euro(result.price)}
+					{:else}
+						{euro(cable.pricePerMeter)}<small>per meter</small>
+					{/if}
+				</div>
+			</div>
+			<div class="reserve">
+				<span>Reserve {reservePercent}% + {orderLength(CONNECTION_ALLOWANCE)} aansluiting</span>
+				<div class="stepper">
+					<button
+						aria-label="Minder reserve"
+						disabled={reservePercent <= 0}
+						onclick={() => (reservePercent = Math.max(0, reservePercent - 5))}
+					>
+						−
+					</button>
+					<button
+						aria-label="Meer reserve"
+						disabled={reservePercent >= 30}
+						onclick={() => (reservePercent = Math.min(30, reservePercent + 5))}
+					>
+						+
+					</button>
+				</div>
+			</div>
+			<button class="cta" disabled={!result} onclick={addToCart}>
+				{result ? `Voeg ${pieces(result.pieces)} toe aan winkelmand` : 'Vul eerst een lengte in'}
+			</button>
+		</div>
+	</div>
+
+	<dialog
+		bind:this={cartDialog}
+		aria-labelledby="cart-title"
+		onclick={(e) => e.target === cartDialog && cartDialog?.close()}
+	>
+		<div class="sheet">
+			<div class="sheet-head">
+				<h2 id="cart-title">Winkelmand</h2>
+				<button class="link-button" onclick={() => cartDialog?.close()}>Klaar</button>
+			</div>
+			{#if cart.items.length === 0}
+				<p class="muted">Je winkelmand is leeg. Vul een route in en voeg de kabel toe.</p>
+			{/if}
+			{#each cart.items as item (item.cableId)}
+				<div class="line">
+					<div class="line-top"><span>{item.name}</span><span>{euro(linePrice(item))}</span></div>
+					<p class="cable-meta">
+						{item.crossSection} · {orderLength(item.meters)} × {euro(item.pricePerMeter)} per meter
+					</p>
+					<a
+						class="secondary-cta"
+						href={item.productUrl}
+						target="_blank"
+						rel="external noopener noreferrer"
+					>
+						Bestel op elektramat.nl
+					</a>
+					<button class="link-button" onclick={() => cart.remove(item.cableId)}>Verwijder</button>
+				</div>
+			{/each}
+			{#if cart.items.length > 0}
+				<div class="total"><span>Totaal</span><span>{euro(cart.total)}</span></div>
+				<button class="link-button" onclick={() => cart.clear()}>Winkelmand leegmaken</button>
+			{/if}
+			<p class="muted">{DISCLAIMER}</p>
+		</div>
+	</dialog>
+
+	{#if toast}<div class="toast" role="status">{toast}</div>{/if}
+</div>

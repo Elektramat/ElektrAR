@@ -9,3 +9,8 @@ build/
 Package.resolved
 # macOS
 .DS_Store
+
+# Vercel CLI link
+.vercel/
+.vercel
+.env*
