@@ -28,8 +28,8 @@ struct SimulatedMeasureView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let scale = min(geo.size.width / 5.4, geo.size.height / 3.4)
-            let origin = CGPoint(x: (geo.size.width - 4.6 * scale) / 2, y: geo.size.height * 0.62)
+            let scale = min(geo.size.width / 5.6, geo.size.height / 5.0)
+            let origin = CGPoint(x: (geo.size.width - 4.6 * scale) / 2, y: geo.size.height * 0.46)
             let map = { (p: SIMD3<Float>) in
                 CGPoint(x: origin.x + CGFloat(p.x) * scale, y: origin.y - CGFloat(p.y - 1.4) * scale)
             }

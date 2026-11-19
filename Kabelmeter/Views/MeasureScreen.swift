@@ -13,6 +13,8 @@ struct MeasureScreen: View {
     @AppStorage("demoMode") private var demoMode = false
     @AppStorage("selectedCableId") private var storedCableId = ""
     @AppStorage("routeMode") private var routeMode = RouteMode.alongWall.rawValue
+    @AppStorage("seenIntro") private var seenIntro = false
+    @State private var showIntro = false
 
     @State private var showPicker = false
     @State private var showCart = false
@@ -60,6 +62,20 @@ struct MeasureScreen: View {
     }
 
     var body: some View {
+        // First start: the intro comes before the camera, so the camera prompt
+        // appears only after the user knows why it is needed.
+        if seenIntro {
+            mainScreen
+                .fullScreenCover(isPresented: $showIntro) { IntroView { showIntro = false } }
+        } else {
+            IntroView {
+                cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
+                seenIntro = true
+            }
+        }
+    }
+
+    private var mainScreen: some View {
         ZStack {
             measureLayer
                 .id(useSimulated)
@@ -141,6 +157,15 @@ struct MeasureScreen: View {
             .disabled(cableStore.cables.isEmpty)
 
             Spacer(minLength: 0)
+
+            Button { showIntro = true } label: {
+                Image(systemName: "questionmark")
+                    .font(.title3.weight(.semibold))
+                    .frame(width: 48, height: 48)
+                    .background(.regularMaterial, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Uitleg")
 
             Button { showCart = true } label: {
                 Image(systemName: "cart")
@@ -334,6 +359,8 @@ private struct SummarySheet: View {
                     .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
             }
             .buttonStyle(.borderedProminent)
+            .tint(Theme.cta)
+            .buttonBorderShape(.roundedRectangle(radius: Theme.buttonCorner))
             .disabled(quote == nil)
             Button("Verder meten", action: onContinue)
                 .frame(maxWidth: .infinity, minHeight: 44)

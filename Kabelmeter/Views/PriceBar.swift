@@ -56,6 +56,8 @@ struct PriceBar: View {
                     .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
             }
             .buttonStyle(.borderedProminent)
+            .tint(Theme.cta)
+            .buttonBorderShape(.roundedRectangle(radius: Theme.buttonCorner))
             .disabled(cartQuote == nil || cable == nil)
         }
         .padding(Theme.spacing)
