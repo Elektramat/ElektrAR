@@ -1,27 +1,31 @@
 import SwiftUI
 import WebKit
 
-/// Shows elektramat.nl in the app while the cart lines are added, then the shop cart.
+/// Adds the cart lines to elektramat.nl, shows the result at once, and shows the shop
+/// cart (loaded in the background meanwhile) when the user asks for it.
 struct WebShopSheet: View {
     let lines: [WebShopLine]
-    @StateObject private var shop = WebShopCart()
+    /// Owned by the cart screen, so the web view is already warmed up when this opens.
+    @ObservedObject var shop: WebShopCart
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
             ZStack {
-                // Hidden until the cart page loads: the session page is plain text.
+                // Always in the hierarchy so the cart page can load in the background.
                 WebView(webView: shop.webView).ignoresSafeArea(edges: .bottom)
-                    .opacity(shop.phase == .done ? 1 : 0)
+                    .opacity(shop.phase == .cart ? 1 : 0)
+                    .allowsHitTesting(shop.phase == .cart)
+
                 switch shop.phase {
                 case .idle, .connecting: progress(step: nil)
                 case let .adding(index, total): progress(step: total > 1 ? "\(index) van \(total)" : nil)
-                case .done: EmptyView()
+                case .added: result
+                case .cart:
+                    if !shop.cartPageReady { ProgressView("Winkelmand laden…").controlSize(.large) }
                 }
             }
-            .safeAreaInset(edge: .top) {
-                if shop.phase == .done && !shop.failures.isEmpty { failureBanner }
-            }
+            .background(Color(Theme.Token.black5))
             .navigationTitle("elektramat.nl")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -34,14 +38,51 @@ struct WebShopSheet: View {
     private func progress(step: String?) -> some View {
         VStack(spacing: Theme.spacing) {
             ProgressView().controlSize(.large)
-            Text("Kabel in je winkelmand zetten…").font(.headline)
-            if let step { Text(step).foregroundStyle(.secondary) }
+            Text(lines.count == 1 ? "Kabel in je winkelmand zetten…" : "Kabels in je winkelmand zetten…")
+                .font(.headline)
+            if let step { Text(step).foregroundStyle(Theme.inkSecondary) }
         }
         .padding(24)
         .surface(RoundedRectangle(cornerRadius: Theme.corner))
     }
 
-    private var failureBanner: some View {
+    private var result: some View {
+        VStack(spacing: Theme.spacing) {
+            if shop.addedCount > 0 {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 56))
+                    .foregroundStyle(Theme.cta)
+                Text(shop.addedCount == 1 ? "1 product staat in je winkelmand"
+                                          : "\(shop.addedCount) producten staan in je winkelmand")
+                    .font(.title3.weight(.heavy))
+                    .multilineTextAlignment(.center)
+                Text("op elektramat.nl")
+                    .foregroundStyle(Theme.inkSecondary)
+            }
+
+            if !shop.failures.isEmpty { failureList }
+
+            Button { shop.showCart() } label: {
+                Label("Bekijk winkelmand en reken af", systemImage: "cart")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Theme.cta)
+            .buttonBorderShape(.roundedRectangle(radius: Theme.buttonCorner))
+            .padding(.top, 8)
+
+            Button("Verder meten") { dismiss() }
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .foregroundStyle(Theme.accent)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .surface(RoundedRectangle(cornerRadius: Theme.corner))
+        .padding(Theme.spacing)
+    }
+
+    private var failureList: some View {
         VStack(alignment: .leading, spacing: 4) {
             Label("Niet alles staat in je winkelmand", systemImage: "exclamationmark.triangle.fill")
                 .font(.headline)
@@ -51,8 +92,8 @@ struct WebShopSheet: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Theme.spacing)
-        .background(Theme.warning.opacity(0.9))
-        .foregroundStyle(.black)
+        .background(Theme.warning.opacity(0.2), in: RoundedRectangle(cornerRadius: Theme.buttonCorner))
+        .foregroundStyle(Theme.ink)
     }
 }
 

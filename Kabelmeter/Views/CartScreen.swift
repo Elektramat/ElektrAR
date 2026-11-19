@@ -6,6 +6,8 @@ struct CartScreen: View {
     @Environment(\.openURL) private var openURL
     @State private var webShopLines: [WebShopLine] = []
     @State private var showWebShop = false
+    /// Created with the cart screen and warmed up right away, so adding to the shop is faster.
+    @StateObject private var shop = WebShopCart()
 
     /// Sample cables have no real product page, so they stay out of the shop cart.
     private var realLines: [WebShopLine] { WebShopOrder.lines(for: cart.items.filter { !$0.isSample }) }
@@ -68,7 +70,7 @@ struct CartScreen: View {
                                 .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
                         }
                         .brandProminentButton()
-                        .disabled(realLines.isEmpty || showWebShop)
+                        .disabled(realLines.isEmpty || showWebShop || shop.isBusy)
                         if cart.items.contains(where: \.isSample) {
                             Text("Voorbeeldkabels gaan niet mee naar de webshop.")
                                 .font(.footnote).foregroundStyle(.secondary)
@@ -82,7 +84,8 @@ struct CartScreen: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .sheet(isPresented: $showWebShop) { WebShopSheet(lines: webShopLines) }
+            .sheet(isPresented: $showWebShop) { WebShopSheet(lines: webShopLines, shop: shop) }
+            .onAppear { if !realLines.isEmpty { shop.warmUp() } }
             .navigationTitle("Winkelmand")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

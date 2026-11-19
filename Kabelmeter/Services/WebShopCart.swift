@@ -11,8 +11,15 @@ import WebKit
 /// 2. Read the cart quantities from Magento's customer section (about 1 KB).
 /// 3. Post the add-to-cart form per cable without following the redirect (which would
 ///    download the 2.7 MB product page again).
-/// 4. Read the cart again, report every cable that did not arrive, and show the cart page.
+/// 4. Read the cart again and report every cable that did not arrive.
 /// Measured with curl on 19 Nov 2026: about 2 s for one cable instead of about 7 s.
+///
+/// Two more speed-ups (19 Nov 2026):
+/// - `warmUp()` starts the web view and the session page as soon as the cart screen opens,
+///   so the web process start and TLS handshake are done before the user taps.
+/// - After the posts the sheet shows a native "added" screen at once. The cart page
+///   (2.6 MB HTML, 1.4 to 2.3 s on fast wifi) loads in the background and is shown only
+///   when the user taps "Bekijk winkelmand en reken af".
 ///
 /// The cart lives in this web view's cookie store (persisted), not in Safari; the user checks
 /// out in the same web view.
@@ -25,7 +32,10 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate {
         case idle
         case connecting
         case adding(index: Int, total: Int)
-        case done
+        /// Posts are done; the native result screen shows. The cart page may still be loading.
+        case added
+        /// The user asked to see the shop cart.
+        case cart
     }
 
     struct Failure: Identifiable, Equatable {
@@ -36,13 +46,26 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate {
 
     static let cartUrl = URL(string: "https://www.elektramat.nl/checkout/cart/")!
     private static let sessionUrl = URL(string: "https://www.elektramat.nl/robots.txt")!
+    private static let shopHost = "www.elektramat.nl"
     private static let pageTimeout: TimeInterval = 30
 
     let webView: WKWebView
     @Published private(set) var phase: Phase = .idle
     @Published private(set) var failures: [Failure] = []
+    /// Cables that are in the shop cart after this run (posted and confirmed by the cart check).
+    @Published private(set) var addedCount = 0
+    /// True once the cart page finished loading in the background.
+    @Published private(set) var cartPageReady = false
 
     private var pageLoad: CheckedContinuation<Void, Error>?
+    private var sessionTask: Task<Void, Error>?
+
+    var isBusy: Bool {
+        switch phase {
+        case .connecting, .adding: true
+        case .idle, .added, .cart: false
+        }
+    }
 
     override init() {
         let config = WKWebViewConfiguration()
@@ -53,13 +76,22 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate {
         webView.allowsBackForwardNavigationGestures = true
     }
 
-    /// Adds every line, checks the cart, then shows the shop cart. Runs once per instance.
+    /// Starts the web view and loads the session page in the background. Safe to call often.
+    func warmUp() {
+        guard sessionTask == nil, !isBusy else { return }
+        sessionTask = Task { try await self.load(Self.sessionUrl) }
+    }
+
+    /// Adds every line and checks the cart, then shows the result at once and loads the
+    /// cart page in the background. Can run again later with new lines.
     func run(_ lines: [WebShopLine]) async {
-        guard phase == .idle else { return }
+        guard !isBusy else { return }
+        failures = []
+        addedCount = 0
+        cartPageReady = false
         phase = .connecting
-        defer { phase = .done }
         do {
-            try await load(Self.sessionUrl)
+            try await ensureSession()
             let before = try await cartQuantities()
             var posted: [WebShopLine] = []
             for (index, line) in lines.enumerated() {
@@ -71,13 +103,44 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate {
                 }
             }
             let after = try await cartQuantities()
-            failures += WebShopOrder.missing(posted, before: before, after: after).map {
+            let missing = WebShopOrder.missing(posted, before: before, after: after)
+            failures += missing.map {
                 Failure(name: $0.line.name, reason: "De webshop nam \($0.arrived) van \($0.line.quantity) m over.")
             }
+            addedCount = posted.count - missing.count
         } catch {
             failures.append(Failure(name: "Webshop", reason: "Geen verbinding met elektramat.nl (\(error.localizedDescription))."))
         }
+        phase = .added
+        Task { await loadCartPage() }
+    }
+
+    /// Shows the shop cart; the page is already loading or loaded.
+    func showCart() {
+        phase = .cart
+    }
+
+    private func loadCartPage() async {
+        // A failed load still shows the web view, which then shows the browser's error.
         try? await load(Self.cartUrl)
+        cartPageReady = true
+    }
+
+    /// Reuses the warmed-up session page. Loads it again when the warm-up failed or the
+    /// web view left the shop (for example to a payment page), because the scripts must run
+    /// on www.elektramat.nl.
+    private func ensureSession() async throws {
+        if let task = sessionTask, webView.url?.host == Self.shopHost || webView.url == nil {
+            do {
+                try await task.value
+                if webView.url?.host == Self.shopHost { return }
+            } catch {
+                // Fall through and try once more.
+            }
+        }
+        let task = Task { try await self.load(Self.sessionUrl) }
+        sessionTask = task
+        try await task.value
     }
 
     // MARK: Steps
