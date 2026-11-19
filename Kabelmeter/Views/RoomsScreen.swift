@@ -47,7 +47,10 @@ struct RoomsScreen: View {
                     }
                     .accessibilityLabel("Uitleg")
                 }
+                // iOS 26 puts every toolbar item in its own glass capsule. CartButton draws its
+                // own surface, so hide the system one or the button gets a second border inside.
                 ToolbarItem(placement: .topBarTrailing) { CartButton() }
+                    .sharedBackgroundVisibility(.hidden)
             }
             .safeAreaInset(edge: .bottom) {
                 Button { showNewRoom = true } label: {
