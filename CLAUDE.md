@@ -23,7 +23,7 @@ Switch recognition, AI/vision calls, 3D overlay of new switches, accounts/login,
 
 - **Language/UI:** Swift 5.9+, SwiftUI. Minimum iOS 17.
 - **AR:** ARKit + RealityKit, using `ARView` wrapped in `UIViewRepresentable`. Do not use SceneKit or third-party AR packages.
-- **No external dependencies.** No network calls except opening a product URL in Safari.
+- **No external dependencies.** No network calls except elektramat.nl: the product page in Safari, and the shop cart in an in-app web view (decided by Jairo on 19 Nov 2026, see `WebShopCart`).
 - **UI language: Dutch** (all user-visible strings). **Code, comments, commit messages, docs: English.**
 - **Numbers:** format with `Locale(identifier: "nl_NL")` (comma decimals, euro). Internally always meters as `Double`.
 - **State:** `@Observable` / `ObservableObject`, whichever is simpler. No Core Data. Persist the cart with `UserDefaults` + `Codable`.
@@ -116,7 +116,7 @@ required = measured * (1 + reserve) + connectionAllowance
 
 ## 7. Cart
 
-- `CartService` protocol with `add(cable:meters:)`. Ship `LocalCartService` (in-app cart via `CartStore`). The cart screen lists items, quantity in meters, line price and total, and has a **"Bestel op elektramat.nl"** button that opens the product URL of the cable in Safari.
+- `CartService` protocol with `add(cable:meters:)`. Ship `LocalCartService` (in-app cart via `CartStore`). The cart screen lists items, quantity in meters, line price and total, and has a **"Zet in winkelmand op elektramat.nl"** button that fills the real shop cart through an in-app web view (`WebShopCart`), plus a per-item link that opens the product page in Safari.
 - Real cart integration (the webshop probably runs on Magento, which is unconfirmed) depends on an API we do not know yet. **Do not build a fake network client.** Leave a documented `RemoteCartService` stub with a TODO and the questions to ask: how is cable sold (per meter, per roll, cut to length), are decimal quantities allowed, is there a cart API, and how would a user's session be linked.
 - Show this note on the cart screen: *"Dit is een schatting. Controleer de lengte zelf en laat het aansluiten over aan een installateur."*
 

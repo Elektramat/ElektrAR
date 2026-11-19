@@ -60,7 +60,11 @@ of fixed roll lengths. See `Kabelmeter/Core/PricingCalculator.swift`.
 ## Known limits
 
 - Cable prices and stock are a snapshot of 19 November 2026; rerun the script before a demo.
-- The cart lives in the app. "Bestel op elektramat.nl" opens the product page; there is no
-  webshop cart integration yet (see `RemoteCartService` for the open questions).
+- "Zet in winkelmand op elektramat.nl" (cart screen) opens the shop in a web view inside the
+  app, posts each product page's own add-to-cart form with the meters as quantity, checks the
+  shop cart and shows it. That cart lives in the app's web view, not in Safari: check out there.
+  It depends on the product form (`product_addtocart_form`) and Magento's customer section
+  endpoint; a site change can break it. See `Kabelmeter/Services/WebShopCart.swift`.
+- Sample cables (`"isSample": true`) stay out of the shop cart.
 - Long distances can drift by a few percent; the reserve covers that.
 - The app only estimates a material quantity. It gives no installation instructions.

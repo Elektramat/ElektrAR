@@ -26,3 +26,5 @@ One line each: what we chose and why.
 - A segment snapped to vertical takes its height from where the camera ray passes the vertical line, not from the hit depth (which is often wrong on plain walls without LiDAR).
 - LiDAR devices read the smoothed LiDAR depth at the crosshair first (3x3 center pixels, high confidence only), then raycast the estimated surface; no infinite-plane fallback. Devices without LiDAR keep plane → estimated → infinite wall.
 - Camera denied shows a card with "Open Instellingen" and "Gebruik demo-modus" instead of a black screen.
+- Real shop cart through an in-app web view (`WebShopCart`) at Jairo's request: the shop only accepts its product form with a session form key, so a Safari link cannot fill the cart. Tested with curl on 19 Nov 2026: 7 m YMvK 3x1,5 landed in a guest cart. The cart lives in the app's web view, not in Safari. Production needs a deep link or cart API from the webshop team.
+- The app checks every added line through Magento's customer section (`/customer/section/load/?sections=cart`) and shows which cable failed and why, instead of assuming success.

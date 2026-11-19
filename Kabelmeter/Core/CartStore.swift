@@ -82,12 +82,12 @@ struct LocalCartService: CartService {
     }
 }
 
-/// TODO(open question): real webshop cart. The shop probably runs on Magento (unconfirmed).
-/// Before building this, ask e-commerce/dev:
-/// 1. How is cable sold: per meter, per roll, or cut to length?
-/// 2. Are decimal quantities allowed?
-/// 3. Is there a cart API that is reachable from outside?
-/// 4. How would the app link a cart to the customer's browser session or account?
+/// TODO(open question): a cart API with a hand-off to the customer's browser session or account.
+/// What we know (19 Nov 2026, from elektramat.nl): the shop runs on Magento with Hyvä; cable is
+/// sold per whole meter (minimum 1, no decimals) and as rolls and reels, which are separate
+/// products. For the demo, `WebShopCart` posts the product form inside an in-app web view.
+/// Still to ask e-commerce/dev: is there a cart API reachable from outside, and how would the
+/// app link a cart to the customer's Safari session or account (for example a deep link)?
 @MainActor
 struct RemoteCartService: CartService {
     func add(cable: Cable, meters: Double) throws {

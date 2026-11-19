@@ -114,3 +114,38 @@ final class CartStoreTests: XCTestCase {
         XCTAssertEqual(CartStore(defaults: defaults).items.first?.meters, 11)
     }
 }
+
+final class WebShopOrderTests: XCTestCase {
+    private func item(_ meters: Double, sku: String = "401169628") -> CartItem {
+        CartItem(id: UUID(), cableId: sku, sku: sku, name: "YMvK kabel 3x1,5", crossSection: "3x1,5 mm²",
+                 pricePerMeter: 1.45, meters: meters,
+                 productUrl: URL(string: "https://www.elektramat.nl/ymvk-kabel-3x1-5-per-meter/")!, isSample: false)
+    }
+
+    func testWholeMetersStayTheSame() {
+        XCTAssertEqual(WebShopOrder.lines(for: [item(10)]).map(\.quantity), [10])
+    }
+
+    func testFloatingPointNoiseDoesNotAddAMeter() {
+        XCTAssertEqual(WebShopOrder.lines(for: [item(10.000000001)]).map(\.quantity), [10])
+    }
+
+    func testPartialMeterRoundsUp() {
+        XCTAssertEqual(WebShopOrder.lines(for: [item(7.2)]).map(\.quantity), [8])
+    }
+
+    func testSkipsEmptyAndInvalidLengths() {
+        XCTAssertTrue(WebShopOrder.lines(for: [item(0), item(-1), item(.nan), item(.infinity)]).isEmpty)
+    }
+
+    func testKeepsOrderAndProductData() {
+        let lines = WebShopOrder.lines(for: [item(3, sku: "A"), item(12, sku: "B")])
+        XCTAssertEqual(lines.map(\.sku), ["A", "B"])
+        XCTAssertEqual(lines.map(\.quantity), [3, 12])
+        XCTAssertEqual(lines.first?.productUrl.host, "www.elektramat.nl")
+    }
+
+    func testEmptyCartHasNoLines() {
+        XCTAssertTrue(WebShopOrder.lines(for: []).isEmpty)
+    }
+}

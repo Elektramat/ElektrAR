@@ -4,6 +4,11 @@ struct CartScreen: View {
     @EnvironmentObject private var cart: CartStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @State private var webShopLines: [WebShopLine] = []
+    @State private var showWebShop = false
+
+    /// Sample cables have no real product page, so they stay out of the shop cart.
+    private var realLines: [WebShopLine] { WebShopOrder.lines(for: cart.items.filter { !$0.isSample }) }
 
     var body: some View {
         NavigationStack {
@@ -26,7 +31,7 @@ struct CartScreen: View {
                                 Button {
                                     openURL(item.productUrl)
                                 } label: {
-                                    Label("Bestel op elektramat.nl", systemImage: "safari")
+                                    Label("Bekijk op elektramat.nl", systemImage: "safari")
                                         .frame(maxWidth: .infinity, minHeight: 44)
                                 }
                                 .buttonStyle(.bordered)
@@ -42,6 +47,21 @@ struct CartScreen: View {
                             Spacer()
                             Text(Format.euro(cart.total)).font(.title2.bold()).monospacedDigit()
                         }
+                        Button {
+                            webShopLines = realLines
+                            showWebShop = true
+                        } label: {
+                            Label("Zet in winkelmand op elektramat.nl", systemImage: "cart.badge.plus")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Theme.accent)
+                        .disabled(realLines.isEmpty || showWebShop)
+                        if cart.items.contains(where: \.isSample) {
+                            Text("Voorbeeldkabels gaan niet mee naar de webshop.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
                     }
                 }
 
@@ -51,6 +71,7 @@ struct CartScreen: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .sheet(isPresented: $showWebShop) { WebShopSheet(lines: webShopLines) }
             .navigationTitle("Winkelmand")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
