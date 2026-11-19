@@ -100,13 +100,17 @@ extension View {
     }
 }
 
-/// No automatic dimming when disabled: the label shows its own disabled colors, so a
-/// white card stays white instead of turning see-through grey on the camera image.
+/// For every custom button (cards, chips, round icon buttons): visible and felt on touch.
+/// Pressed: shrinks to 90%, darkens a little and gives a light tap, so the user knows the
+/// button reacted before anything else changes. No automatic dimming when disabled: the
+/// label keeps its full colors, so a white card stays white on the camera image.
 struct CardButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.96 : 1)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.9 : 1)
+            .brightness(configuration.isPressed ? -0.08 : 0)
+            .animation(.spring(duration: 0.18, bounce: 0.4), value: configuration.isPressed)
+            .sensoryFeedback(.impact(weight: .light), trigger: configuration.isPressed) { _, pressed in pressed }
     }
 }
 

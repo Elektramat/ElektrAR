@@ -46,6 +46,7 @@ struct PriceBar: View {
             }
             .pickerStyle(.segmented)
             .controlSize(.large)   // a bigger tap target, used standing in a room
+            .sensoryFeedback(.selection, trigger: mode)
             if earlierRuns > 0 {
                 Label(earlierRuns == 1 ? "1 kabel al in winkelmand" : "\(earlierRuns) kabels al in winkelmand",
                       systemImage: "checkmark.circle")
@@ -56,7 +57,12 @@ struct PriceBar: View {
             Stepper(value: $reservePercent, in: 0...30, step: 5) {
                 Text("Reserve \(reservePercent)% + \(Format.orderLength(PricingCalculator.connectionAllowance)) aansluiting")
                     .font(Theme.labelFont)
+                    .monospacedDigit()
+                    .contentTransition(.numericText(value: Double(reservePercent)))
+                    .animation(.snappy, value: reservePercent)
             }
+            // The stepper only dims its sign; a tap and a rolling number show it worked.
+            .sensoryFeedback(.selection, trigger: reservePercent)
 
             Button(action: onAddToCart) {
                 Label(cartQuote.map { "Voeg \(Format.pieces($0.pieces)) toe aan winkelmand" }

@@ -26,6 +26,8 @@ struct CartScreen: View {
                                     Text(item.name).font(.headline)
                                     Spacer()
                                     Text(Format.euro(item.linePrice)).font(.headline).monospacedDigit()
+                                        .contentTransition(.numericText(value: item.linePrice))
+                                        .animation(.snappy, value: item.linePrice)
                                 }
                                 switch item.kind {
                                 case .cable:
@@ -39,7 +41,10 @@ struct CartScreen: View {
                                             in: 0...99) {
                                         Text("\(Format.quantity(item.quantity)) × \(Format.euro(item.unitPrice))")
                                             .monospacedDigit()
+                                            .contentTransition(.numericText(value: item.quantity))
+                                            .animation(.snappy, value: item.quantity)
                                     }
+                                    .sensoryFeedback(.selection, trigger: item.quantity)
                                 }
                                 if item.isSample { SampleBadge() }
                                 // A light text link with its own space, not a second filled button

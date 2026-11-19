@@ -26,6 +26,7 @@ struct CablePickerSheet: View {
                 }
                 .buttonStyle(.plain)
             }
+            .sensoryFeedback(.selection, trigger: selectedId)
             .overlay {
                 if filtered.isEmpty { ContentUnavailableView.search(text: query) }
             }

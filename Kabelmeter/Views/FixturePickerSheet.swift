@@ -42,6 +42,7 @@ struct FixturePickerSheet: View {
                 if filtered.isEmpty { ContentUnavailableView.search(text: query) }
             }
             .searchable(text: $query, prompt: "Zoek serie, kleur, lamp of type")
+            .sensoryFeedback(.selection, trigger: selectedId)
             .navigationTitle("Kies schakelaar of lamp")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

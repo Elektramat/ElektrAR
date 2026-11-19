@@ -144,6 +144,7 @@ Mirror Apple's Measure app. Do **not** require tapping on the screen to place a 
 - No logos, no copied brand assets. If the team supplies design tokens later, only `Theme.swift` should need to change.
 - **Never black or dark text on a blue button, anywhere in the app.** Text and icons on a blue fill are white (`Theme.onAccent`). Use `.brandProminentButton()` (`Views/BrandButton.swift`) for a filled blue button, not a bare `.buttonStyle(.borderedProminent)`: the system picks the label color itself and that can be black. The same goes for selected segments, badges and any other blue surface. Check every new blue surface in a screenshot.
 - The square control buttons next to "+": when placing switches, only the undo and trash icons (no text); when measuring, the icon with a short title under it ("Terug", "Opnieuw", "Klaar"). Icons are always full brand color, also when disabled (no opacity). The title is always the accessibility label.
+- **Every interactive control reacts visibly and with a haptic on touch.** Custom buttons use `CardButtonStyle` (shrinks, darkens a little, light tap); never a bare `.buttonStyle(.plain)` on a standalone button. Steppers, segmented pickers and picker lists add `.sensoryFeedback(.selection, trigger:)`, and a number that changes rolls (`.contentTransition(.numericText())`), so the user sees the tap worked before the price changes.
 
 ## 10. Milestones and acceptance criteria
 

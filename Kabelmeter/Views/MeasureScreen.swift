@@ -235,7 +235,7 @@ struct MeasureScreen: View {
                     .frame(width: 48, height: 48)
                     .surface(Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(CardButtonStyle())
             .accessibilityLabel("Uitleg")
 
             cartButton
@@ -263,7 +263,7 @@ struct MeasureScreen: View {
             .frame(minHeight: 48)
             .surface(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CardButtonStyle())
         .disabled(fixtureStore.fixtures.isEmpty)
     }
 
@@ -284,7 +284,7 @@ struct MeasureScreen: View {
             .frame(minHeight: 48)
             .surface(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CardButtonStyle())
         .disabled(cableStore.cables.isEmpty)
     }
 
@@ -305,7 +305,7 @@ struct MeasureScreen: View {
                     }
                 }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CardButtonStyle())
         .accessibilityLabel("Winkelmand, \(cartStore.count) artikelen")
     }
 
@@ -346,7 +346,7 @@ struct MeasureScreen: View {
                     .padding(.horizontal, 16)
                     .frame(minHeight: 44)
                     .surface(Capsule())
-                    .buttonStyle(.plain)
+                    .buttonStyle(CardButtonStyle())
             }
 
             if !isPlacing, cable?.isSample == true { SampleBadge() }
