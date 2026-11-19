@@ -18,6 +18,8 @@ final class MeasureSession: ObservableObject {
     @Published var cursor: SIMD3<Float>?
     /// Dutch hint for the user, nil when tracking is fine.
     @Published var trackingMessage: String?
+    /// Set when the cursor is snapped to vertical or level from the last point.
+    @Published var guide: MeasureGuide?
     @Published private(set) var isFinished = false
 
     var canAddPoint: Bool { !isFinished && cursor != nil }

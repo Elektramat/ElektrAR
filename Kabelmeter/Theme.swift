@@ -19,6 +19,7 @@ enum Theme {
     static let arPoint = UIColor.white
     static let arSegment = UIColor.systemOrange
     static let arPreview = UIColor.systemOrange.withAlphaComponent(0.6)
+    static let arGuide = UIColor.white.withAlphaComponent(0.5)
 
     // Sizes
     static let spacing: CGFloat = 12

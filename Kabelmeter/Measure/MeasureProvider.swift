@@ -13,6 +13,7 @@ protocol MeasureProvider: AnyObject {
 enum TrackingText {
     static let moveSlowly = "Beweeg de telefoon langzaam"
     static let aimAtSurface = "Richt op een muur of vloer"
+    static let moveSideways = "Richt op een muur of vloer en beweeg zijwaarts"
     static let tooDark = "Te weinig licht"
     static let unavailable = "AR werkt niet op dit toestel. Zet Demo-modus aan."
 }

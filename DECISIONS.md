@@ -13,3 +13,7 @@ One line each: what we chose and why.
 - "Te weinig licht" when ARKit's ambient intensity is below 150 lumen.
 - Segments are thin boxes scaled along their length; no per-segment labels (the total in the price bar is what matters).
 - Demo-modus is stored in `@AppStorage`, so it survives an app restart during the demo.
+- Cursor is averaged over the last 5 hits (a jump over 10 cm is followed at once) and held for 0.5 s when ARKit loses the surface: less jitter, "+" stays usable.
+- Raycast falls back to detected vertical planes extended infinitely, so a wall ARKit saw only partly still gives a hit. Risk: past a corner the extended plane can give a wrong hit.
+- Segments within 8° of vertical or level snap to it ("Verticaal" / "Waterpas"). Without a surface hit, aiming within 2.5° of the vertical line through the last point measures along that line, like Apple's Measure app.
+- LiDAR (Pro models) is used automatically through scene reconstruction and estimated-plane raycasts; no separate code path.

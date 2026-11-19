@@ -148,6 +148,8 @@ struct MeasureScreen: View {
                 pill(message, color: Theme.warning)
             } else if session.isFinished {
                 pill("Meting klaar", color: .green)
+            } else if let guide = session.guide {
+                pill(guide == .vertical ? "Verticaal" : "Waterpas", color: Theme.accent)
             } else if session.points.isEmpty {
                 pill("Richt op het beginpunt en tik op +", color: .white)
             }

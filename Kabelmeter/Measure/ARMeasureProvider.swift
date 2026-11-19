@@ -13,6 +13,11 @@ final class ARMeasureProvider: MeasureProvider {
     private weak var session: MeasureSession?
     private let root = AnchorEntity(world: .zero)
     private let preview: ModelEntity
+    private let verticalGuide: ModelEntity
+    private var smoother = CursorSmoother()
+    private var lastHitTime: CFTimeInterval = 0
+    /// Keep the last cursor this long when ARKit briefly loses the surface.
+    private static let holdDuration: CFTimeInterval = 0.5
     private var placed: [Entity] = []
     private var updateSubscription: Cancellable?
     private var pointsSubscription: AnyCancellable?
@@ -27,6 +32,9 @@ final class ARMeasureProvider: MeasureProvider {
         preview = Self.makeSegmentEntity(color: Theme.arPreview)
         preview.isEnabled = false
         root.addChild(preview)
+        verticalGuide = Self.makeSegmentEntity(color: Theme.arGuide, thickness: 0.002)
+        verticalGuide.isEnabled = false
+        root.addChild(verticalGuide)
         arView.scene.addAnchor(root)
 
         let coaching = ARCoachingOverlayView()
@@ -72,20 +80,47 @@ final class ARMeasureProvider: MeasureProvider {
         lastTick = now
 
         let frame = arView.session.currentFrame
+        let last = session.isFinished ? nil : session.points.last
         var message = Self.message(for: frame?.camera.trackingState)
         var cursor: SIMD3<Float>?
+        var guide: MeasureGuide?
+
         if message == nil {
-            cursor = raycastFromCenter()
-            if cursor == nil {
-                message = TrackingText.aimAtSurface
-            } else if let light = frame?.lightEstimate, light.ambientIntensity < Self.darkThreshold {
-                message = TrackingText.tooDark
+            var raw = raycastFromCenter()
+            // No surface hit: aim along the vertical line through the last point.
+            if raw == nil, let last, let ray = rayFromCenter(),
+               let onGuide = Snapping.pointOnVerticalGuide(rayOrigin: ray.origin, rayDirection: ray.direction,
+                                                           through: last) {
+                raw = onGuide
             }
+
+            if let raw {
+                lastHitTime = now
+                let smooth = smoother.add(raw)
+                if let last {
+                    (cursor, guide) = Snapping.snap(smooth, from: last)
+                } else {
+                    cursor = smooth
+                }
+                if let light = frame?.lightEstimate, light.ambientIntensity < Self.darkThreshold {
+                    message = TrackingText.tooDark
+                }
+            } else if now - lastHitTime < Self.holdDuration {
+                cursor = session.cursor
+                guide = session.guide
+            } else {
+                smoother.reset()
+                message = TrackingText.moveSideways
+            }
+        } else {
+            smoother.reset()
         }
 
         if session.trackingMessage != message { session.trackingMessage = message }
+        if session.guide != guide { session.guide = guide }
         session.cursor = cursor
-        updatePreview(from: session.points.last, to: session.isFinished ? nil : cursor)
+        updatePreview(from: last, to: cursor)
+        updateVerticalGuide(through: guide == .vertical ? last : nil)
     }
 
     private static func message(for state: ARCamera.TrackingState?) -> String? {
@@ -100,10 +135,20 @@ final class ARMeasureProvider: MeasureProvider {
         let bounds = arView.bounds
         guard bounds.width > 0, bounds.height > 0 else { return nil }
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
+        // 1. Detected plane within its bounds (most accurate).
+        // 2. Estimated surface (uses LiDAR depth on Pro models).
+        // 3. Detected plane extended infinitely: a wall ARKit only saw partly.
         let hit = arView.raycast(from: center, allowing: .existingPlaneGeometry, alignment: .any).first
             ?? arView.raycast(from: center, allowing: .estimatedPlane, alignment: .any).first
+            ?? arView.raycast(from: center, allowing: .existingPlaneInfinite, alignment: .vertical).first
         guard let t = hit?.worldTransform else { return nil }
         return SIMD3(t.columns.3.x, t.columns.3.y, t.columns.3.z)
+    }
+
+    private func rayFromCenter() -> (origin: SIMD3<Float>, direction: SIMD3<Float>)? {
+        let bounds = arView.bounds
+        guard bounds.width > 0, bounds.height > 0 else { return nil }
+        return arView.ray(through: CGPoint(x: bounds.midX, y: bounds.midY))
     }
 
     // MARK: Drawing
@@ -135,9 +180,19 @@ final class ARMeasureProvider: MeasureProvider {
         preview.isEnabled = true
     }
 
+    /// A long thin line through the last point while the cursor is snapped to vertical.
+    private func updateVerticalGuide(through point: SIMD3<Float>?) {
+        guard let point else {
+            verticalGuide.isEnabled = false
+            return
+        }
+        Self.place(verticalGuide, from: point - [0, 1.5, 0], to: point + [0, 3, 0])
+        verticalGuide.isEnabled = true
+    }
+
     /// A 1 m tall thin box, scaled along y to the segment length.
-    private static func makeSegmentEntity(color: UIColor) -> ModelEntity {
-        ModelEntity(mesh: .generateBox(width: 0.004, height: 1, depth: 0.004),
+    private static func makeSegmentEntity(color: UIColor, thickness: Float = 0.004) -> ModelEntity {
+        ModelEntity(mesh: .generateBox(width: thickness, height: 1, depth: thickness),
                     materials: [UnlitMaterial(color: color)])
     }
 
