@@ -60,7 +60,7 @@ final class ARMeasureProvider: MeasureProvider {
         placer = ARFixturePlacer(arView: arView, fixtures: fixtures)
         placer.mapURL = mapURL
         catalog = Dictionary(fixtures.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        preview = (0..<2).map { _ in Self.makeSegmentEntity(color: Theme.arPreview) }
+        preview = (0..<2).map { _ in Self.makeSegmentEntity(color: Theme.arPreview, thickness: Theme.arLineThickness) }
         for segment in preview {
             segment.isEnabled = false
             root.addChild(segment)
@@ -432,14 +432,14 @@ final class ARMeasureProvider: MeasureProvider {
         placed.forEach { $0.removeFromParent() }
         placed.removeAll()
         for point in points {
-            let dot = ModelEntity(mesh: .generateSphere(radius: 0.008),
+            let dot = ModelEntity(mesh: .generateSphere(radius: Theme.arPointRadius),
                                   materials: [UnlitMaterial(color: Theme.arPoint)])
             dot.position = point
             root.addChild(dot)
             placed.append(dot)
         }
         for (a, b) in zip(points, points.dropFirst()) {
-            let segment = Self.makeSegmentEntity(color: Theme.arSegment)
+            let segment = Self.makeSegmentEntity(color: Theme.arSegment, thickness: Theme.arLineThickness)
             Self.place(segment, from: a, to: b)
             root.addChild(segment)
             placed.append(segment)

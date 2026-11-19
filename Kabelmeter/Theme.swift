@@ -52,7 +52,11 @@ enum Theme {
     // AR entities: the light brand blue stands out on a camera image.
     static let arPoint = UIColor.white
     static let arSegment = Token.secondary
-    static let arPreview = Token.secondary.withAlphaComponent(0.6)
+    /// The live piece to the crosshair: solid, a see-through line was hard to find on a wall.
+    static let arPreview = Token.secondary
+    /// Thickness of the cable being drawn and of its live piece, in meters (thin lines vanish at 2 m).
+    static let arLineThickness: Float = 0.009
+    static let arPointRadius: Float = 0.014
     static let arGuide = UIColor.white.withAlphaComponent(0.5)
     // AR roles, only brand tokens (DESIGN.md). Lines and dots, never text.
     /// Cables that are already in the cart: brand light blue.
