@@ -41,7 +41,7 @@ struct PlacementBar: View {
                     .font(.headline)
                     .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
             }
-            .buttonStyle(.borderedProminent)
+            .brandProminentButton()
             .disabled(newCount == 0)
 
             if persists {

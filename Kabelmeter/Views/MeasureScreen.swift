@@ -433,7 +433,7 @@ struct MeasureScreen: View {
             Button("Open Instellingen") {
                 if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
             }
-            .buttonStyle(.borderedProminent)
+            .brandProminentButton()
             Button("Gebruik demo-modus") { demoMode = true }
         }
         .padding(24)
@@ -442,8 +442,9 @@ struct MeasureScreen: View {
     }
 
     private func controlButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) { ControlLabel(title: title, icon: icon) }
+        Button(action: action) { ControlLabel(icon: icon) }
             .buttonStyle(CardButtonStyle())
+            .accessibilityLabel(title)
     }
 
     // MARK: Actions
@@ -579,23 +580,17 @@ private struct SummarySheet: View {
 
 /// White square button on the camera image: Elektramat-blue icon and black label; when
 /// disabled the same colors, lighter, so it never turns grey.
+/// Icon only: the icons (undo, trash, reset, done) speak for themselves, and the text did not
+/// fit ("Ongedaan ma…"). The title stays as the accessibility label.
 private struct ControlLabel: View {
-    let title: String
     let icon: String
     @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
-        VStack(spacing: 3) {
-            Image(systemName: icon)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(Theme.accent.opacity(isEnabled ? 1 : 0.4))
-            Text(title)
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(Theme.ink.opacity(isEnabled ? 1 : 0.4))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-        }
-        .frame(width: Theme.tapTarget + 8, height: Theme.tapTarget)
+        Image(systemName: icon)
+            .font(.title2.weight(.semibold))
+            .foregroundStyle(Theme.accent.opacity(isEnabled ? 1 : 0.4))
+            .frame(width: Theme.tapTarget, height: Theme.tapTarget)
         .surface(RoundedRectangle(cornerRadius: 14))
     }
 }

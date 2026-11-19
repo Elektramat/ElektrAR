@@ -67,8 +67,7 @@ struct CartScreen: View {
                                 .font(.headline)
                                 .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(Theme.accent)
+                        .brandProminentButton()
                         .disabled(realLines.isEmpty || showWebShop)
                         if cart.items.contains(where: \.isSample) {
                             Text("Voorbeeldkabels gaan niet mee naar de webshop.")
