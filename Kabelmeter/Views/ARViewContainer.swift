@@ -7,8 +7,10 @@ struct ARViewContainer: UIViewRepresentable {
     let session: MeasureSession
     let placement: PlacementSession
     let fixtures: [Fixture]
+    /// Where the open room is saved.
+    let mapURL: URL?
 
-    func makeCoordinator() -> ARMeasureProvider { ARMeasureProvider(fixtures: fixtures) }
+    func makeCoordinator() -> ARMeasureProvider { ARMeasureProvider(fixtures: fixtures, mapURL: mapURL) }
 
     func makeUIView(context: Context) -> ARView {
         context.coordinator.start(session: session, placement: placement)
@@ -22,7 +24,7 @@ struct ARViewContainer: UIViewRepresentable {
     }
 }
 
-/// Stand-in for the camera in the Simulator and in Demo-modus: draws the wall,
+/// Stand-in for the camera in the Simulator: draws the wall,
 /// the measured points and the crosshair position from the simulated provider.
 struct SimulatedMeasureView: View {
     @ObservedObject var session: MeasureSession
@@ -46,13 +48,27 @@ struct SimulatedMeasureView: View {
                                       width: 4.6 * scale + 40, height: 2.6 * scale)
                     context.fill(Path(wall), with: .color(Theme.simulatedWall))
 
-                    // Cables added earlier
-                    for run in session.runs {
-                        var runPath = Path()
-                        for (i, p) in run.points.enumerated() {
-                            i == 0 ? runPath.move(to: map(p)) : runPath.addLine(to: map(p))
+                    // Cables added earlier (the selected one thicker), and suggested ones.
+                    let polyline = { (points: [SIMD3<Float>]) -> Path in
+                        var path = Path()
+                        for (i, p) in points.enumerated() {
+                            i == 0 ? path.move(to: map(p)) : path.addLine(to: map(p))
                         }
-                        context.stroke(runPath, with: .color(Theme.run), lineWidth: 3)
+                        return path
+                    }
+                    for run in session.runs {
+                        let selected = run.id == session.selectedRunId
+                        context.stroke(polyline(run.points), with: .color(selected ? Theme.highlight : Theme.run),
+                                       lineWidth: selected ? 6 : 3)
+                    }
+                    for route in session.proposedRoutes {
+                        context.stroke(polyline(route), with: .color(Theme.proposed),
+                                       style: StrokeStyle(lineWidth: 3, dash: [8, 5]))
+                    }
+                    if let start = session.startPoint {
+                        let c = map(start)
+                        context.fill(Path(roundedRect: CGRect(x: c.x - 9, y: c.y - 9, width: 18, height: 18),
+                                          cornerRadius: 3), with: .color(Theme.start))
                     }
 
                     // Dotted height line from the crosshair (or the switch preview) to the floor.
@@ -72,13 +88,27 @@ struct SimulatedMeasureView: View {
                     }
                     context.stroke(path, with: .color(Theme.accent), lineWidth: 4)
 
-                    // Live preview segment
-                    if !session.isFinished, let last = session.points.last, let cursor = session.cursor {
-                        var preview = Path()
-                        preview.move(to: map(last))
-                        preview.addLine(to: map(cursor))
-                        context.stroke(preview, with: .color(Theme.accent.opacity(0.6)),
+                    // Live preview (with a corner when drawing with right angles)
+                    let preview = session.previewPoints
+                    if preview.count >= 2 {
+                        context.stroke(polyline(preview), with: .color(Theme.accent.opacity(0.6)),
                                        style: StrokeStyle(lineWidth: 3, dash: [6, 4]))
+                    }
+
+                    // What the part preview lines up with
+                    if placement.isActive, let pose = placement.cursor {
+                        let here = pose.translation
+                        let dashed = StrokeStyle(lineWidth: 1.5, dash: [5, 4])
+                        if let level = placement.alignment.level {
+                            let d = here - level
+                            context.stroke(polyline([level - d * 0.3, here + d * 0.3]), with: .color(Theme.align), style: dashed)
+                        } else if placement.alignment.standardHeight != nil {
+                            context.stroke(polyline([here - [0.6, 0, 0], here + [0.6, 0, 0]]), with: .color(Theme.align), style: dashed)
+                        }
+                        if let vertical = placement.alignment.vertical {
+                            let d = here - vertical
+                            context.stroke(polyline([vertical - d * 0.3, here + d * 0.3]), with: .color(Theme.align), style: dashed)
+                        }
                     }
 
                     for p in session.points {
@@ -89,6 +119,11 @@ struct SimulatedMeasureView: View {
 
                     // Placed switches and sockets, drawn larger than real size so they stay visible.
                     for item in placement.placed {
+                        if item.id == placement.selectedId {
+                            let c = map(item.position), r = 0.12 * scale * 0.75
+                            context.fill(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r)),
+                                         with: .color(Theme.highlight.opacity(0.6)))
+                        }
                         drawFixture(item.fixtureId, at: map(item.position), size: 0.12 * scale, in: &context)
                     }
                     if placement.isActive, let pose = placement.cursor, let id = placement.selectedFixtureId {
@@ -106,12 +141,17 @@ struct SimulatedMeasureView: View {
                         .frame(width: 22, height: 22)
                         .position(c)
                 }
-
-                Text("Demo-modus: gesimuleerde punten")
-                    .font(Theme.labelFont)
-                    .foregroundStyle(.white.opacity(0.7))
-                    .position(x: geo.size.width / 2, y: geo.size.height * 0.30)
             }
+            .contentShape(Rectangle())
+            .gesture(SpatialTapGesture().onEnded { value in
+                let screen = { (p: SIMD3<Float>) -> SIMD2<Double>? in
+                    let c = map(p)
+                    return SIMD2(Double(c.x), Double(c.y))
+                }
+                session.tapped = TapHit.target(at: SIMD2(Double(value.location.x), Double(value.location.y)),
+                                               fixtures: placement.placed.map { ($0.id, screen($0.position)) },
+                                               cables: session.runs.map { ($0.id, $0.points.map(screen)) })
+            })
         }
         .onAppear {
             provider.catalog = Dictionary(fixtures.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })

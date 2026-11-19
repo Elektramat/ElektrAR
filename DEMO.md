@@ -2,25 +2,21 @@
 
 ## Main path (AR)
 
-1. Open the app. Point the phone at a wall until the hint disappears.
-2. Tap the cable chip at the top and pick "Installatiekabel 3x1,5 mm²".
-3. Aim the crosshair at the electrical cabinet and tap "+".
-4. Walk along the wall: tap "+" at every corner. Show that the length and price change while you move.
-5. Change the reserve from 15% to 20% and show the price update.
-6. Tap "Klaar": show measured length, length with reserve, length to order and price.
-7. Tap "Voeg toe aan winkelmand", open the cart, show the total and "Bestel op elektramat.nl".
+1. Open the app. Tap "Nieuwe ruimte", pick "Woonkamer", tap "Maak".
+2. Step "1 Onderdelen": the bottom card shows the part the "+" places; tap "Wijzig" to pick a switch or socket per brand. Aim at the wall: the see-through part follows the crosshair, the yellow line shows the height and the cyan dotted lines show when it is level with another part or at the standard height (1,05 m switch, 0,30 m socket). Tap "+": green checkmark, the part lights up for a second.
+3. Step "2 Kabels", "Automatisch": aim at the electrical cabinet and tap "+". The app draws the cables (up, along the wall, down to each part). Tap "Kabels toevoegen".
+4. Or "Handmatig": tap "+" at a part, then aim at the next corner: the preview goes straight up and then sideways (right angles). Tap "+" at every corner and "Klaar" at the last part. Show the length and price while you move.
+5. Switch to "Bekijken" and tap a switch and a cable: show the info card with codes, height, meters and price.
+6. Tap the cart at the top right: the shared cart of all rooms, with "Bestel op elektramat.nl" per product.
 
 Say: "Long distances can drift a few percent. That is what the reserve is for."
 
-## Extra: switches on the wall (30 seconds)
+## Rooms
 
-1. Tap "Schakelaars plaatsen". Tap the chip at the top and pick e.g. future linear studiowit, Schakelaar.
-2. Aim at the wall where the switch goes (about 1,05 m high): a see-through switch follows the crosshair. Tap "+".
-3. Pick a socket and place it too. The bar shows the number placed and the price of the complete sets.
-4. Walk around: the switches stay on the wall. Close and reopen the app, aim at the same wall: they come back.
+Back to "Mijn ruimtes": every room has a sketch and its price; the cart adds them all up.
+Reopen a room in the same place: once ARKit recognises it, everything comes back on the wall.
 
-## Fallback (Demo-modus)
+## If tracking misbehaves
 
-If tracking misbehaves on stage: long-press the "Kabelmeter" title until "Demo-modus aan" appears.
-The crosshair now walks along a simulated route on a wall. Tap "+" at each corner and continue
-from step 5. Long-press again to switch back.
+Walk slowly, aim at a textured wall, and wait for the hint to disappear. The "+" stays grey until the
+app sees a surface. There is no demo mode: the camera is always used on a device.

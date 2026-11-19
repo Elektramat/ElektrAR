@@ -142,98 +142,90 @@ final class CableRunTests: XCTestCase {
     }
 }
 
-@MainActor
-final class FixtureCartTests: XCTestCase {
-    private var defaults: UserDefaults!
+final class AlignmentTests: XCTestCase {
+    private let size = SIMD2<Float>(0.08, 0.08)
 
-    override func setUp() async throws {
-        defaults = UserDefaults(suiteName: "FixtureCartTests-\(UUID().uuidString)")
+    func testLevelWithAnotherPartWithinTolerance() {
+        let other = fixturePose([1, 1.05, 0])
+        let (pose, alignment) = AlignmentSnapping.align(pose: fixturePose([2, 1.08, 0]), others: [other],
+                                                        floorY: nil, standardHeight: nil)
+        XCTAssertEqual(alignment.level, [1, 1.05, 0])
+        XCTAssertNil(alignment.vertical)
+        XCTAssertLessThan(simd_distance(pose.translation, [2, 1.05, 0]), 1e-5)
+        XCTAssertEqual(alignment.label, "Waterpas met ander onderdeel")
     }
 
-    private func part(_ sku: String, _ price: Double?) -> FixturePart {
-        FixturePart(role: "x", sku: sku, description: "Onderdeel \(sku)", price: price,
-                    productUrl: URL(string: "https://www.elektramat.nl/\(sku)")!)
+    func testHalfAMeterHigherIsNotPulledDown() {
+        let (pose, alignment) = AlignmentSnapping.align(pose: fixturePose([2, 1.55, 0]), others: [fixturePose([1, 1.05, 0])],
+                                                        floorY: nil, standardHeight: nil)
+        XCTAssertTrue(alignment.isEmpty)
+        XCTAssertEqual(pose.translation, [2, 1.55, 0])
     }
 
-    private func fixture(_ id: String, parts: [FixturePart], complete: Bool = true) -> Fixture {
-        Fixture(id: id, brand: "Busch-Jaeger", line: "future linear", colour: "studiowit", product: "schakelaar",
-                productName: "Wipschakelaar", mounting: "inbouw", model: id, complete: complete,
-                price: complete ? parts.compactMap(\.price).reduce(0, +) : nil, parts: parts, note: nil,
-                frameMM: [80, 80], depthMM: 12)
+    func testStraightAboveAnotherPart() {
+        let (pose, alignment) = AlignmentSnapping.align(pose: fixturePose([1.02, 0.3, 0]), others: [fixturePose([1, 1.05, 0])],
+                                                        floorY: nil, standardHeight: nil)
+        XCTAssertEqual(alignment.vertical, [1, 1.05, 0])
+        XCTAssertLessThan(simd_distance(pose.translation, [1, 0.3, 0]), 1e-5)
     }
 
-    func testAddsEachPartByElektramatCode() {
-        let store = CartStore(defaults: defaults)
-        let result = store.add(fixture: fixture("a", parts: [part("401", 5), part("402", 3.5)]), count: 3)
-        XCTAssertEqual(result, FixtureCartResult(pieces: 6, incompleteFixtures: 0))
-        XCTAssertEqual(store.items.map(\.sku), ["401", "402"])
-        XCTAssertEqual(store.items.map(\.quantity), [3, 3])
-        XCTAssertEqual(store.items.first?.kind, .part)
-        XCTAssertEqual(store.total, 25.5)
+    func testStandardHeightWhenNothingToAlignWith() {
+        let (pose, alignment) = AlignmentSnapping.align(pose: fixturePose([1, 0.32, 0]), others: [],
+                                                        floorY: 0, standardHeight: 0.30)
+        XCTAssertEqual(alignment.standardHeight, 0.30)
+        XCTAssertLessThan(simd_distance(pose.translation, [1, 0.30, 0]), 1e-5)
+        XCTAssertEqual(alignment.label, "Standaardhoogte 0,30 m")
     }
 
-    func testSharedPartFromTwoFixturesIsOneLine() {
-        let store = CartStore(defaults: defaults)
-        store.add(fixture: fixture("a", parts: [part("frame", 4), part("rocker", 2)]), count: 1)
-        store.add(fixture: fixture("b", parts: [part("frame", 4), part("insert", 9)]), count: 2)
-        XCTAssertEqual(store.items.first { $0.sku == "frame" }?.quantity, 3)
-        XCTAssertEqual(store.count, 3)
+    func testOtherWallDoesNotAlign() {
+        var other = matrix_identity_float4x4
+        other.columns.0 = [0, 0, -1, 0]
+        other.columns.2 = [1, 0, 0, 0]
+        other.columns.3 = [0, 1.05, 1, 1]
+        let (_, alignment) = AlignmentSnapping.align(pose: fixturePose([2, 1.06, 0]), others: [other],
+                                                     floorY: nil, standardHeight: nil)
+        XCTAssertTrue(alignment.isEmpty)
     }
 
-    func testIncompleteFixtureSkipsPartsWithoutPrice() {
-        let store = CartStore(defaults: defaults)
-        let result = store.add(fixture: fixture("a", parts: [part("401", 6.16), part("402", nil)], complete: false),
-                               count: 2)
-        XCTAssertEqual(result, FixtureCartResult(pieces: 2, incompleteFixtures: 2))
-        XCTAssertEqual(store.items.map(\.sku), ["401"])
-    }
-
-    func testCableAndPartWithSameIdStaySeparate() {
-        let store = CartStore(defaults: defaults)
-        let cable = Cable(id: "401", sku: "401", name: "Kabel", crossSection: "3x1,5 mm²", use: "x",
-                          pricePerMeter: 1, sales: .perMeter(step: 1, minimum: 1), stock: "x", imageUrl: nil,
-                          productUrl: URL(string: "https://www.elektramat.nl")!, isSample: false)
-        store.add(cable: cable, meters: 10)
-        store.add(fixture: fixture("a", parts: [part("401", 5)]), count: 1)
-        XCTAssertEqual(store.count, 2)
-    }
-
-    func testSetQuantityAndRemoveAtZero() throws {
-        let store = CartStore(defaults: defaults)
-        store.add(fixture: fixture("a", parts: [part("401", 5)]), count: 1)
-        let id = try XCTUnwrap(store.items.first?.id)
-        store.setQuantity(4, for: id)
-        XCTAssertEqual(store.items.first?.quantity, 4)
-        store.setQuantity(0, for: id)
-        XCTAssertTrue(store.items.isEmpty)
-    }
-
-    func testReadsCartSavedByOlderBuild() throws {
-        let old = #"[{"id":"6B1E8A2C-0E57-4C1F-9C11-8E2B5C1F0A01","cableId":"c1","sku":"S1","name":"Kabel","crossSection":"3x1,5 mm²","pricePerMeter":0.99,"meters":12,"productUrl":"https://www.elektramat.nl","isSample":false}]"#
-        defaults.set(Data(old.utf8), forKey: "cart.items.v1")
-        let item = try XCTUnwrap(CartStore(defaults: defaults).items.first)
-        XCTAssertEqual(item.kind, .cable)
-        XCTAssertEqual(item.productId, "c1")
-        XCTAssertEqual(item.detail, "3x1,5 mm²")
-        XCTAssertEqual(item.unitPrice, 0.99)
-        XCTAssertEqual(item.quantity, 12)
+    func testStandardHeights() {
+        XCTAssertEqual(FixtureGeometry.standardHeight(product: "schakelaar"), 1.05)
+        XCTAssertEqual(FixtureGeometry.standardHeight(product: "stopcontact"), 0.30)
+        XCTAssertNil(FixtureGeometry.standardHeight(product: "x"))
     }
 }
 
 @MainActor
-final class PlacementCartTests: XCTestCase {
-    func testOnlyNewPlacementsAreAddedAgain() {
-        let placement = PlacementSession()
-        placement.isActive = true
-        placement.cursor = fixturePose([0, 1, 0])
-        placement.place("a")
-        placement.place("a")
-        placement.place("b")
-        XCTAssertEqual(placement.notInCart.map(\.fixtureId), ["a", "b"])
-        XCTAssertEqual(placement.notInCart.map(\.count), [2, 1])
-        placement.markAllInCart()
-        XCTAssertTrue(placement.notInCart.isEmpty)
-        placement.place("a")
-        XCTAssertEqual(placement.notInCart.map(\.count), [1])
+final class RightAngleTests: XCTestCase {
+    func testPreviewGoesUpThenSideways() {
+        let s = MeasureSession()
+        s.cursor = [0, 1, 0]
+        s.addPoint()
+        s.cursor = [2, 2.25, 0]
+        XCTAssertEqual(s.previewPoints, [[0, 1, 0], [0, 2.25, 0], [2, 2.25, 0]])
+        XCTAssertEqual(s.totalLength, 3.25, accuracy: 1e-6)
+    }
+
+    func testPlusAddsCornerAndUndoRemovesBoth() {
+        let s = MeasureSession()
+        s.cursor = [0, 1, 0]; s.addPoint()
+        s.cursor = [2, 2.25, 0]; s.addPoint()
+        XCTAssertEqual(s.points.count, 3)
+        s.undo()
+        XCTAssertEqual(s.points, [[0, 1, 0]])
+    }
+
+    func testStraightLineWithoutRightAngles() {
+        let s = MeasureSession()
+        s.rightAngles = false
+        s.cursor = [0, 1, 0]; s.addPoint()
+        s.cursor = [2, 2.25, 0]
+        XCTAssertEqual(s.previewPoints.count, 2)
+        s.addPoint()
+        XCTAssertEqual(s.points.count, 2)
+    }
+
+    func testAlignedCursorNeedsNoCorner() {
+        XCTAssertEqual(MeasureSession.route(from: [0, 1, 0], to: [0, 2, 0], rightAngles: true).count, 2)
+        XCTAssertEqual(MeasureSession.route(from: [0, 1, 0], to: [3, 1, 0], rightAngles: true).count, 2)
     }
 }

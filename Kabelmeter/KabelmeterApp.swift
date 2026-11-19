@@ -3,15 +3,15 @@ import SwiftUI
 @main
 struct KabelmeterApp: App {
     @StateObject private var cableStore = CableStore()
-    @StateObject private var cartStore = CartStore()
     @StateObject private var fixtureStore = FixtureStore()
+    @StateObject private var projectStore = ProjectStore()
 
     var body: some Scene {
         WindowGroup {
-            MeasureScreen()
+            RoomsScreen()
                 .environmentObject(cableStore)
-                .environmentObject(cartStore)
                 .environmentObject(fixtureStore)
+                .environmentObject(projectStore)
                 .tint(Theme.accent)
         }
     }

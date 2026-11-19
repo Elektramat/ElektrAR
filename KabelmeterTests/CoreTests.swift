@@ -81,36 +81,3 @@ final class MeasureSessionTests: XCTestCase {
         XCTAssertEqual(s.totalLength, 0)
     }
 }
-
-@MainActor
-final class CartStoreTests: XCTestCase {
-    private var defaults: UserDefaults!
-
-    override func setUp() async throws {
-        defaults = UserDefaults(suiteName: "CartStoreTests-\(UUID().uuidString)")
-    }
-
-    private let cable = Cable(id: "c1", sku: "S1", name: "Kabel", crossSection: "3x1,5 mm²", use: "x",
-                              pricePerMeter: 0.99, sales: .perMeter(step: 1, minimum: 1), stock: "x",
-                              imageUrl: nil, productUrl: URL(string: "https://www.elektramat.nl")!, isSample: true)
-
-    func testAddSameCableMergesMeters() {
-        let store = CartStore(defaults: defaults)
-        store.add(cable: cable, meters: 10)
-        store.add(cable: cable, meters: 5)
-        XCTAssertEqual(store.items.count, 1)
-        XCTAssertEqual(store.items.first?.quantity, 15)
-        XCTAssertEqual(store.total, 14.85)
-    }
-
-    func testIgnoresZeroMeters() {
-        let store = CartStore(defaults: defaults)
-        store.add(cable: cable, meters: 0)
-        XCTAssertTrue(store.items.isEmpty)
-    }
-
-    func testPersists() {
-        CartStore(defaults: defaults).add(cable: cable, meters: 11)
-        XCTAssertEqual(CartStore(defaults: defaults).items.first?.quantity, 11)
-    }
-}

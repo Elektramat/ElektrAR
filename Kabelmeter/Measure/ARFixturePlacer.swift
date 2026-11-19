@@ -8,9 +8,9 @@ import UIKit
 /// Puts switch and socket models on walls and keeps them there.
 ///
 /// Every placement is an `ARAnchor` named "fixture:<fixture id>", so ARKit keeps it fixed
-/// in the room while the user walks around. The anchors are saved with an `ARWorldMap` in
-/// the app's Documents folder; on the next start ARKit recognises the room (relocalizes)
-/// and the anchors, and so the models, come back at the same spot.
+/// in the room while the user walks around. The room itself is saved as an `ARWorldMap` at
+/// `mapURL` (one per room); the placements are saved in the room's JSON. When a room is
+/// opened, ARKit first recognises it (relocalizes) and then everything is put back.
 @MainActor
 final class ARFixturePlacer {
     static let anchorPrefix = "fixture:"
@@ -24,8 +24,8 @@ final class ARFixturePlacer {
 
     /// Placed id -> anchor and the entity that follows it.
     private var placedAnchors: [UUID: (anchor: ARAnchor, entity: AnchorEntity)] = [:]
-    /// ARAnchor identifiers we already handle (ours and restored ones).
-    private var knownAnchorIds: Set<UUID> = []
+    /// Where the room is saved; nil means nothing is saved (e.g. before a room is open).
+    var mapURL: URL?
     private var templates: [String: Entity] = [:]
     private let ghostRoot = AnchorEntity(world: .zero)
     private var ghost: Entity?
@@ -41,14 +41,9 @@ final class ARFixturePlacer {
         arView.scene.addAnchor(ghostRoot)
     }
 
-    /// Call before running the session: adds the saved room to `config` if there is one.
-    func prepare(_ config: ARWorldTrackingConfiguration, placement: PlacementSession) {
+    /// Call before running the session.
+    func prepare(placement: PlacementSession) {
         self.placement = placement
-        if let map = Self.loadSavedMap(),
-           map.anchors.contains(where: { $0.name?.hasPrefix(Self.anchorPrefix) == true }) {
-            config.initialWorldMap = map
-            placement.isRestoring = true
-        }
         placement.$placed
             .sink { [weak self] placed in self?.sync(placed) }
             .store(in: &subscriptions)
@@ -60,25 +55,32 @@ final class ARFixturePlacer {
     }
 
     /// Called by ARMeasureProvider about 15 times per second.
-    /// `connections` are the points a new switch may click onto (cable points and edges of
-    /// placed switches).
-    func tick(frame: ARFrame?, connections: [ConnectionPoint]) {
+    /// `connections` are the points a new part may click onto (cable points and edges of
+    /// placed parts); `floorY` is needed for the standard-height guide.
+    func tick(frame: ARFrame?, connections: [ConnectionPoint], floorY: Float?) {
         guard let placement else { return }
         let tracking = frame?.camera.trackingState
         var isNormal = false
         if case .normal = tracking { isNormal = true }
 
-        // Relocalized: the saved anchors are now at the right spot in this session.
+        // Relocalized: coordinates now match the saved room.
         if placement.isRestoring, isNormal { placement.isRestoring = false }
-        if !placement.isRestoring, let frame { restoreAnchors(from: frame) }
         saveIfNeeded(frame)
 
         var pose: simd_float4x4?
         var guide: MeasureGuide?
+        var alignment = Alignment.none
         if placement.isActive, !placement.isRestoring, isNormal, let frame,
            let raw = wallPose(camera: frame.camera) {
-            let size = FixtureGeometry.size(frameMM: placement.selectedFixtureId.flatMap { fixtures[$0] }?.frameMM)
-            let (snapped, kind) = ConnectionSnapping.snapFixture(pose: raw, size: size, to: connections)
+            let fixture = placement.selectedFixtureId.flatMap { fixtures[$0] }
+            let size = FixtureGeometry.size(frameMM: fixture?.frameMM)
+            var (snapped, kind) = ConnectionSnapping.snapFixture(pose: raw, size: size, to: connections)
+            if kind == nil {
+                // Not clicked onto something: line up with the other parts on this wall.
+                (snapped, alignment) = AlignmentSnapping.align(
+                    pose: snapped, others: placement.placed.map(\.transform), floorY: floorY,
+                    standardHeight: fixture.flatMap { FixtureGeometry.standardHeight(product: $0.product) })
+            }
             pose = snapped
             guide = kind.map(MeasureGuide.init)
         } else {
@@ -86,6 +88,7 @@ final class ARFixturePlacer {
         }
         if placement.cursor != pose { placement.cursor = pose }
         if placement.guide != guide { placement.guide = guide }
+        if placement.alignment != alignment { placement.alignment = alignment }
         updateGhost(pose: pose, fixtureId: placement.isActive ? placement.selectedFixtureId : nil)
     }
 
@@ -94,19 +97,24 @@ final class ARFixturePlacer {
         saveIfNeeded(nil, force: true)
     }
 
-    /// Forgets every placement and the saved room, for a new room or a tracking reset.
+    /// Forgets every placement in the scene (the saved room stays), before opening a room.
     func removeAll() {
-        for item in placedAnchors.values { item.entity.removeFromParent() }
+        for item in placedAnchors.values {
+            arView.session.remove(anchor: item.anchor)
+            item.entity.removeFromParent()
+        }
         placedAnchors.removeAll()
-        knownAnchorIds.removeAll()
         isDirty = false
-        Self.deleteSavedMap()
+    }
+
+    /// Something in the room changed (e.g. a cable): save the room map again soon.
+    func markDirty() {
+        isDirty = true
     }
 
     // MARK: Anchors
 
     private func sync(_ placed: [PlacedFixture]) {
-        let hadAny = !placedAnchors.isEmpty
         let wanted = Set(placed.map(\.id))
         for (id, item) in placedAnchors where !wanted.contains(id) {
             arView.session.remove(anchor: item.anchor)
@@ -116,28 +124,9 @@ final class ARFixturePlacer {
         }
         for item in placed where placedAnchors[item.id] == nil {
             let anchor = ARAnchor(name: Self.anchorPrefix + item.fixtureId, transform: item.transform)
-            knownAnchorIds.insert(anchor.identifier)
             arView.session.add(anchor: anchor)
             attach(anchor, id: item.id, fixtureId: item.fixtureId)
             isDirty = true
-        }
-        if placedAnchors.isEmpty {
-            // Only forget the saved room when the user removed the last placement,
-            // not on the first (empty) value while a saved room is being restored.
-            if hadAny { Self.deleteSavedMap() }
-            isDirty = false
-        }
-    }
-
-    /// Picks up anchors that ARKit brought back from the saved world map.
-    private func restoreAnchors(from frame: ARFrame) {
-        guard let placement else { return }
-        for anchor in frame.anchors where !knownAnchorIds.contains(anchor.identifier) {
-            guard let name = anchor.name, name.hasPrefix(Self.anchorPrefix) else { continue }
-            knownAnchorIds.insert(anchor.identifier)
-            let fixtureId = String(name.dropFirst(Self.anchorPrefix.count))
-            attach(anchor, id: anchor.identifier, fixtureId: fixtureId)
-            placement.restore(PlacedFixture(id: anchor.identifier, fixtureId: fixtureId, transform: anchor.transform))
         }
     }
 
@@ -269,12 +258,9 @@ final class ARFixturePlacer {
 
     // MARK: Saving the room
 
-    private static var mapURL: URL {
-        URL.documentsDirectory.appending(path: "placements.worldmap")
-    }
-
     private func saveIfNeeded(_ frame: ARFrame?, force: Bool = false) {
-        guard isDirty, !placedAnchors.isEmpty else { return }
+        // Never while recognising a room: that would overwrite it with an unrelated new map.
+        guard isDirty, let mapURL, placement?.isRestoring != true else { return }
         let now = CACurrentMediaTime()
         if !force {
             guard now - lastSave >= Self.saveInterval,
@@ -282,7 +268,7 @@ final class ARFixturePlacer {
         }
         lastSave = now
         isDirty = false
-        Self.saveWorldMap(of: arView.session, to: Self.mapURL)
+        Self.saveWorldMap(of: arView.session, to: mapURL)
     }
 
     /// Nonisolated so the completion handler (called on an ARKit queue) is not tied to the main actor.
@@ -296,12 +282,8 @@ final class ARFixturePlacer {
         }
     }
 
-    private static func loadSavedMap() -> ARWorldMap? {
-        guard let data = try? Data(contentsOf: mapURL) else { return nil }
+    static func loadMap(at url: URL) -> ARWorldMap? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
         return try? NSKeyedUnarchiver.unarchivedObject(ofClass: ARWorldMap.self, from: data)
-    }
-
-    private static func deleteSavedMap() {
-        try? FileManager.default.removeItem(at: mapURL)
     }
 }

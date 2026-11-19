@@ -26,6 +26,15 @@ nonisolated enum FixtureGeometry {
         return SIMD2(Float(frame[0]) / 1000, Float(frame[1]) / 1000)
     }
 
+    /// Usual height of the middle above the floor in the Netherlands, in meters.
+    static func standardHeight(product: String) -> Float? {
+        switch product {
+        case "schakelaar": 1.05
+        case "stopcontact": 0.30
+        default: nil
+        }
+    }
+
     /// Connection point in the fixture's own space: +X right, +Y up, on the wall (z = 0).
     static func localAnchor(_ side: FixtureSide, size: SIMD2<Float>) -> SIMD3<Float> {
         switch side {
@@ -169,7 +178,108 @@ nonisolated extension simd_float4x4 {
         return SIMD3(p.x, p.y, p.z)
     }
 
+    var axisX: SIMD3<Float> { SIMD3(columns.0.x, columns.0.y, columns.0.z) }
+
+    var axisY: SIMD3<Float> { SIMD3(columns.1.x, columns.1.y, columns.1.z) }
+
     var axisZ: SIMD3<Float> { SIMD3(columns.2.x, columns.2.y, columns.2.z) }
 
     var translation: SIMD3<Float> { SIMD3(columns.3.x, columns.3.y, columns.3.z) }
+}
+
+/// What the user tapped: a placed fixture or a cable.
+nonisolated enum TapTarget: Equatable, Sendable {
+    case fixture(UUID)
+    case cable(UUID)
+}
+
+/// Finds what a tap on the screen hits, from the screen positions of fixtures and cable points
+/// (nil positions are behind the camera or off screen).
+nonisolated enum TapHit {
+    /// A fixture is hit within this many points of its middle.
+    static let fixtureRadius: Double = 44
+    /// A cable is hit within this many points of one of its segments.
+    static let cableRadius: Double = 28
+
+    static func target(at tap: SIMD2<Double>, fixtures: [(id: UUID, screen: SIMD2<Double>?)],
+                       cables: [(id: UUID, screen: [SIMD2<Double>?])]) -> TapTarget? {
+        let fixture = fixtures.compactMap { item in item.screen.map { (item.id, simd_distance($0, tap)) } }
+            .min { $0.1 < $1.1 }
+        if let fixture, fixture.1 <= fixtureRadius { return .fixture(fixture.0) }
+        var best: (UUID, Double)?
+        for cable in cables {
+            for (a, b) in zip(cable.screen, cable.screen.dropFirst()) {
+                guard let a, let b else { continue }
+                let d = distance(tap, segment: a, b)
+                if d <= cableRadius, d < (best?.1 ?? .infinity) { best = (cable.id, d) }
+            }
+        }
+        return best.map { .cable($0.0) }
+    }
+
+    static func distance(_ p: SIMD2<Double>, segment a: SIMD2<Double>, _ b: SIMD2<Double>) -> Double {
+        let ab = b - a
+        let lengthSquared = simd_length_squared(ab)
+        guard lengthSquared > 1e-9 else { return simd_distance(p, a) }
+        let t = min(max(simd_dot(p - a, ab) / lengthSquared, 0), 1)
+        return simd_distance(p, a + ab * t)
+    }
+}
+
+/// What a part being placed lines up with. Only within a few centimeters (`AlignmentSnapping.distance`),
+/// so putting a part half a meter higher on purpose just works.
+nonisolated struct Alignment: Equatable, Sendable {
+    /// Middle of the part this one is level with (same height).
+    var level: SIMD3<Float>?
+    /// Middle of the part this one is straight above or below.
+    var vertical: SIMD3<Float>?
+    /// The standard height above the floor it sits at, in meters.
+    var standardHeight: Float?
+
+    static let none = Alignment()
+
+    var isEmpty: Bool { level == nil && vertical == nil && standardHeight == nil }
+
+    /// Dutch label for the status pill.
+    var label: String? {
+        if level != nil, vertical != nil { return "Waterpas én recht boven elkaar" }
+        if level != nil { return "Waterpas met ander onderdeel" }
+        if vertical != nil { return "Recht boven of onder ander onderdeel" }
+        if let standardHeight { return "Standaardhoogte \(Format.height(Double(standardHeight)))" }
+        return nil
+    }
+}
+
+/// Lines up a part being placed with the parts already on the same wall (level, or straight
+/// above/below), or with the standard height for its kind. The dotted guide lines show it.
+nonisolated enum AlignmentSnapping {
+    /// Within this distance the part is pulled onto the line, in meters.
+    static let distance: Float = 0.04
+
+    static func align(pose: simd_float4x4, others: [simd_float4x4], floorY: Float?, standardHeight: Float?,
+                      within tolerance: Float = distance) -> (simd_float4x4, Alignment) {
+        let normal = pose.axisZ, right = pose.axisX, up = pose.axisY
+        var result = pose
+        var alignment = Alignment()
+        var bestY = tolerance, bestX = tolerance
+        for other in others where simd_dot(other.axisZ, normal) > 0.9 {
+            let d = other.translation - pose.translation
+            let dy = abs(simd_dot(d, up)), dx = abs(simd_dot(d, right))
+            if dy < bestY { bestY = dy; alignment.level = other.translation }
+            if dx < bestX { bestX = dx; alignment.vertical = other.translation }
+        }
+        if let level = alignment.level {
+            result.columns.3 += SIMD4(up * simd_dot(level - pose.translation, up), 0)
+        } else if let floorY, let standardHeight, abs(up.y) > 0.5 {
+            let dy = (floorY + standardHeight) - pose.translation.y
+            if abs(dy) < tolerance {
+                result.columns.3 += SIMD4(up * (dy / up.y), 0)
+                alignment.standardHeight = standardHeight
+            }
+        }
+        if let vertical = alignment.vertical {
+            result.columns.3 += SIMD4(right * simd_dot(vertical - result.translation, right), 0)
+        }
+        return (result, alignment)
+    }
 }

@@ -12,8 +12,6 @@ Built for the Elektramat hackathon of 19 November 2026. See `CLAUDE.md` for the 
 3. Pick your iPhone as the run destination and press Run.
 4. First run on the phone: Settings > General > VPN & Device Management > trust the developer.
 
-ARKit does not run in the Simulator. In the Simulator, and in Demo-modus on a device,
-the app uses simulated points. Long-press the "Kabelmeter" title to switch Demo-modus on or off.
 
 ## Tests
 

@@ -3,7 +3,7 @@ import Foundation
 /// Source of world positions for measuring and placing. The provider writes the crosshair
 /// position and tracking messages into the sessions, and draws points and placed fixtures.
 /// `ARMeasureProvider` is the real one; `SimulatedMeasureProvider` fakes it for the
-/// Simulator and for Demo-modus on stage.
+/// Simulator, which has no camera.
 @MainActor
 protocol MeasureProvider: AnyObject {
     func start(session: MeasureSession, placement: PlacementSession)
@@ -17,5 +17,5 @@ enum TrackingText {
     static let tooDark = "Te weinig licht"
     static let aimAtWall = "Richt op een muur"
     static let relocalizing = "Richt op de plek van de vorige keer om de schakelaars terug te zetten"
-    static let unavailable = "AR werkt niet op dit toestel. Zet Demo-modus aan."
+    static let unavailable = "AR werkt niet op dit toestel."
 }
