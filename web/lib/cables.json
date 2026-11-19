@@ -1,0 +1,218 @@
+[
+  {
+    "id": "401169628",
+    "sku": "401169628",
+    "name": "YMvK kabel 3x1,5",
+    "crossSection": "3x1,5 mm²",
+    "use": "Verlichting",
+    "pricePerMeter": 1.45,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169628-jpg.jpg",
+    "productUrl": "https://www.elektramat.nl/ymvk-kabel-3x1-5-per-meter/",
+    "isSample": false,
+    "shopProductId": 610957
+  },
+  {
+    "id": "401169442",
+    "sku": "401169442",
+    "name": "YMvK kabel 3x2,5",
+    "crossSection": "3x2,5 mm²",
+    "use": "Stopcontacten",
+    "pricePerMeter": 2.08,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169442-jpg.jpg",
+    "productUrl": "https://www.elektramat.nl/ymvk-kabel-3x2-5-per-meter/",
+    "isSample": false,
+    "shopProductId": 616398
+  },
+  {
+    "id": "401169527",
+    "sku": "401169527",
+    "name": "YMvK kabel 3x4",
+    "crossSection": "3x4 mm²",
+    "use": "Zware groep",
+    "pricePerMeter": 3.38,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169527-jpg.jpg",
+    "productUrl": "https://www.elektramat.nl/ymvk-kabel-3x4-per-meter/",
+    "isSample": false,
+    "shopProductId": 610748
+  },
+  {
+    "id": "401168649",
+    "sku": "401168649",
+    "name": "YMvK kabel 3x6",
+    "crossSection": "3x6 mm²",
+    "use": "Zware groep",
+    "pricePerMeter": 5.38,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169528-2-jpg.png",
+    "productUrl": "https://www.elektramat.nl/ymvk-kabel-3x6-per-meter/",
+    "isSample": false,
+    "shopProductId": 618893
+  },
+  {
+    "id": "401169790",
+    "sku": "401169790",
+    "name": "YMvK kabel 5x1,5",
+    "crossSection": "5x1,5 mm²",
+    "use": "Krachtstroom",
+    "pricePerMeter": 2.29,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169790-jpg.jpg",
+    "productUrl": "https://www.elektramat.nl/ymvk-kabel-5x1-5-per-meter/",
+    "isSample": false,
+    "shopProductId": 616562
+  },
+  {
+    "id": "401169451",
+    "sku": "401169451",
+    "name": "YMvK kabel 5x2,5",
+    "crossSection": "5x2,5 mm²",
+    "use": "Kookgroep",
+    "pricePerMeter": 3.41,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169451-jpg.jpg",
+    "productUrl": "https://www.elektramat.nl/ymvk-kabel-5x2-5-per-meter/",
+    "isSample": false,
+    "shopProductId": 616407
+  },
+  {
+    "id": "401169476",
+    "sku": "401169476",
+    "name": "YMvK kabel 5x4",
+    "crossSection": "5x4 mm²",
+    "use": "Krachtstroom",
+    "pricePerMeter": 5.36,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169476-jpg.jpg",
+    "productUrl": "https://www.elektramat.nl/ymvk-kabel-5x4-per-meter/",
+    "isSample": false,
+    "shopProductId": 616418
+  },
+  {
+    "id": "401169761",
+    "sku": "401169761",
+    "name": "XMvK kabel 3x1,5",
+    "crossSection": "3x1,5 mm²",
+    "use": "Halogeenvrij",
+    "pricePerMeter": 1.25,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/3/-/3-aderig-meter-jpg_1.png",
+    "productUrl": "https://www.elektramat.nl/xmvk-kabel-3x1-5-per-meter/",
+    "isSample": false,
+    "shopProductId": 616539
+  },
+  {
+    "id": "401169480",
+    "sku": "401169480",
+    "name": "XMvK kabel 3x2,5",
+    "crossSection": "3x2,5 mm²",
+    "use": "Halogeenvrij",
+    "pricePerMeter": 1.92,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/3/-/3-aderig-meter-jpg.png",
+    "productUrl": "https://www.elektramat.nl/xmvk-kabel-3x2-5-per-meter/",
+    "isSample": false,
+    "shopProductId": 616422
+  },
+  {
+    "id": "401168576",
+    "sku": "401168576",
+    "name": "Neopreen kabel H07RN-F 3x1,5mm²",
+    "crossSection": "3x1,5 mm²",
+    "use": "Flexibel, buiten",
+    "pricePerMeter": 1.83,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/n/e/neopreen-3-aderig-per-meter-jpg_3.png",
+    "productUrl": "https://www.elektramat.nl/neopreen-kabel-h07rnf-3x1-5-per-meter/",
+    "isSample": false,
+    "shopProductId": 619000
+  },
+  {
+    "id": "401168654",
+    "sku": "401168654",
+    "name": "Neopreen kabel H07RN-F 3x2,5mm²",
+    "crossSection": "3x2,5 mm²",
+    "use": "Flexibel, buiten",
+    "pricePerMeter": 2.78,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/n/e/neopreen-3-aderig-per-meter-jpg_1.png",
+    "productUrl": "https://www.elektramat.nl/neopreen-kabel-h07rnf-3x2-5-per-meter/",
+    "isSample": false,
+    "shopProductId": 618891
+  },
+  {
+    "id": "401169471",
+    "sku": "401169471",
+    "name": "YMvK-as grondkabel 3x2,5",
+    "crossSection": "3x2,5 mm²",
+    "use": "Grondkabel",
+    "pricePerMeter": 4.05,
+    "sales": {
+      "type": "perMeter",
+      "step": 1,
+      "minimum": 1
+    },
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169471-jpg.jpg",
+    "productUrl": "https://www.elektramat.nl/ymvk-as-grondkabel-3x2-5-per-meter/",
+    "isSample": false,
+    "shopProductId": 607079
+  }
+]
