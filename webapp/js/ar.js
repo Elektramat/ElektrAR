@@ -63,8 +63,8 @@ export async function startAR({ overlay, getMode, getFixture, onFrame, onEnd }) 
   const viewerSpace = await session.requestReferenceSpace('viewer');
   const hitSource = await session.requestHitTestSource({ space: viewerSpace });
 
-  const orange = new THREE.MeshBasicMaterial({ color: 0xff9500 });
-  const preview = new THREE.MeshBasicMaterial({ color: 0xff9500, transparent: true, opacity: 0.6 });
+  const cableColour = new THREE.MeshBasicMaterial({ color: 0x34bbda }); // secondary: cables in AR
+  const preview = new THREE.MeshBasicMaterial({ color: 0x34bbda, transparent: true, opacity: 0.6 });
   const white = new THREE.MeshBasicMaterial({ color: 0xffffff });
   const segmentGeometry = new THREE.BoxGeometry(0.004, 1, 0.004);
   const dotGeometry = new THREE.SphereGeometry(0.008, 16, 12);
@@ -208,7 +208,7 @@ export async function startAR({ overlay, getMode, getFixture, onFrame, onEnd }) 
       if (!lastHit || getMode() !== 'measure') return false;
       const p = lastHit.position.clone();
       if (points.length) {
-        const seg = new THREE.Mesh(segmentGeometry, orange);
+        const seg = new THREE.Mesh(segmentGeometry, cableColour);
         placeSegment(seg, points[points.length - 1], p);
         scene.add(seg);
         pointMeshes.push(seg);

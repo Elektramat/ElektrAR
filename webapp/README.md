@@ -13,6 +13,14 @@ python3 -m http.server 8000     # or: npm start
 
 Open http://localhost:8000. Opening `index.html` as a file does not work (the data is fetched).
 
+## Deploy on Vercel
+
+The folder is a static site, no build step. In the Vercel project: **Settings > Build and
+Deployment**: Root Directory `webapp`, Framework Preset **Other**, Build Command and Output
+Directory empty (no override). `vercel.json` sets the content type of the `.usdz` models (AR Quick
+Look needs `model/vnd.usdz+zip`), turns off caching of the code and data, and allows the camera.
+`manifest.webmanifest` and `icons/` make it installable ("Zet op beginscherm").
+
 ## What works where
 
 | | iPhone (Safari) | Android (Chrome) | Desktop |
@@ -44,5 +52,5 @@ scripts/sync_webapp_data.sh
 ## Tests
 
 ```sh
-cd webapp && npm test     # node --test: pricing, formatting, wall pose
+cd webapp && npm test     # node --test: pricing (incl. ../shared/pricing-cases.json and rolls), formatting, wall pose
 ```

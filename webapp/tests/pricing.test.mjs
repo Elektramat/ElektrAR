@@ -1,7 +1,8 @@
 // Run: node --test webapp/tests
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { quote, billedPieces, cheapestRolls, requiredLength, pathLength, CONNECTION_ALLOWANCE } from '../js/pricing.js';
+import { readFileSync } from 'node:fs';
+import { quote, billedPieces, cheapestRolls, requiredLength, pathLength, rollPlan, CONNECTION_ALLOWANCE } from '../js/pricing.js';
 import { meters, orderLength, euro, parseMeters } from '../js/format.js';
 import { wallPose } from '../js/wallpose.js';
 
@@ -69,4 +70,40 @@ test('wall pose faces the camera and stays upright', () => {
   assert.deepEqual([m[4], m[5], m[6]].map((v) => Math.round(v) + 0), [0, 1, 0]); // +Y up
   assert.deepEqual([m[12], m[13], m[14]], [1, 1, 0]);
   assert.equal(wallPose({ x: 0, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }, { x: 0, y: 1.5, z: 1 }), null, 'floor');
+});
+
+// The cases the iPhone app and the other web app also run (shared/pricing-cases.json).
+const shared = JSON.parse(readFileSync(new URL('../../shared/pricing-cases.json', import.meta.url)));
+
+test('shared cases: pieces', () => {
+  for (const c of shared.pieces) assert.deepEqual(billedPieces(c.required, c.sales), c.pieces, JSON.stringify(c));
+});
+
+test('shared cases: quotes', () => {
+  for (const c of shared.quotes) {
+    const q = quote({ pricePerMeter: c.pricePerMeter, sales: c.sales }, c.measured, c.reserve);
+    if (c.quote === null) assert.equal(q, null);
+    else assert.deepEqual({ billedLength: q.billedLength, price: q.price }, c.quote, JSON.stringify(c));
+  }
+});
+
+// Snelflex 3x2,5 rolls as on elektramat.nl on 19 Nov 2026.
+const snelflex = [
+  { lengthM: 100, price: 208.77 },
+  { lengthM: 50, price: 117.66 },
+  { lengthM: 25, price: 64.51 },
+];
+
+test('rolls: cheapest total price, not shortest length', () => {
+  assert.deepEqual(rollPlan(120, snelflex).map((r) => r.lengthM), [100, 25]); // 273,28 < 100+50 (326,43)
+  assert.deepEqual(rollPlan(60, snelflex).map((r) => r.lengthM), [50, 25]); // 182,17 < 100 (208,77)
+  assert.deepEqual(rollPlan(26, snelflex).map((r) => r.lengthM), [50]); // 117,66 < 2 x 25 (129,02)
+  assert.deepEqual(rollPlan(0, snelflex), []);
+});
+
+test('rolls: quote sums the roll prices', () => {
+  const q = quote({ pricePerMeter: 2.09, sales: { type: 'fixedLengths', lengthsM: [100, 50, 25] }, rolls: snelflex }, 50, 0.15);
+  // 50 * 1.15 + 2 = 59.5 m -> 50 + 25
+  assert.deepEqual(q.pieces, [50, 25]);
+  assert.equal(q.price, 182.17);
 });
