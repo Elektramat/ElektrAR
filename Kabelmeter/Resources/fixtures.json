@@ -19,7 +19,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
       }
     ],
-    "note": "No alpha 1-voudig frame or single rocker on elektramat.nl (only 2-/3-voudig frames)."
+    "note": "No alpha 1-voudig frame or single rocker on elektramat.nl (only 2-/3-voudig frames).",
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 18.0
   },
   {
     "id": "busch-jaeger_alpha_studiowit_stopcontact",
@@ -41,7 +46,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-2300-ucrks-24g-503-bj-inb-wcds-1v-z-ra-kv-studiow-2300-ucrks-24g-503/"
       }
     ],
-    "note": "No alpha 1-voudig frame on elektramat.nl. Socket title reads 'Z/RA'; check whether this is a version without randaarde."
+    "note": "No alpha 1-voudig frame on elektramat.nl. Socket title reads 'Z/RA'; check whether this is a version without randaarde.",
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_art-linear_studiowit_schakelaar",
@@ -77,7 +87,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wissel-kruisschakelaar-art-linear-studiowit-1786-44g/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      85,
+      85
+    ],
+    "depthMM": 16.2
   },
   {
     "id": "busch-jaeger_art-linear_studiowit_stopcontact",
@@ -106,7 +121,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-stopcontact-met-randaarde-met-kinderbeveiliging-art-linear-studiowit-20-eucb-44g/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      85,
+      85
+    ],
+    "depthMM": 14.1
   },
   {
     "id": "busch-jaeger_art-linear_zwart-mat_schakelaar",
@@ -142,7 +162,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wissel-kruisschakelaar-art-linear-zwart-mat-1786-45m/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      85,
+      85
+    ],
+    "depthMM": 16.2
   },
   {
     "id": "busch-jaeger_art-linear_zwart-mat_stopcontact",
@@ -171,7 +196,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-stopcontact-met-randaarde-met-kinderbeveiliging-art-linear-zwart-mat-20-eucb-45m/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      85,
+      85
+    ],
+    "depthMM": 14.1
   },
   {
     "id": "busch-jaeger_busch-axcent_studiowit_schakelaar",
@@ -207,7 +237,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wis-kruis-puls-carat-future-linear-studiowit-1786-84/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      91,
+      91
+    ],
+    "depthMM": 17.0
   },
   {
     "id": "busch-jaeger_busch-axcent_studiowit_stopcontact",
@@ -236,7 +271,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-solo-carat-future-linear-studiowit-20-eucr-84-503/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      91,
+      91
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_busch-balance-si_mat-zwart_schakelaar",
@@ -272,7 +312,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-bedieningswip-1-voudig-busch-balance-si-mat-zwart-2506-915/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 18.0
   },
   {
     "id": "busch-jaeger_busch-balance-si_mat-zwart_stopcontact",
@@ -301,7 +346,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-busch-balance-si-mat-zwart-20-eucr-915/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_busch-balance-si_zuiver-wit_schakelaar",
@@ -337,7 +387,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wisselschakelaar-busch-balance-si-zuiver-wit-2506-914/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 18.0
   },
   {
     "id": "busch-jaeger_busch-balance-si_zuiver-wit_stopcontact",
@@ -366,7 +421,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-stopcontact-met-randaarde-busch-balance-si-zuiver-wit-20-eucr-914/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_busch-duro-2000-si_creme_schakelaar",
@@ -402,7 +462,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-bedieningswip-wisselschakelaar-si-creme-2506-212-506/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 18.0
   },
   {
     "id": "busch-jaeger_busch-duro-2000-si_creme_stopcontact",
@@ -431,7 +496,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-si-creme-20-euc-212-503/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_carat_glaszwart-antraciet_schakelaar",
@@ -467,7 +537,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-bedieningswip-voor-inbouw-wisselschakelaar-kruisschakelaar-carat-antraciet-1786-81/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 17.0
   },
   {
     "id": "busch-jaeger_carat_glaszwart-antraciet_stopcontact",
@@ -496,7 +571,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-wandcontactdoos-inbouw-met-randaarde-1-voudig-future-linear-antraciet-20-euc-81/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_carat_rvs-studiowit_schakelaar",
@@ -532,7 +612,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wis-kruis-puls-carat-future-linear-studiowit-1786-84/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 17.0
   },
   {
     "id": "busch-jaeger_carat_rvs-studiowit_stopcontact",
@@ -561,7 +646,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-solo-carat-future-linear-studiowit-20-eucr-84-503/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_carat_witglas-ivoorwit_schakelaar",
@@ -590,7 +680,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
       }
     ],
-    "note": "No single ivoorwit rocker (1786-82) on elektramat.nl; only the series rocker 1785-82."
+    "note": "No single ivoorwit rocker (1786-82) on elektramat.nl; only the series rocker 1785-82.",
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 17.0
   },
   {
     "id": "busch-jaeger_carat_witglas-ivoorwit_stopcontact",
@@ -619,7 +714,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-stopcontact-met-randaarde-met-2x-usb-2-4a-usb-a-a-carat-solo-future-linear-ivoorwit-20-eucb2usb-82/"
       }
     ],
-    "note": "Only ivoorwit socket with a price is the 2x USB version (20 EUCB2USB-82)."
+    "note": "Only ivoorwit socket with a price is the 2x USB version (20 EUCB2USB-82).",
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_carat_witglas-studiowit_schakelaar",
@@ -655,7 +755,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wis-kruis-puls-carat-future-linear-studiowit-1786-84/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 17.0
   },
   {
     "id": "busch-jaeger_carat_witglas-studiowit_stopcontact",
@@ -684,7 +789,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-solo-carat-future-linear-studiowit-20-eucr-84-503/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_future-linear_aluzilver_schakelaar",
@@ -720,7 +830,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-bedieningswip-aan-uit-schakelaar-1-voudig-future-linear-aluzilver-1786-83/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 17.0
   },
   {
     "id": "busch-jaeger_future-linear_aluzilver_stopcontact",
@@ -749,7 +864,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-wandcontactdoos-inbouw-met-randaarde-1-voudig-future-linear-aluzilver-20-euc-83/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_future-linear_antraciet_schakelaar",
@@ -785,7 +905,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-bedieningswip-voor-inbouw-wisselschakelaar-kruisschakelaar-carat-antraciet-1786-81/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 17.0
   },
   {
     "id": "busch-jaeger_future-linear_antraciet_stopcontact",
@@ -814,7 +939,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-wandcontactdoos-inbouw-met-randaarde-1-voudig-future-linear-antraciet-20-euc-81/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_future-linear_studiowit_schakelaar",
@@ -850,7 +980,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wis-kruis-puls-carat-future-linear-studiowit-1786-84/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 17.0
   },
   {
     "id": "busch-jaeger_future-linear_studiowit_schakelaar_opbouw",
@@ -893,7 +1028,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wis-kruis-puls-carat-future-linear-studiowit-1786-84/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      80,
+      85
+    ],
+    "depthMM": 49
   },
   {
     "id": "busch-jaeger_future-linear_studiowit_stopcontact",
@@ -922,7 +1062,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-solo-carat-future-linear-studiowit-20-eucr-84-503/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_future-linear_studiowit_stopcontact_opbouw",
@@ -958,7 +1103,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-solo-carat-future-linear-studiowit-20-eucr-84-503/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      80,
+      85
+    ],
+    "depthMM": 46
   },
   {
     "id": "busch-jaeger_future-linear_studiowit-mat_schakelaar",
@@ -994,7 +1144,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-bedieningselement-aan-uit-voor-inbouwwisselschakelaar-kruisschakelaar-future-linear-studiowit-mat-1786-884/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 17.0
   },
   {
     "id": "busch-jaeger_future-linear_studiowit-mat_stopcontact",
@@ -1023,7 +1178,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-wandcontactdoos-1-voudig-met-verhoogde-aanraakbeveiliging-future-linear-studiowit-mat-20-eucks-884/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_future-linear_zwart-mat_schakelaar",
@@ -1059,7 +1219,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-bedieningswip-wisselschakelaar-future-linear-zwart-mat-2cka001751a3041/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 17.0
   },
   {
     "id": "busch-jaeger_future-linear_zwart-mat_stopcontact",
@@ -1088,7 +1253,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-stopcontact-met-randaarde-en-kinderbeveiliging-future-linear-zwart-mat-20-eucrb-885/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_reflex-si_alpinwit_schakelaar",
@@ -1124,7 +1294,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-bedieningswip-met-schroefbevestiging-aan-uit-schakelaar-1-voudig-reflex-si-alpinwit-2546-214/"
       }
     ],
-    "note": "Only Reflex SI single rocker in stock is 2546-214 (screw-fixed version); check it fits 2000/6 USR before ordering."
+    "note": "Only Reflex SI single rocker in stock is 2546-214 (screw-fixed version); check it fits 2000/6 USR before ordering.",
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 18.0
   },
   {
     "id": "busch-jaeger_reflex-si_alpinwit_schakelaar_opbouw",
@@ -1160,7 +1335,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-bedieningswip-met-schroefbevestiging-aan-uit-schakelaar-1-voudig-reflex-si-alpinwit-2546-214/"
       }
     ],
-    "note": "Only Reflex SI single rocker in stock is 2546-214 (screw-fixed version); check it fits 2000/6 USR before ordering. | Reflex SI 1-voudig opbouwbak (1701-214) not orderable on elektramat.nl; 2-/3-voudig only."
+    "note": "Only Reflex SI single rocker in stock is 2546-214 (screw-fixed version); check it fits 2000/6 USR before ordering. | Reflex SI 1-voudig opbouwbak (1701-214) not orderable on elektramat.nl; 2-/3-voudig only.",
+    "frameMM": [
+      81,
+      85
+    ],
+    "depthMM": 50
   },
   {
     "id": "busch-jaeger_reflex-si_alpinwit_stopcontact",
@@ -1189,7 +1369,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-alpin-wit-20-euc-214-503/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 14.0
   },
   {
     "id": "busch-jaeger_reflex-si_alpinwit_stopcontact_opbouw",
@@ -1218,7 +1403,12 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-alpin-wit-20-euc-214-503/"
       }
     ],
-    "note": "Reflex SI 1-voudig opbouwbak (1701-214) not orderable on elektramat.nl; 2-/3-voudig only."
+    "note": "Reflex SI 1-voudig opbouwbak (1701-214) not orderable on elektramat.nl; 2-/3-voudig only.",
+    "frameMM": [
+      81,
+      85
+    ],
+    "depthMM": 46
   },
   {
     "id": "busch-jaeger_solo_studiowit_schakelaar",
@@ -1254,7 +1444,12 @@
         "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wis-kruis-puls-carat-future-linear-studiowit-1786-84/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      87,
+      87
+    ],
+    "depthMM": 17.0
   },
   {
     "id": "busch-jaeger_solo_studiowit_stopcontact",
@@ -1283,6 +1478,11 @@
         "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-solo-carat-future-linear-studiowit-20-eucr-84-503/"
       }
     ],
-    "note": null
+    "note": null,
+    "frameMM": [
+      87,
+      87
+    ],
+    "depthMM": 14.0
   }
 ]

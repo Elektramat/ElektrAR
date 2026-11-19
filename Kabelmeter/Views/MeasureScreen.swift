@@ -28,6 +28,7 @@ struct MeasureScreen: View {
     @State private var mode: Mode = .measure
     @State private var showFixturePicker = false
     @State private var confirmClear = false
+    @State private var showEasterEgg = false
 
     private var cable: Cable? {
         cableStore.cables.first { $0.id == storedCableId } ?? cableStore.cables.first
@@ -156,7 +157,11 @@ struct MeasureScreen: View {
     private var fixtureChip: some View {
         Button { showFixturePicker = true } label: {
             HStack(spacing: 8) {
-                Image(systemName: fixture?.product == "stopcontact" ? "poweroutlet.type.f" : "lightswitch.on")
+                if let fixture {
+                    FixtureIcon(fixture: fixture, size: 36)
+                } else {
+                    Image(systemName: "lightswitch.on")
+                }
                 VStack(alignment: .leading, spacing: 0) {
                     Text(fixture?.title ?? "Kies schakelmateriaal").font(.subheadline.weight(.semibold)).lineLimit(1)
                     if let fixture {
@@ -217,10 +222,12 @@ struct MeasureScreen: View {
     private var statusText: some View {
         VStack(spacing: 6) {
             // Long-press the title to toggle Demo-modus (hidden fallback for the stage).
-            Text(demoMode ? "Kabelmeter · Demo" : "Kabelmeter")
+            // Triple-tap: team easter egg, not saved, gone after a restart.
+            Text((demoMode ? "Kabelmeter · Demo" : "Kabelmeter") + (showEasterEgg ? " 🍆" : ""))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.8))
                 .shadow(radius: 2)
+                .onTapGesture(count: 3) { showEasterEgg.toggle() }
                 .onLongPressGesture(minimumDuration: 0.8) { toggleDemoMode() }
 
             if let error = isPlacing ? fixtureStore.loadError : cableStore.loadError {

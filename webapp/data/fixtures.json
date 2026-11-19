@@ -1,0 +1,1488 @@
+[
+  {
+    "id": "busch-jaeger_alpha_studiowit_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "alpha",
+    "colour": "studiowit",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_alpha_studiowit_schakelaar",
+    "complete": false,
+    "price": null,
+    "parts": [
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      }
+    ],
+    "note": "No alpha 1-voudig frame or single rocker on elektramat.nl (only 2-/3-voudig frames).",
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 18.0
+  },
+  {
+    "id": "busch-jaeger_alpha_studiowit_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "alpha",
+    "colour": "studiowit",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_alpha_studiowit_stopcontact",
+    "complete": false,
+    "price": null,
+    "parts": [
+      {
+        "role": "stopcontact",
+        "sku": "401039552",
+        "description": "Wandcontactdoos alpha studiowit",
+        "price": 12.15,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-2300-ucrks-24g-503-bj-inb-wcds-1v-z-ra-kv-studiow-2300-ucrks-24g-503/"
+      }
+    ],
+    "note": "No alpha 1-voudig frame on elektramat.nl. Socket title reads 'Z/RA'; check whether this is a version without randaarde.",
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_art-linear_studiowit_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "Busch-art linear",
+    "colour": "studiowit",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_art-linear_studiowit_schakelaar",
+    "complete": true,
+    "price": 18.48,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401321067",
+        "description": "Afdekraam 1-voudig art linear studiowit",
+        "price": 5.06,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-art-linear-studiowit-1721-44g/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401321075",
+        "description": "Enkele wip art linear studiowit",
+        "price": 7.26,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wissel-kruisschakelaar-art-linear-studiowit-1786-44g/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      85,
+      85
+    ],
+    "depthMM": 16.2
+  },
+  {
+    "id": "busch-jaeger_art-linear_studiowit_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "Busch-art linear",
+    "colour": "studiowit",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_art-linear_studiowit_stopcontact",
+    "complete": true,
+    "price": 16.39,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401321067",
+        "description": "Afdekraam 1-voudig art linear studiowit",
+        "price": 5.06,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-art-linear-studiowit-1721-44g/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401321072",
+        "description": "Stopcontact randaarde + kinderbeveiliging art linear studiowit",
+        "price": 11.33,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-stopcontact-met-randaarde-met-kinderbeveiliging-art-linear-studiowit-20-eucb-44g/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      85,
+      85
+    ],
+    "depthMM": 14.1
+  },
+  {
+    "id": "busch-jaeger_art-linear_zwart-mat_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "Busch-art linear",
+    "colour": "zwart-mat",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_art-linear_zwart-mat_schakelaar",
+    "complete": true,
+    "price": 23.4,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401321084",
+        "description": "Afdekraam 1-voudig art linear zwart mat",
+        "price": 7.44,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-art-linear-zwart-mat-1721-45m/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401321092",
+        "description": "Enkele wip art linear zwart mat",
+        "price": 9.8,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wissel-kruisschakelaar-art-linear-zwart-mat-1786-45m/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      85,
+      85
+    ],
+    "depthMM": 16.2
+  },
+  {
+    "id": "busch-jaeger_art-linear_zwart-mat_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "Busch-art linear",
+    "colour": "zwart-mat",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_art-linear_zwart-mat_stopcontact",
+    "complete": true,
+    "price": 19.84,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401321084",
+        "description": "Afdekraam 1-voudig art linear zwart mat",
+        "price": 7.44,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-art-linear-zwart-mat-1721-45m/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401321089",
+        "description": "Stopcontact randaarde + kinderbeveiliging art linear zwart mat",
+        "price": 12.4,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-stopcontact-met-randaarde-met-kinderbeveiliging-art-linear-zwart-mat-20-eucb-45m/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      85,
+      85
+    ],
+    "depthMM": 14.1
+  },
+  {
+    "id": "busch-jaeger_busch-axcent_studiowit_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "Busch-axcent",
+    "colour": "studiowit",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_busch-axcent_studiowit_schakelaar",
+    "complete": true,
+    "price": 16.8,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401040082",
+        "description": "Afdekraam 1-voudig axcent studiowit",
+        "price": 7.02,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-busch-axcent-studiowit-1721-284/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401039206",
+        "description": "Enkele wip studiowit (future linear/solo/carat/axcent)",
+        "price": 3.62,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wis-kruis-puls-carat-future-linear-studiowit-1786-84/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      91,
+      91
+    ],
+    "depthMM": 17.0
+  },
+  {
+    "id": "busch-jaeger_busch-axcent_studiowit_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "Busch-axcent",
+    "colour": "studiowit",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_busch-axcent_studiowit_stopcontact",
+    "complete": true,
+    "price": 13.01,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401040082",
+        "description": "Afdekraam 1-voudig axcent studiowit",
+        "price": 7.02,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-busch-axcent-studiowit-1721-284/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401039231",
+        "description": "Stopcontact randaarde studiowit (future linear/solo/carat/axcent)",
+        "price": 5.99,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-solo-carat-future-linear-studiowit-20-eucr-84-503/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      91,
+      91
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_busch-balance-si_mat-zwart_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "Busch-balance SI",
+    "colour": "mat-zwart",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_busch-balance-si_mat-zwart_schakelaar",
+    "complete": true,
+    "price": 12.56,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401333543",
+        "description": "Afdekraam 1-voudig balance SI mat zwart",
+        "price": 2.88,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-afdekraam-1-voudig-busch-balance-si-mat-zwart-1721-915/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401333557",
+        "description": "Bedieningswip balance SI mat zwart",
+        "price": 3.52,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-bedieningswip-1-voudig-busch-balance-si-mat-zwart-2506-915/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 18.0
+  },
+  {
+    "id": "busch-jaeger_busch-balance-si_mat-zwart_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "Busch-balance SI",
+    "colour": "mat-zwart",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_busch-balance-si_mat-zwart_stopcontact",
+    "complete": true,
+    "price": 9.91,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401333543",
+        "description": "Afdekraam 1-voudig balance SI mat zwart",
+        "price": 2.88,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-afdekraam-1-voudig-busch-balance-si-mat-zwart-1721-915/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401333585",
+        "description": "Stopcontact randaarde balance SI mat zwart",
+        "price": 7.03,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-busch-balance-si-mat-zwart-20-eucr-915/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_busch-balance-si_zuiver-wit_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "Busch-balance SI",
+    "colour": "zuiver-wit",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_busch-balance-si_zuiver-wit_schakelaar",
+    "complete": true,
+    "price": 10.97,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401077046",
+        "description": "Afdekraam 1-voudig balance SI zuiver wit",
+        "price": 2.23,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-busch-balance-si-zuiver-wit-1721-914/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401077054",
+        "description": "Enkele wip balance SI zuiver wit",
+        "price": 2.58,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wisselschakelaar-busch-balance-si-zuiver-wit-2506-914/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 18.0
+  },
+  {
+    "id": "busch-jaeger_busch-balance-si_zuiver-wit_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "Busch-balance SI",
+    "colour": "zuiver-wit",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_busch-balance-si_zuiver-wit_stopcontact",
+    "complete": true,
+    "price": 6.82,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401077046",
+        "description": "Afdekraam 1-voudig balance SI zuiver wit",
+        "price": 2.23,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-busch-balance-si-zuiver-wit-1721-914/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401077096",
+        "description": "Stopcontact randaarde balance SI zuiver wit",
+        "price": 4.59,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-stopcontact-met-randaarde-busch-balance-si-zuiver-wit-20-eucr-914/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_busch-duro-2000-si_creme_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "Busch-Duro 2000 SI",
+    "colour": "creme",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_busch-duro-2000-si_creme_schakelaar",
+    "complete": true,
+    "price": 11.86,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401340408",
+        "description": "Afdekraam 1-voudig SI crème",
+        "price": 2.42,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-afdekraam-1-voudig-si-creme-2511-212-506/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401340410",
+        "description": "Bedieningswip SI crème",
+        "price": 3.28,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-bedieningswip-wisselschakelaar-si-creme-2506-212-506/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 18.0
+  },
+  {
+    "id": "busch-jaeger_busch-duro-2000-si_creme_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "Busch-Duro 2000 SI",
+    "colour": "creme",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_busch-duro-2000-si_creme_stopcontact",
+    "complete": true,
+    "price": 7.08,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401340408",
+        "description": "Afdekraam 1-voudig SI crème",
+        "price": 2.42,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-afdekraam-1-voudig-si-creme-2511-212-506/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401340086",
+        "description": "Stopcontact met randaarde SI crème",
+        "price": 4.66,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-si-creme-20-euc-212-503/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_carat_glaszwart-antraciet_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "colour": "glaszwart-antraciet",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_carat_antraciet_schakelaar",
+    "complete": true,
+    "price": 47.2,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401167664",
+        "description": "Afdekraam 1-voudig carat glas zwart",
+        "price": 34.42,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-1721-825-bj-afdekraam-1v-c-glas-zwart-1721-825/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401039201",
+        "description": "Bedieningswip antraciet (future linear/carat)",
+        "price": 6.62,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-bedieningswip-voor-inbouw-wisselschakelaar-kruisschakelaar-carat-antraciet-1786-81/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 17.0
+  },
+  {
+    "id": "busch-jaeger_carat_glaszwart-antraciet_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "colour": "glaszwart-antraciet",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_carat_antraciet_stopcontact",
+    "complete": true,
+    "price": 44.58,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401167664",
+        "description": "Afdekraam 1-voudig carat glas zwart",
+        "price": 34.42,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-1721-825-bj-afdekraam-1v-c-glas-zwart-1721-825/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401039228",
+        "description": "Wandcontactdoos randaarde antraciet",
+        "price": 10.16,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-wandcontactdoos-inbouw-met-randaarde-1-voudig-future-linear-antraciet-20-euc-81/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_carat_rvs-studiowit_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "colour": "rvs-studiowit",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_carat_studiowit_schakelaar",
+    "complete": true,
+    "price": 44.2,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039101",
+        "description": "Afdekraam 1-voudig carat RVS",
+        "price": 34.42,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-1721-860-bj-afdekraam-1v-c-rvs-1721-860/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401039206",
+        "description": "Enkele wip studiowit (future linear/solo/carat/axcent)",
+        "price": 3.62,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wis-kruis-puls-carat-future-linear-studiowit-1786-84/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 17.0
+  },
+  {
+    "id": "busch-jaeger_carat_rvs-studiowit_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "colour": "rvs-studiowit",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_carat_studiowit_stopcontact",
+    "complete": true,
+    "price": 40.41,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039101",
+        "description": "Afdekraam 1-voudig carat RVS",
+        "price": 34.42,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-1721-860-bj-afdekraam-1v-c-rvs-1721-860/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401039231",
+        "description": "Stopcontact randaarde studiowit (future linear/solo/carat/axcent)",
+        "price": 5.99,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-solo-carat-future-linear-studiowit-20-eucr-84-503/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_carat_witglas-ivoorwit_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "colour": "witglas-ivoorwit",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_carat_ivoorwit_schakelaar",
+    "complete": false,
+    "price": null,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401018044",
+        "description": "Afdekraam 1-voudig carat witglas",
+        "price": 34.42,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-carat-witglas-1721-811/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      }
+    ],
+    "note": "No single ivoorwit rocker (1786-82) on elektramat.nl; only the series rocker 1785-82.",
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 17.0
+  },
+  {
+    "id": "busch-jaeger_carat_witglas-ivoorwit_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "colour": "witglas-ivoorwit",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_carat_ivoorwit_stopcontact",
+    "complete": true,
+    "price": 82.43,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401018044",
+        "description": "Afdekraam 1-voudig carat witglas",
+        "price": 34.42,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-carat-witglas-1721-811/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401298445",
+        "description": "Stopcontact randaarde + 2x USB ivoorwit",
+        "price": 48.01,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-stopcontact-met-randaarde-met-2x-usb-2-4a-usb-a-a-carat-solo-future-linear-ivoorwit-20-eucb2usb-82/"
+      }
+    ],
+    "note": "Only ivoorwit socket with a price is the 2x USB version (20 EUCB2USB-82).",
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_carat_witglas-studiowit_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "colour": "witglas-studiowit",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_carat_studiowit_schakelaar",
+    "complete": true,
+    "price": 44.2,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401018044",
+        "description": "Afdekraam 1-voudig carat witglas",
+        "price": 34.42,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-carat-witglas-1721-811/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401039206",
+        "description": "Enkele wip studiowit (future linear/solo/carat/axcent)",
+        "price": 3.62,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wis-kruis-puls-carat-future-linear-studiowit-1786-84/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 17.0
+  },
+  {
+    "id": "busch-jaeger_carat_witglas-studiowit_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "carat",
+    "colour": "witglas-studiowit",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_carat_studiowit_stopcontact",
+    "complete": true,
+    "price": 40.41,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401018044",
+        "description": "Afdekraam 1-voudig carat witglas",
+        "price": 34.42,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-carat-witglas-1721-811/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401039231",
+        "description": "Stopcontact randaarde studiowit (future linear/solo/carat/axcent)",
+        "price": 5.99,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-solo-carat-future-linear-studiowit-20-eucr-84-503/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      107,
+      107
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_future-linear_aluzilver_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "colour": "aluzilver",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_future-linear_aluzilver_schakelaar",
+    "complete": true,
+    "price": 21.4,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039254",
+        "description": "Afdekraam 1-voudig future linear aluzilver",
+        "price": 6.76,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-hoekig-1-voudig-future-linear-aluzilver-1721-183k/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401039205",
+        "description": "Bedieningswip future linear aluzilver",
+        "price": 8.48,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-bedieningswip-aan-uit-schakelaar-1-voudig-future-linear-aluzilver-1786-83/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 17.0
+  },
+  {
+    "id": "busch-jaeger_future-linear_aluzilver_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "colour": "aluzilver",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_future-linear_aluzilver_stopcontact",
+    "complete": true,
+    "price": 19.25,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039254",
+        "description": "Afdekraam 1-voudig future linear aluzilver",
+        "price": 6.76,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-hoekig-1-voudig-future-linear-aluzilver-1721-183k/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401039227",
+        "description": "Wandcontactdoos randaarde aluzilver",
+        "price": 12.49,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-wandcontactdoos-inbouw-met-randaarde-1-voudig-future-linear-aluzilver-20-euc-83/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_future-linear_antraciet_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "colour": "antraciet",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_future-linear_antraciet_schakelaar",
+    "complete": true,
+    "price": 18.1,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039240",
+        "description": "Afdekraam 1-voudig future linear antraciet",
+        "price": 5.32,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-hoekig-1-voudig-future-linear-antraciet-1721-181k/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401039201",
+        "description": "Bedieningswip antraciet (future linear/carat)",
+        "price": 6.62,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-bedieningswip-voor-inbouw-wisselschakelaar-kruisschakelaar-carat-antraciet-1786-81/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 17.0
+  },
+  {
+    "id": "busch-jaeger_future-linear_antraciet_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "colour": "antraciet",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_future-linear_antraciet_stopcontact",
+    "complete": true,
+    "price": 15.48,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039240",
+        "description": "Afdekraam 1-voudig future linear antraciet",
+        "price": 5.32,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-hoekig-1-voudig-future-linear-antraciet-1721-181k/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401039228",
+        "description": "Wandcontactdoos randaarde antraciet",
+        "price": 10.16,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-wandcontactdoos-inbouw-met-randaarde-1-voudig-future-linear-antraciet-20-euc-81/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_future-linear_studiowit_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "colour": "studiowit",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_future-linear_studiowit_schakelaar",
+    "complete": true,
+    "price": 13.48,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039245",
+        "description": "Afdekraam 1-voudig future linear studiowit",
+        "price": 3.7,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-future-linear-wit-glanzend-1721-184k/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401039206",
+        "description": "Enkele wip studiowit (future linear/solo/carat/axcent)",
+        "price": 3.62,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wis-kruis-puls-carat-future-linear-studiowit-1786-84/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 17.0
+  },
+  {
+    "id": "busch-jaeger_future-linear_studiowit_schakelaar_opbouw",
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "colour": "studiowit",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "opbouw",
+    "model": "busch-jaeger_future-linear_studiowit_schakelaar_opbouw",
+    "complete": true,
+    "price": 25.51,
+    "parts": [
+      {
+        "role": "opbouwbak",
+        "sku": "401050981",
+        "description": "Opbouwbak 1-voudig future linear studiowit",
+        "price": 12.03,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-opbouwbak-met-bodem-1-voudig-future-linear-studiowit-1701-84/"
+      },
+      {
+        "role": "afdekraam",
+        "sku": "401039245",
+        "description": "Afdekraam 1-voudig future linear studiowit",
+        "price": 3.7,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-future-linear-wit-glanzend-1721-184k/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401039206",
+        "description": "Enkele wip studiowit (future linear/solo/carat/axcent)",
+        "price": 3.62,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wis-kruis-puls-carat-future-linear-studiowit-1786-84/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      80,
+      85
+    ],
+    "depthMM": 49
+  },
+  {
+    "id": "busch-jaeger_future-linear_studiowit_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "colour": "studiowit",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_future-linear_studiowit_stopcontact",
+    "complete": true,
+    "price": 9.69,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039245",
+        "description": "Afdekraam 1-voudig future linear studiowit",
+        "price": 3.7,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-future-linear-wit-glanzend-1721-184k/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401039231",
+        "description": "Stopcontact randaarde studiowit (future linear/solo/carat/axcent)",
+        "price": 5.99,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-solo-carat-future-linear-studiowit-20-eucr-84-503/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_future-linear_studiowit_stopcontact_opbouw",
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "colour": "studiowit",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "opbouw",
+    "model": "busch-jaeger_future-linear_studiowit_stopcontact_opbouw",
+    "complete": true,
+    "price": 21.72,
+    "parts": [
+      {
+        "role": "opbouwbak",
+        "sku": "401050981",
+        "description": "Opbouwbak 1-voudig future linear studiowit",
+        "price": 12.03,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-opbouwbak-met-bodem-1-voudig-future-linear-studiowit-1701-84/"
+      },
+      {
+        "role": "afdekraam",
+        "sku": "401039245",
+        "description": "Afdekraam 1-voudig future linear studiowit",
+        "price": 3.7,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-future-linear-wit-glanzend-1721-184k/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401039231",
+        "description": "Stopcontact randaarde studiowit (future linear/solo/carat/axcent)",
+        "price": 5.99,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-solo-carat-future-linear-studiowit-20-eucr-84-503/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      80,
+      85
+    ],
+    "depthMM": 46
+  },
+  {
+    "id": "busch-jaeger_future-linear_studiowit-mat_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "colour": "studiowit-mat",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_future-linear_studiowit-mat_schakelaar",
+    "complete": true,
+    "price": 21.59,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401167134",
+        "description": "Afdekraam 1-voudig future linear studiowit mat",
+        "price": 6.95,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-hoekig-1-voudig-future-linear-studiowit-mat-1721-884k/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401167136",
+        "description": "Bedieningswip future linear studiowit mat",
+        "price": 8.48,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-bedieningselement-aan-uit-voor-inbouwwisselschakelaar-kruisschakelaar-future-linear-studiowit-mat-1786-884/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 17.0
+  },
+  {
+    "id": "busch-jaeger_future-linear_studiowit-mat_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "colour": "studiowit-mat",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_future-linear_studiowit-mat_stopcontact",
+    "complete": true,
+    "price": 18.32,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401167134",
+        "description": "Afdekraam 1-voudig future linear studiowit mat",
+        "price": 6.95,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-hoekig-1-voudig-future-linear-studiowit-mat-1721-884k/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401024158",
+        "description": "Wandcontactdoos verhoogde aanraakbeveiliging studiowit mat",
+        "price": 11.37,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-wandcontactdoos-1-voudig-met-verhoogde-aanraakbeveiliging-future-linear-studiowit-mat-20-eucks-884/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_future-linear_zwart-mat_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "colour": "zwart-mat",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_future-linear_zwart-mat_schakelaar",
+    "complete": true,
+    "price": 20.53,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401011349",
+        "description": "Afdekraam 1-voudig future linear zwart mat",
+        "price": 6.95,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-afdekraam-hoekig-1-voudig-future-linear-zwart-mat-1721-885k/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401167137",
+        "description": "Bedieningswip future linear zwart mat",
+        "price": 7.42,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-bedieningswip-wisselschakelaar-future-linear-zwart-mat-2cka001751a3041/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 17.0
+  },
+  {
+    "id": "busch-jaeger_future-linear_zwart-mat_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "future linear",
+    "colour": "zwart-mat",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_future-linear_zwart-mat_stopcontact",
+    "complete": true,
+    "price": 18.75,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401011349",
+        "description": "Afdekraam 1-voudig future linear zwart mat",
+        "price": 6.95,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-afdekraam-hoekig-1-voudig-future-linear-zwart-mat-1721-885k/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401145230",
+        "description": "Stopcontact randaarde + kinderbeveiliging future linear zwart mat",
+        "price": 11.8,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-stopcontact-met-randaarde-en-kinderbeveiliging-future-linear-zwart-mat-20-eucrb-885/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      80,
+      80
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_reflex-si_alpinwit_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "Reflex SI",
+    "colour": "alpinwit",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_reflex-si_alpinwit_schakelaar",
+    "complete": true,
+    "price": 11.59,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039771",
+        "description": "Afdekraam 1-voudig Reflex SI alpinwit",
+        "price": 2.31,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-afdekraam-1-voudig-alpin-wit-2511-214/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401039719",
+        "description": "Bedieningswip (schroefbevestiging) Reflex SI alpinwit",
+        "price": 3.12,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-bedieningswip-met-schroefbevestiging-aan-uit-schakelaar-1-voudig-reflex-si-alpinwit-2546-214/"
+      }
+    ],
+    "note": "Only Reflex SI single rocker in stock is 2546-214 (screw-fixed version); check it fits 2000/6 USR before ordering.",
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 18.0
+  },
+  {
+    "id": "busch-jaeger_reflex-si_alpinwit_schakelaar_opbouw",
+    "brand": "Busch-Jaeger",
+    "line": "Reflex SI",
+    "colour": "alpinwit",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "opbouw",
+    "model": "busch-jaeger_reflex-si_alpinwit_schakelaar_opbouw",
+    "complete": false,
+    "price": null,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039771",
+        "description": "Afdekraam 1-voudig Reflex SI alpinwit",
+        "price": 2.31,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-afdekraam-1-voudig-alpin-wit-2511-214/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401039719",
+        "description": "Bedieningswip (schroefbevestiging) Reflex SI alpinwit",
+        "price": 3.12,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-bedieningswip-met-schroefbevestiging-aan-uit-schakelaar-1-voudig-reflex-si-alpinwit-2546-214/"
+      }
+    ],
+    "note": "Only Reflex SI single rocker in stock is 2546-214 (screw-fixed version); check it fits 2000/6 USR before ordering. | Reflex SI 1-voudig opbouwbak (1701-214) not orderable on elektramat.nl; 2-/3-voudig only.",
+    "frameMM": [
+      81,
+      85
+    ],
+    "depthMM": 50
+  },
+  {
+    "id": "busch-jaeger_reflex-si_alpinwit_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "Reflex SI",
+    "colour": "alpinwit",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_reflex-si_alpinwit_stopcontact",
+    "complete": true,
+    "price": 6.9,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039771",
+        "description": "Afdekraam 1-voudig Reflex SI alpinwit",
+        "price": 2.31,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-afdekraam-1-voudig-alpin-wit-2511-214/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401340085",
+        "description": "Stopcontact met randaarde Reflex SI alpinwit",
+        "price": 4.59,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-alpin-wit-20-euc-214-503/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      81,
+      81
+    ],
+    "depthMM": 14.0
+  },
+  {
+    "id": "busch-jaeger_reflex-si_alpinwit_stopcontact_opbouw",
+    "brand": "Busch-Jaeger",
+    "line": "Reflex SI",
+    "colour": "alpinwit",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "opbouw",
+    "model": "busch-jaeger_reflex-si_alpinwit_stopcontact_opbouw",
+    "complete": false,
+    "price": null,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039771",
+        "description": "Afdekraam 1-voudig Reflex SI alpinwit",
+        "price": 2.31,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-afdekraam-1-voudig-alpin-wit-2511-214/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401340085",
+        "description": "Stopcontact met randaarde Reflex SI alpinwit",
+        "price": 4.59,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-alpin-wit-20-euc-214-503/"
+      }
+    ],
+    "note": "Reflex SI 1-voudig opbouwbak (1701-214) not orderable on elektramat.nl; 2-/3-voudig only.",
+    "frameMM": [
+      81,
+      85
+    ],
+    "depthMM": 46
+  },
+  {
+    "id": "busch-jaeger_solo_studiowit_schakelaar",
+    "brand": "Busch-Jaeger",
+    "line": "solo",
+    "colour": "studiowit",
+    "product": "schakelaar",
+    "productName": "Wipschakelaar 1-voudig",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_solo_studiowit_schakelaar",
+    "complete": true,
+    "price": 15.01,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039221",
+        "description": "Afdekraam 1-voudig solo studiowit",
+        "price": 5.23,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-solo-studiowit-1721-84/"
+      },
+      {
+        "role": "basiselement",
+        "sku": "401039326",
+        "description": "Wisselschakelaar basiselement 10A",
+        "price": 6.16,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-wisselschakelaar-inbouw-10a-2000-6-usr-503/"
+      },
+      {
+        "role": "wip",
+        "sku": "401039206",
+        "description": "Enkele wip studiowit (future linear/solo/carat/axcent)",
+        "price": 3.62,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-enkele-wip-voor-wis-kruis-puls-carat-future-linear-studiowit-1786-84/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      87,
+      87
+    ],
+    "depthMM": 17.0
+  },
+  {
+    "id": "busch-jaeger_solo_studiowit_stopcontact",
+    "brand": "Busch-Jaeger",
+    "line": "solo",
+    "colour": "studiowit",
+    "product": "stopcontact",
+    "productName": "Wandcontactdoos 1-voudig met randaarde",
+    "mounting": "inbouw",
+    "model": "busch-jaeger_solo_studiowit_stopcontact",
+    "complete": true,
+    "price": 11.22,
+    "parts": [
+      {
+        "role": "afdekraam",
+        "sku": "401039221",
+        "description": "Afdekraam 1-voudig solo studiowit",
+        "price": 5.23,
+        "productUrl": "https://www.elektramat.nl/busch-jaeger-afdekraam-1-voudig-solo-studiowit-1721-84/"
+      },
+      {
+        "role": "stopcontact",
+        "sku": "401039231",
+        "description": "Stopcontact randaarde studiowit (future linear/solo/carat/axcent)",
+        "price": 5.99,
+        "productUrl": "https://www.elektramat.nl/abb-busch-jaeger-stopcontact-met-randaarde-solo-carat-future-linear-studiowit-20-eucr-84-503/"
+      }
+    ],
+    "note": null,
+    "frameMM": [
+      87,
+      87
+    ],
+    "depthMM": 14.0
+  }
+]

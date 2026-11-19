@@ -30,6 +30,10 @@ nonisolated struct Fixture: Codable, Identifiable, Equatable, Sendable {
     let price: Double?
     let parts: [FixturePart]
     let note: String?
+    /// Frame width and height in mm, from the model manifest.
+    let frameMM: [Double]?
+    /// Distance from the wall to the front in mm.
+    let depthMM: Double?
 
     var title: String {
         let base = product == "stopcontact" ? "Stopcontact" : "Schakelaar"

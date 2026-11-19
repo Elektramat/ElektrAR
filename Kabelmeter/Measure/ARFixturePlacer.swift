@@ -1,5 +1,6 @@
 import ARKit
 import Combine
+import os
 import QuartzCore
 import RealityKit
 import UIKit
@@ -13,6 +14,7 @@ import UIKit
 @MainActor
 final class ARFixturePlacer {
     static let anchorPrefix = "fixture:"
+    private static let logger = Logger(subsystem: "Kabelmeter", category: "Placement")
     /// Save the world map at most this often while placements change.
     private static let saveInterval: CFTimeInterval = 3
 
@@ -136,7 +138,7 @@ final class ARFixturePlacer {
         arView.scene.addAnchor(entity)
         placedAnchors[id] = (anchor, entity)
         guard let fixture = fixtures[fixtureId] else { return }
-        withModel(fixture.model) { [weak entity] model in
+        withModel(fixture) { [weak entity] model in
             entity?.addChild(model)
         }
     }
@@ -166,13 +168,14 @@ final class ARFixturePlacer {
 
     /// A see-through copy of the selected model at the crosshair.
     private func updateGhost(pose: simd_float4x4?, fixtureId: String?) {
-        let model = fixtureId.flatMap { fixtures[$0] }?.model
+        let fixture = fixtureId.flatMap { fixtures[$0] }
+        let model = fixture?.model
         if model != ghostModel {
             ghost?.removeFromParent()
             ghost = nil
             ghostModel = model
-            if let model {
-                withModel(model) { [weak self] entity in
+            if let fixture, let model {
+                withModel(fixture) { [weak self] entity in
                     guard let self, self.ghostModel == model else { return }
                     entity.components.set(OpacityComponent(opacity: 0.55))
                     entity.isEnabled = false
@@ -192,31 +195,68 @@ final class ARFixturePlacer {
 
     // MARK: Models
 
-    /// Hands a fresh copy of a bundled model to `use`, loading it once.
-    private func withModel(_ name: String, _ use: @escaping @MainActor (Entity) -> Void) {
-        if let template = templates[name] {
+    /// Hands a fresh copy of the fixture's model to `use`, loading it once.
+    private func withModel(_ fixture: Fixture, _ use: @escaping @MainActor (Entity) -> Void) {
+        if let template = templates[fixture.model] {
             use(template.clone(recursive: true))
             return
         }
         Task { [weak self] in
-            guard let self, let template = await self.loadTemplate(name) else { return }
+            guard let self else { return }
+            let template = await self.loadTemplate(fixture)
             use(template.clone(recursive: true))
         }
     }
 
-    private func loadTemplate(_ name: String) async -> Entity? {
-        if let template = templates[name] { return template }
-        guard let url = Bundle.main.url(forResource: name, withExtension: "usdz")
-            ?? Bundle.main.url(forResource: name, withExtension: "usdz", subdirectory: "Models") else {
-            return nil
+    /// Loads a bundled model, or a plain frame when that fails, so a placement is never invisible.
+    private func loadTemplate(_ fixture: Fixture) async -> Entity {
+        if let template = templates[fixture.model] { return template }
+        let template: Entity
+        if let url = Bundle.main.url(forResource: fixture.model, withExtension: "usdz")
+            ?? Bundle.main.url(forResource: fixture.model, withExtension: "usdz", subdirectory: "Models"),
+           let loaded = try? await Entity(contentsOf: url) {
+            template = Self.unanchored(loaded)
+        } else {
+            Self.logger.error("Model \(fixture.model, privacy: .public) could not be loaded; showing a plain frame")
+            template = Self.fallbackModel(for: fixture)
         }
-        do {
-            let entity = try await Entity(contentsOf: url)
-            templates[name] = entity
-            return entity
-        } catch {
-            return nil
+        templates[fixture.model] = template
+        return template
+    }
+
+    /// The model files carry `preliminary:anchoring` (vertical plane) so AR Quick Look snaps them
+    /// to a wall. RealityKit turns that into an AnchoringComponent, and an anchor nested inside our
+    /// own AnchorEntity is not drawn where we put it. So: move the content into a plain entity and
+    /// drop any anchoring on the way.
+    private static func unanchored(_ loaded: Entity) -> Entity {
+        let container = Entity()
+        container.transform = loaded.transform
+        for child in Array(loaded.children) {
+            container.addChild(child)
         }
+        removeAnchoring(container)
+        return container
+    }
+
+    private static func removeAnchoring(_ entity: Entity) {
+        entity.components.remove(AnchoringComponent.self)
+        for child in entity.children {
+            removeAnchoring(child)
+        }
+    }
+
+    /// A white plate of the right size, back on the wall (z = 0), like the real models.
+    private static func fallbackModel(for fixture: Fixture) -> Entity {
+        let frame = fixture.frameMM ?? [80, 80]
+        let width = Float(frame.first ?? 80) / 1000
+        let height = Float(frame.last ?? 80) / 1000
+        let depth = Float(fixture.depthMM ?? 12) / 1000
+        let plate = ModelEntity(mesh: .generateBox(width: width, height: height, depth: depth, cornerRadius: 0.004),
+                                materials: [SimpleMaterial(color: .white, roughness: 0.4, isMetallic: false)])
+        plate.position.z = depth / 2
+        let container = Entity()
+        container.addChild(plate)
+        return container
     }
 
     // MARK: Saving the room
