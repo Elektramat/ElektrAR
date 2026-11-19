@@ -197,30 +197,14 @@ struct RoomScreen: View {
     }
 
     /// Step tabs and, for cables, the automatic/manual choice: one row at the top of the card.
+    /// Step tabs and, in the cable step, automatic or manual. Plain buttons, no Menu: this view
+    /// redraws about 15 times a second (crosshair, height), and a Menu rebuilt that often misses taps.
     private var cardHeader: some View {
-        HStack(spacing: 8) {
+        VStack(spacing: 8) {
             BrandTabs(selection: $step, options: [(Step.parts, "Onderdelen"), (Step.cables, "Kabels")])
-
             if step == .cables {
-                Menu {
-                    Picker("Kabels trekken", selection: $cableMode) {
-                        Label("Automatisch", systemImage: "wand.and.stars").tag(CableMode.auto)
-                        Label("Handmatig", systemImage: "hand.point.up.left").tag(CableMode.manual)
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(cableMode == .auto ? "Automatisch" : "Handmatig")
-                        Image(systemName: "chevron.down").font(.caption.weight(.bold))
-                    }
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Theme.accent)
-                    .padding(.horizontal, 14)
-                    .frame(minHeight: 44)
-                    .background(Theme.surface, in: Capsule())
-                    .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
-                }
-                .sensoryFeedback(.selection, trigger: cableMode)
-                .accessibilityLabel("Kabels trekken: \(cableMode == .auto ? "automatisch" : "handmatig")")
+                BrandTabs(selection: $cableMode, options: [(CableMode.auto, "Automatisch"), (CableMode.manual, "Handmatig")])
+                    .accessibilityLabel("Kabels trekken")
             }
         }
     }
