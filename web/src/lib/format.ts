@@ -9,6 +9,9 @@ export const orderLength = (v: number) =>
 
 export const pieces = (p: number[]) => p.map(orderLength).join(' + ');
 
+/** "1 kabel", "3 kabels": a count with the right Dutch word. */
+export const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
 export const euro = (v: number) => v.toLocaleString(nl, { style: 'currency', currency: 'EUR' });
 
 /** "2 × 50 m + 1 × 25 m": rolls grouped by length, longest first. */
