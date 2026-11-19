@@ -73,13 +73,17 @@ struct BrandTabs<Value: Hashable>: View {
     @Binding var selection: Value
     let options: [(value: Value, title: String)]
     var height: CGFloat = 44
+    @Namespace private var pill
 
     var body: some View {
         HStack(spacing: 4) {
             ForEach(options, id: \.value) { option in
                 let selected = option.value == selection
                 Button {
-                    selection = option.value
+                    guard option.value != selection else { return }
+                    // One transaction for the whole screen: the pill slides and the content below
+                    // resizes together, instead of the tabs animating while the card jumps.
+                    withAnimation(.snappy(duration: 0.25)) { selection = option.value }
                 } label: {
                     Text(option.title)
                         .font(.subheadline.weight(.semibold))
@@ -87,8 +91,14 @@ struct BrandTabs<Value: Hashable>: View {
                         .minimumScaleFactor(0.8)
                         .foregroundStyle(selected ? Theme.onAccent : Theme.ink)
                         .frame(maxWidth: .infinity, minHeight: height - 8)
-                        .background(selected ? Theme.accent : Color.clear,
-                                    in: RoundedRectangle(cornerRadius: Theme.buttonCorner - 3))
+                        .background {
+                            // One pill that moves between the tabs, not two that fade in and out.
+                            if selected {
+                                RoundedRectangle(cornerRadius: Theme.buttonCorner - 3)
+                                    .fill(Theme.accent)
+                                    .matchedGeometryEffect(id: "pill", in: pill)
+                            }
+                        }
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(CardButtonStyle())
@@ -98,7 +108,6 @@ struct BrandTabs<Value: Hashable>: View {
         .padding(4)
         .frame(height: height)
         .background(Color(Theme.Token.black5), in: RoundedRectangle(cornerRadius: Theme.buttonCorner))
-        .animation(.snappy(duration: 0.2), value: selection)
         .sensoryFeedback(.selection, trigger: selection)
     }
 }
