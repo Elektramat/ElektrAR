@@ -45,7 +45,7 @@ private struct CableRow: View {
 
     var body: some View {
         HStack(spacing: Theme.spacing) {
-            CablePhoto(url: cable.imageUrl)
+            CablePhoto(cable: cable)
             VStack(alignment: .leading, spacing: 2) {
                 Text(cable.name).font(.headline)
                 Text("\(cable.crossSection) · \(cable.use)").font(.subheadline).foregroundStyle(.secondary)
@@ -72,11 +72,13 @@ private struct CableRow: View {
 }
 
 struct CablePhoto: View {
-    let url: URL?
+    let cable: Cable
 
     var body: some View {
         Group {
-            if let url {
+            if let image = bundledImage {
+                Image(uiImage: image).resizable().scaledToFit().background(.white)
+            } else if let url = cable.imageUrl {
                 AsyncImage(url: url) { image in image.resizable().scaledToFit() } placeholder: { placeholder }
             } else {
                 placeholder
@@ -84,6 +86,13 @@ struct CablePhoto: View {
         }
         .frame(width: 52, height: 52)
         .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    /// Photos fetched by scripts/scrape_elektramat.py ship in the bundle as <sku>.jpg,
+    /// so the picker works without a network connection.
+    private var bundledImage: UIImage? {
+        guard let path = Bundle.main.path(forResource: cable.sku, ofType: "jpg") else { return nil }
+        return UIImage(contentsOfFile: path)
     }
 
     private var placeholder: some View {

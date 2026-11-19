@@ -17,3 +17,7 @@ One line each: what we chose and why.
 - Raycast falls back to detected vertical planes extended infinitely, so a wall ARKit saw only partly still gives a hit. Risk: past a corner the extended plane can give a wrong hit.
 - Segments within 8° of vertical or level snap to it ("Verticaal" / "Waterpas"). Without a surface hit, aiming within 2.5° of the vertical line through the last point measures along that line, like Apple's Measure app.
 - LiDAR (Pro models) is used automatically through scene reconstruction and estimated-plane raycasts; no separate code path.
+- Cable data from the elektramat.nl product pages (schema.org data) at Jairo's request, instead of sample data: the database export had not arrived. Waits 10 s between requests, per robots.txt.
+- Only "per meter" products (whole meters, minimum 1, as the shop's quantity field allows). Rolls and reels are separate products with their own price, so `fixedLengths` is not used yet.
+- Price per meter including VAT: the app shows a consumer price.
+- Photos ship in the bundle as `<sku>.jpg` (JPEG, 300 px, 164 KB in total) instead of loading from the site: the demo must work without Wi-Fi.

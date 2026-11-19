@@ -64,7 +64,8 @@ Views/ARViewContainer.swift  UIViewRepresentable around ARView
 Views/CablePickerSheet.swift
 Views/PriceBar.swift
 Views/CartScreen.swift
-Resources/cables.json        Sample data (see section 5)
+Resources/cables.json        Cable data (see section 5)
+Resources/CableImages/       One photo per cable, <sku>.jpg
 KabelmeterTests/PricingCalculatorTests.swift
 README.md, DECISIONS.md
 ```
@@ -75,7 +76,7 @@ Define a `MeasureProvider` protocol (current crosshair world position, tracking 
 
 ## 5. Data
 
-- `cables.json` holds 10 to 15 cables. **Use clearly labeled sample data until the human supplies the real export from the Elektramat product database.** Do not scrape elektramat.nl and do not invent real SKUs or claim these are real prices: set `"isSample": true` and show a small "Voorbeelddata" badge in the UI while any sample cable is shown.
+- `cables.json` holds 10 to 15 cables. **The cables come from elektramat.nl product pages via `scripts/scrape_elektramat.py` (decided by Jairo on 19 Nov 2026).** Keep the 10 s delay between requests. Do not invent SKUs or prices; hand-made cables must set `"isSample": true`, which shows a small "Voorbeelddata" badge.
 - Write a small script `scripts/csv_to_cables_json.py` that converts the real CSV export into `cables.json`, so replacing the data is a one-minute job. Document the expected columns in `README.md`.
 
 Suggested model:

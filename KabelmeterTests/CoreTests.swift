@@ -3,13 +3,18 @@ import simd
 @testable import KabelmeterCore
 
 final class CatalogTests: XCTestCase {
-    func testBundledSampleDataDecodes() throws {
-        let url = URL(fileURLWithPath: #filePath)
+    func testBundledCatalogDecodesWithAPhotoPerRealCable() throws {
+        let resources = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("Kabelmeter/Resources/cables.json")
-        let cables = try CableCatalog.decode(Data(contentsOf: url))
+            .appendingPathComponent("Kabelmeter/Resources")
+        let cables = try CableCatalog.decode(Data(contentsOf: resources.appendingPathComponent("cables.json")))
         XCTAssertTrue((10...15).contains(cables.count))
-        XCTAssertTrue(cables.allSatisfy(\.isSample), "Sample data must stay marked until the real export arrives")
+        for cable in cables where !cable.isSample {
+            let photo = resources.appendingPathComponent("CableImages/\(cable.sku).jpg")
+            XCTAssertTrue(FileManager.default.fileExists(atPath: photo.path), "No bundled photo for \(cable.sku)")
+            XCTAssertTrue(cable.productUrl.absoluteString.hasPrefix("https://www.elektramat.nl/"))
+            XCTAssertGreaterThan(cable.pricePerMeter, 0)
+        }
     }
 
     func testRejectsEmptyFixedLengths() {

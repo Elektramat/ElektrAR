@@ -26,19 +26,30 @@ swift test
 
 ## Replace the cable data
 
-`Kabelmeter/Resources/cables.json` holds sample data (`"isSample": true`, shown with a
-"Voorbeelddata" badge). To use the real export:
+`Kabelmeter/Resources/cables.json` holds 12 real cables from elektramat.nl (all sold per whole
+meter), with a photo per cable in `Kabelmeter/Resources/CableImages/<sku>.jpg`. Prices are the
+consumer price including VAT on 19 November 2026. The `use` labels are ours, not the shop's.
+
+To refresh prices, stock and photos (takes about 4 minutes; it waits 10 s between requests, as
+the site's robots.txt asks):
+
+```sh
+python3 -I scripts/scrape_elektramat.py
+swift test   # checks that the file decodes and every cable has a photo
+```
+
+Edit `PRODUCTS` in the script to change the list. To use an export from the product database
+instead:
 
 ```sh
 python3 scripts/csv_to_cables_json.py export.csv > Kabelmeter/Resources/cables.json
-swift test   # checks that the file decodes
 ```
 
 Expected CSV columns: `sku, name, cross_section, use, price_per_meter, sales_type, step_m,
 minimum_m, lengths_m, stock, image_url, product_url`. `sales_type` is `perMeter` (uses
 `step_m`, `minimum_m`) or `fixedLengths` (uses `lengths_m`, separated by `;`). Decimals may use
-a comma or a dot. Note: the catalog test currently expects every cable to be sample data;
-update `testBundledSampleDataDecodes` when the real export arrives.
+a comma or a dot. The app shows a bundled `<sku>.jpg` if there is one, otherwise it loads
+`image_url`.
 
 ## Pricing
 
@@ -48,7 +59,7 @@ of fixed roll lengths. See `Kabelmeter/Core/PricingCalculator.swift`.
 
 ## Known limits
 
-- Sample cable data and prices until the real export arrives.
+- Cable prices and stock are a snapshot of 19 November 2026; rerun the script before a demo.
 - The cart lives in the app. "Bestel op elektramat.nl" opens the product page; there is no
   webshop cart integration yet (see `RemoteCartService` for the open questions).
 - Long distances can drift by a few percent; the reserve covers that.
