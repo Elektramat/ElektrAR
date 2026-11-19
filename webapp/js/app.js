@@ -54,6 +54,9 @@ function measured() {
   return state.segments.map(parseMeters).filter((v) => Number.isFinite(v) && v > 0).reduce((a, b) => a + b, 0);
 }
 
+/** Stored line price; carts saved before prices were stored fall back to meters x price per meter. */
+const linePrice = (item) => item.price ?? roundToCents(item.meters * item.pricePerMeter);
+
 const currentQuote = () => (cable() ? quote(cable(), measured(), state.reservePercent / 100) : null);
 
 function listTotal() {
@@ -84,7 +87,7 @@ function fixtureSvg(f, size = 32) {
 
 /** AR Quick Look needs an <a rel="ar"> whose only child is an image, so the button is drawn as SVG. */
 function quickLookButtonImage() {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="112" viewBox="0 0 520 112"><rect width="520" height="112" rx="28" fill="#ff9500"/><text x="260" y="66" text-anchor="middle" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="36" font-weight="600" fill="#fff">Bekijk op je muur (AR)</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="112" viewBox="0 0 520 112"><rect width="520" height="112" rx="28" fill="#196CAE"/><text x="260" y="66" text-anchor="middle" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="36" font-weight="600" fill="#fff">Bekijk op je muur (AR)</text></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
@@ -235,7 +238,7 @@ function renderBar() {
     <div class="stepper"><span>Reserve ${state.reservePercent}% + ${orderLength(CONNECTION_ALLOWANCE)} aansluiting</span>
       <div><button type="button" data-action="reserve-down" aria-label="Minder reserve" ${state.reservePercent <= 0 ? 'disabled' : ''}>−</button>
       <button type="button" data-action="reserve-up" aria-label="Meer reserve" ${state.reservePercent >= 30 ? 'disabled' : ''}>+</button></div></div>
-    <button type="button" class="primary" data-action="add-to-cart" ${q && c ? '' : 'disabled'}>Voeg toe aan winkelmand</button>`;
+    <button type="button" class="primary cta" data-action="add-to-cart" ${q && c ? '' : 'disabled'}>Voeg toe aan winkelmand</button>`;
 }
 
 function renderAR() {
@@ -314,12 +317,12 @@ function renderCart() {
     body.innerHTML = `<p class="muted">De winkelmand is leeg. Meet een route en tik op “Voeg toe aan winkelmand”.</p><p class="muted small">${DISCLAIMER}</p>`;
     return;
   }
-  const total = roundToCents(state.cart.reduce((sum, item) => sum + roundToCents(item.meters * item.pricePerMeter), 0));
+  const total = roundToCents(state.cart.reduce((sum, item) => sum + linePrice(item), 0));
   body.innerHTML = state.cart
     .map((item, i) => `<div class="cart-item">
         <div class="bar-top"><div><div class="pick-title">${esc(item.name)}</div>
-          <div class="muted small">${esc(item.crossSection)} · ${orderLength(item.meters)} × ${euro(item.pricePerMeter)}</div></div>
-          <div class="pick-title">${euro(roundToCents(item.meters * item.pricePerMeter))}</div></div>
+          <div class="muted small">${esc(item.crossSection)} · ${item.pieces ? pieces(item.pieces) : orderLength(item.meters)}</div></div>
+          <div class="pick-title">${euro(linePrice(item))}</div></div>
         <div class="row-buttons">
           <a class="secondary" href="${esc(item.productUrl)}" target="_blank" rel="noopener">Bestel op elektramat.nl</a>
           <button type="button" class="secondary" data-cart-remove="${i}">Verwijder</button>
@@ -348,9 +351,15 @@ function addToCart() {
   const c = cable();
   const q = currentQuote();
   if (!c || !q) return;
+  // The line price is stored: roll cables cost the sum of their roll prices, not meters x price per meter.
   const existing = state.cart.find((item) => item.cableId === c.id);
-  if (existing) existing.meters += q.billedLength;
-  else state.cart.push({ cableId: c.id, sku: c.sku, name: c.name, crossSection: c.crossSection, pricePerMeter: c.pricePerMeter, meters: q.billedLength, productUrl: c.productUrl });
+  if (existing) {
+    existing.price = roundToCents(linePrice(existing) + q.price);
+    existing.pieces = [...(existing.pieces ?? [existing.meters]), ...q.pieces];
+    existing.meters += q.billedLength;
+  } else {
+    state.cart.push({ cableId: c.id, sku: c.sku, name: c.name, crossSection: c.crossSection, pricePerMeter: c.pricePerMeter, meters: q.billedLength, pieces: q.pieces, price: q.price, productUrl: c.productUrl });
+  }
   saved.set('cart', state.cart);
   vibrate(30);
   toast(`${orderLength(q.billedLength)} ${c.name} toegevoegd`);

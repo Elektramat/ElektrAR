@@ -1,16 +1,17 @@
-/* All colors and sizes as tokens, like Theme.swift: swap these for the team's design tokens. */
+/* Elektramat tokens from DESIGN.md (same as Theme.swift). Views never name a colour themselves. */
 :root {
-  --accent: #ff9500;
+  --accent: #196CAE;   /* primary: buttons, selection, links */
+  --cta: #65B809;      /* success-110: the one main action per screen */
   --on-accent: #fff;
-  --bg: #f2f2f7;
+  --bg: #F2F2F2;       /* black-5 */
   --surface: #ffffff;
-  --surface-2: #e9e9ef;
-  --text: #111114;
-  --muted: #5f5f6a;
-  --border: #d4d4dc;
-  --warning: #9a5b00;
-  --danger: #c4231b;
-  --sample: #7b3fbf;
+  --surface-2: #F2F2F2;
+  --text: #1A1A1A;     /* ink */
+  --muted: #404040;    /* black-75 */
+  --border: #D9D9D9;   /* black-15 */
+  --warning: #F7A111;  /* icon or dot only, never text */
+  --danger: #E53030;   /* alert */
+  --sample: #196CAE;
   --preview-bg: #dbdbdb; /* light wall tone: white and black switches both read */
   --radius: 18px;
   --gap: 12px;
@@ -26,14 +27,12 @@
     --text: #f5f5f7;
     --muted: #a1a1aa;
     --border: #3a3a40;
-    --warning: #ffcc00;
-    --danger: #ff6b61;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #000000; --surface: #1c1c1f; --surface-2: #2c2c31; --text: #f5f5f7;
-  --muted: #a1a1aa; --border: #3a3a40; --warning: #ffcc00; --danger: #ff6b61;
+  --muted: #a1a1aa; --border: #3a3a40;
   color-scheme: dark;
 }
 
@@ -96,13 +95,13 @@ h3 { font-size: 1rem; margin: 0 0 6px; }
   min-height: 44px; border: 0; border-radius: 10px; background: transparent; font-weight: 600;
   color: var(--muted);
 }
-.segmented button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgb(0 0 0 / 0.15); }
+.segmented button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
 
 .status {
   margin: 0; align-self: center; text-align: center;
   padding: 8px 14px; border-radius: 999px; background: rgb(0 0 0 / 0.7); color: #fff; font-weight: 500;
 }
-.status.warn { color: #ffcc00; }
+.status.warn { color: #fff; }
 
 /* Panels */
 #stage { flex: 1; display: flex; flex-direction: column; gap: var(--gap); }
@@ -114,7 +113,9 @@ h3 { font-size: 1rem; margin: 0 0 6px; }
 .card p { margin: 0 0 8px; }
 .muted { color: var(--muted); }
 .small { font-size: 0.85rem; }
-.warn-text { color: var(--warning); }
+/* Warnings: normal text with a warning-coloured dot (DESIGN.md: warning colour never as text). */
+.warn-text { color: var(--muted); }
+.warn-text::before, .status.warn::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--warning); vertical-align: 1px; }
 
 .primary, .secondary {
   width: 100%; min-height: var(--tap); border-radius: 14px; font-weight: 600; font-size: 1.05rem;
@@ -186,7 +187,8 @@ h3 { font-size: 1rem; margin: 0 0 6px; }
   width: var(--add); height: var(--add); border-radius: 50%; border: 3px solid rgb(255 255 255 / 0.85);
   background: var(--accent); color: var(--on-accent); font-size: 2.6rem; font-weight: 700; line-height: 1;
 }
-.add:disabled { background: #777; opacity: 1; }
+.add:disabled { opacity: 0.4; }
+.cta { background: var(--cta); }
 
 body.in-ar { background: transparent; }
 body.in-ar #app { background: transparent; max-width: none; }

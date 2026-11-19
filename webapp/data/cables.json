@@ -14,7 +14,8 @@
     "stock": "Op voorraad",
     "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169628-jpg.jpg",
     "productUrl": "https://www.elektramat.nl/ymvk-kabel-3x1-5-per-meter/",
-    "isSample": false
+    "isSample": false,
+    "shopProductId": 610957
   },
   {
     "id": "401169442",
@@ -31,7 +32,8 @@
     "stock": "Op voorraad",
     "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169442-jpg.jpg",
     "productUrl": "https://www.elektramat.nl/ymvk-kabel-3x2-5-per-meter/",
-    "isSample": false
+    "isSample": false,
+    "shopProductId": 616398
   },
   {
     "id": "401169527",
@@ -48,7 +50,8 @@
     "stock": "Op voorraad",
     "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169527-jpg.jpg",
     "productUrl": "https://www.elektramat.nl/ymvk-kabel-3x4-per-meter/",
-    "isSample": false
+    "isSample": false,
+    "shopProductId": 610748
   },
   {
     "id": "401168649",
@@ -65,7 +68,8 @@
     "stock": "Op voorraad",
     "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169528-2-jpg.png",
     "productUrl": "https://www.elektramat.nl/ymvk-kabel-3x6-per-meter/",
-    "isSample": false
+    "isSample": false,
+    "shopProductId": 618893
   },
   {
     "id": "401169790",
@@ -82,7 +86,8 @@
     "stock": "Op voorraad",
     "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169790-jpg.jpg",
     "productUrl": "https://www.elektramat.nl/ymvk-kabel-5x1-5-per-meter/",
-    "isSample": false
+    "isSample": false,
+    "shopProductId": 616562
   },
   {
     "id": "401169451",
@@ -99,7 +104,8 @@
     "stock": "Op voorraad",
     "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169451-jpg.jpg",
     "productUrl": "https://www.elektramat.nl/ymvk-kabel-5x2-5-per-meter/",
-    "isSample": false
+    "isSample": false,
+    "shopProductId": 616407
   },
   {
     "id": "401169476",
@@ -116,7 +122,8 @@
     "stock": "Op voorraad",
     "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169476-jpg.jpg",
     "productUrl": "https://www.elektramat.nl/ymvk-kabel-5x4-per-meter/",
-    "isSample": false
+    "isSample": false,
+    "shopProductId": 616418
   },
   {
     "id": "401169761",
@@ -133,7 +140,8 @@
     "stock": "Op voorraad",
     "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/3/-/3-aderig-meter-jpg_1.png",
     "productUrl": "https://www.elektramat.nl/xmvk-kabel-3x1-5-per-meter/",
-    "isSample": false
+    "isSample": false,
+    "shopProductId": 616539
   },
   {
     "id": "401169480",
@@ -150,7 +158,8 @@
     "stock": "Op voorraad",
     "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/3/-/3-aderig-meter-jpg.png",
     "productUrl": "https://www.elektramat.nl/xmvk-kabel-3x2-5-per-meter/",
-    "isSample": false
+    "isSample": false,
+    "shopProductId": 616422
   },
   {
     "id": "401168576",
@@ -167,7 +176,8 @@
     "stock": "Op voorraad",
     "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/n/e/neopreen-3-aderig-per-meter-jpg_3.png",
     "productUrl": "https://www.elektramat.nl/neopreen-kabel-h07rnf-3x1-5-per-meter/",
-    "isSample": false
+    "isSample": false,
+    "shopProductId": 619000
   },
   {
     "id": "401168654",
@@ -184,7 +194,8 @@
     "stock": "Op voorraad",
     "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/n/e/neopreen-3-aderig-per-meter-jpg_1.png",
     "productUrl": "https://www.elektramat.nl/neopreen-kabel-h07rnf-3x2-5-per-meter/",
-    "isSample": false
+    "isSample": false,
+    "shopProductId": 618891
   },
   {
     "id": "401169471",
@@ -201,6 +212,54 @@
     "stock": "Op voorraad",
     "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169471-jpg.jpg",
     "productUrl": "https://www.elektramat.nl/ymvk-as-grondkabel-3x2-5-per-meter/",
-    "isSample": false
+    "isSample": false,
+    "shopProductId": 607079
+  },
+  {
+    "id": "401169424",
+    "sku": "401169424",
+    "name": "Snelflex buis VD draad 3x2,5 mm² - 16 mm",
+    "crossSection": "3x2,5 mm²",
+    "use": "Inbouw, voorbedraad",
+    "pricePerMeter": 2.0877,
+    "sales": {
+      "type": "fixedLengths",
+      "lengthsM": [
+        100.0,
+        50.0,
+        25.0
+      ]
+    },
+    "rolls": [
+      {
+        "lengthM": 100.0,
+        "sku": "401169424",
+        "price": 208.77,
+        "productUrl": "https://www.elektramat.nl/snelflex-flexibele-buis-vd-draad-3x2-5mm2-16mm-per-rol-100-meter-sf3g25/",
+        "shopProductId": 616378,
+        "stock": "Op voorraad"
+      },
+      {
+        "lengthM": 50.0,
+        "sku": "401170092",
+        "price": 117.66,
+        "productUrl": "https://www.elektramat.nl/snelflex-flexibele-buis-vd-draad-3x2-5mm2-16mm-per-rol-50-meter-sf3g25m/",
+        "shopProductId": 616774,
+        "stock": "Op voorraad"
+      },
+      {
+        "lengthM": 25.0,
+        "sku": "401241845",
+        "price": 64.51,
+        "productUrl": "https://www.elektramat.nl/snelflex-flexibele-buis-vd-draad-3g2-5mm2-16mm-per-rol-25-meter-sf3g25k/",
+        "shopProductId": 1011824,
+        "stock": "Op voorraad"
+      }
+    ],
+    "stock": "Op voorraad",
+    "imageUrl": "https://www.elektramat.nl/media/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/4/0/401169424-jpg.jpg",
+    "productUrl": "https://www.elektramat.nl/snelflex-flexibele-buis-vd-draad-3x2-5mm2-16mm-per-rol-100-meter-sf3g25/",
+    "isSample": false,
+    "shopProductId": 616378
   }
 ]

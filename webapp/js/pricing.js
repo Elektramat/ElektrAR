@@ -21,6 +21,12 @@ export function requiredLength(measured, reserve, allowance = CONNECTION_ALLOWAN
 export function quote(cable, measured, reserve, allowance = CONNECTION_ALLOWANCE) {
   if (!Number.isFinite(measured) || measured <= 0) return null;
   const required = requiredLength(measured, reserve, allowance);
+  if (cable.rolls?.length) {
+    // Sold as separate roll products, each with its own price.
+    const plan = rollPlan(required, cable.rolls);
+    const billed = plan.reduce((a, r) => a + r.lengthM, 0);
+    return { measured, required, pieces: plan.map((r) => r.lengthM), billedLength: billed, price: roundToCents(plan.reduce((a, r) => a + r.price, 0)) };
+  }
   const pieces = billedPieces(required, cable.sales);
   const billedLength = pieces.reduce((a, b) => a + b, 0);
   return { measured, required, pieces, billedLength, price: roundToCents(billedLength * cable.pricePerMeter) };
@@ -90,4 +96,61 @@ export function pathLength(points) {
 
 export function distance(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+/**
+ * The rolls to order for `required` meters: the combination with the lowest total price that
+ * covers the length (a shorter roll costs more per meter). Ties: fewest rolls, then least left
+ * over. Longest roll first. Port of PricingCalculator.rollPlan in Swift.
+ */
+export function rollPlan(required, rolls) {
+  const options = rolls.filter((r) => r.lengthM > 0 && r.price >= 0);
+  if (!options.length || required <= TOLERANCE) return [];
+  const cms = options.map((r) => Math.round(r.lengthM * 100));
+  const costs = options.map((r) => Math.round(r.price * 100));
+  const targetCm = Math.ceil(required * 100 - TOLERANCE);
+  if (targetCm + Math.max(...cms) > 2_000_000) return greedyRollPlan(required, options);
+  const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
+  const step = cms.reduce(gcd, 0);
+  const sizes = cms.map((c) => c / step);
+  const target = Math.ceil(targetCm / step);
+  const limit = target + Math.max(...sizes);
+  const cost = new Array(limit + 1).fill(Infinity);
+  const count = new Array(limit + 1).fill(Infinity);
+  const last = new Array(limit + 1).fill(-1);
+  cost[0] = 0;
+  count[0] = 0;
+  for (let s = 1; s <= limit; s++) {
+    for (let i = 0; i < sizes.length; i++) {
+      if (sizes[i] > s || cost[s - sizes[i]] === Infinity) continue;
+      const c = cost[s - sizes[i]] + costs[i];
+      const n = count[s - sizes[i]] + 1;
+      if (c < cost[s] || (c === cost[s] && n < count[s])) {
+        cost[s] = c;
+        count[s] = n;
+        last[s] = i;
+      }
+    }
+  }
+  let best = -1;
+  for (let s = target; s <= limit; s++) {
+    if (cost[s] === Infinity) continue;
+    if (best < 0 || cost[s] < cost[best] || (cost[s] === cost[best] && count[s] < count[best])) best = s;
+  }
+  if (best < 0) return greedyRollPlan(required, options);
+  const plan = [];
+  for (let s = best; s > 0; s -= sizes[last[s]]) plan.push(options[last[s]]);
+  return plan.sort((a, b) => b.lengthM - a.lengthM);
+}
+
+function greedyRollPlan(required, options) {
+  const best = options.reduce((a, b) => (b.price / b.lengthM < a.price / a.lengthM ? b : a));
+  const full = Math.floor(required / best.lengthM - TOLERANCE);
+  const plan = Array(full).fill(best);
+  const rest = required - full * best.lengthM;
+  if (rest > TOLERANCE) {
+    const covering = options.filter((r) => r.lengthM >= rest - TOLERANCE).sort((a, b) => a.price - b.price)[0];
+    plan.push(covering ?? best);
+  }
+  return plan.sort((a, b) => b.lengthM - a.lengthM);
 }
