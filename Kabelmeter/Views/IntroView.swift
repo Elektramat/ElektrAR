@@ -42,8 +42,7 @@ struct IntroView: View {
                     .font(.headline.weight(.heavy))
                     .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Theme.cta)
+            .brandProminentButton(Theme.cta)
             .buttonBorderShape(.roundedRectangle(radius: Theme.buttonCorner))
             .disabled(asking)
             .padding(.horizontal, 24)
