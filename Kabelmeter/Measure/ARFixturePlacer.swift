@@ -64,7 +64,9 @@ final class ARFixturePlacer {
     }
 
     /// Called by ARMeasureProvider about 15 times per second.
-    func tick(frame: ARFrame?) {
+    /// `connections` are the points a new switch may click onto (cable points and edges of
+    /// placed switches).
+    func tick(frame: ARFrame?, connections: [ConnectionPoint]) {
         guard let placement else { return }
         let tracking = frame?.camera.trackingState
         var isNormal = false
@@ -76,21 +78,30 @@ final class ARFixturePlacer {
         saveIfNeeded(frame)
 
         var pose: simd_float4x4?
+        var guide: MeasureGuide?
         if placement.isActive, !placement.isRestoring, isNormal, let frame {
             let now = CACurrentMediaTime()
+            var raw: simd_float4x4?
             if let found = wallPose(camera: frame.camera) {
                 lastPose = (found, now)
-                pose = found
+                raw = found
             } else if let last = lastPose, now - last.time < Self.holdDuration {
-                pose = last.pose
+                raw = last.pose
             } else {
                 smoother.reset()
+            }
+            if let raw {
+                let size = FixtureGeometry.size(frameMM: placement.selectedFixtureId.flatMap { fixtures[$0] }?.frameMM)
+                let (snapped, kind) = ConnectionSnapping.snapFixture(pose: raw, size: size, to: connections)
+                pose = snapped
+                guide = kind.map(MeasureGuide.init)
             }
         } else {
             smoother.reset()
             lastPose = nil
         }
         if placement.cursor != pose { placement.cursor = pose }
+        if placement.guide != guide { placement.guide = guide }
         updateGhost(pose: pose, fixtureId: placement.isActive ? placement.selectedFixtureId : nil)
     }
 

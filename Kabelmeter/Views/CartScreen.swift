@@ -15,7 +15,7 @@ struct CartScreen: View {
             List {
                 if cart.items.isEmpty {
                     ContentUnavailableView("Je winkelmand is leeg", systemImage: "cart",
-                                           description: Text("Meet een route en voeg de kabel toe."))
+                                           description: Text("Meet een kabel of plaats schakelaars en voeg ze toe."))
                 } else {
                     Section {
                         ForEach(cart.items) { item in
@@ -25,8 +25,20 @@ struct CartScreen: View {
                                     Spacer()
                                     Text(Format.euro(item.linePrice)).font(.headline).monospacedDigit()
                                 }
-                                Text("\(item.crossSection) · \(Format.orderLength(item.meters)) × \(Format.euro(item.pricePerMeter)) per meter")
-                                    .font(.subheadline).foregroundStyle(.secondary)
+                                switch item.kind {
+                                case .cable:
+                                    Text("\(item.detail) · \(Format.orderLength(item.quantity)) × \(Format.euro(item.unitPrice)) per meter")
+                                        .font(.subheadline).foregroundStyle(.secondary)
+                                case .part:
+                                    Text("\(item.detail) · art.nr. \(item.sku)")
+                                        .font(.subheadline).foregroundStyle(.secondary)
+                                    Stepper(value: Binding(get: { Int(item.quantity) },
+                                                           set: { cart.setQuantity($0, for: item.id) }),
+                                            in: 0...99) {
+                                        Text("\(Format.quantity(item.quantity)) × \(Format.euro(item.unitPrice))")
+                                            .monospacedDigit()
+                                    }
+                                }
                                 if item.isSample { SampleBadge() }
                                 Button {
                                     openURL(item.productUrl)

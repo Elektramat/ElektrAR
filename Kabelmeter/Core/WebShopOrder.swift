@@ -16,8 +16,8 @@ nonisolated enum WebShopOrder {
     /// 10.000000001 m at 10. Lines below 1 m or with an invalid length are skipped.
     static func lines(for items: [CartItem]) -> [WebShopLine] {
         items.compactMap { item in
-            guard item.meters.isFinite, item.meters > 0 else { return nil }
-            let quantity = Int((item.meters - 1e-6).rounded(.up))
+            guard item.quantity.isFinite, item.quantity > 0 else { return nil }
+            let quantity = Int((item.quantity - 1e-6).rounded(.up))
             guard quantity >= 1 else { return nil }
             return WebShopLine(sku: item.sku, name: item.name, productUrl: item.productUrl,
                                 productId: item.shopProductId, quantity: quantity)

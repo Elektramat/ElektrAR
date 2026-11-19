@@ -48,6 +48,10 @@ final class PlacementSession: ObservableObject {
     @Published var isActive = false
     /// The fixture the "+" button places; the provider shows it as a preview at the crosshair.
     @Published var selectedFixtureId: String?
+    /// Set when the preview is snapped to a cable point or next to another fixture.
+    @Published var guide: MeasureGuide?
+    /// Placements that are already in the cart, so adding again only adds the new ones.
+    @Published private(set) var inCart: Set<UUID> = []
     /// True while ARKit tries to recognise the room of the saved placements.
     @Published var isRestoring = false
     /// Fires when the user wants to start over in a different room.
@@ -69,17 +73,42 @@ final class PlacementSession: ObservableObject {
     }
 
     func undo() {
-        if !placed.isEmpty { placed.removeLast() }
+        if let last = placed.popLast() { inCart.remove(last.id) }
     }
 
     func clearAll() {
         placed.removeAll()
+        inCart.removeAll()
     }
 
     func startNewRoom() {
         placed.removeAll()
+        inCart.removeAll()
         isRestoring = false
         newRoomRequests.send()
+    }
+
+    /// Placements not yet in the cart, counted per fixture id (in placing order).
+    var notInCart: [(fixtureId: String, count: Int)] {
+        var order: [String] = []
+        var counts: [String: Int] = [:]
+        for item in placed where !inCart.contains(item.id) {
+            if counts[item.fixtureId] == nil { order.append(item.fixtureId) }
+            counts[item.fixtureId, default: 0] += 1
+        }
+        return order.map { ($0, counts[$0] ?? 0) }
+    }
+
+    func markAllInCart() {
+        inCart = Set(placed.map(\.id))
+    }
+
+    /// Connection points of every placed fixture plus the points of the given cables.
+    func connectionPoints(catalog: [String: Fixture], cables: [[SIMD3<Float>]]) -> [ConnectionPoint] {
+        let fixtures = placed.map { item in
+            (transform: item.transform, size: FixtureGeometry.size(frameMM: catalog[item.fixtureId]?.frameMM))
+        }
+        return ConnectionSnapping.points(fixtures: fixtures, cables: cables)
     }
 
     /// Sum of the complete sets, and how many placed fixtures have no complete price.

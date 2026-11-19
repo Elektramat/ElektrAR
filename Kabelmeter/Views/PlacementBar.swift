@@ -7,6 +7,9 @@ struct PlacementBar: View {
     let total: (price: Double, incomplete: Int)
     /// False in Demo-modus: simulated placements are not saved.
     let persists: Bool
+    /// Placed fixtures that are not in the cart yet.
+    let newCount: Int
+    let onAddToCart: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -33,6 +36,14 @@ struct PlacementBar: View {
                     }
                 }
             }
+            Button(action: onAddToCart) {
+                Label(buttonTitle, systemImage: "cart.badge.plus")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, minHeight: Theme.tapTarget)
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(newCount == 0)
+
             if persists {
                 Text("Plaatsingen blijven bewaard en komen terug als je de app opnieuw opent in deze ruimte.")
                     .font(.caption)
@@ -41,5 +52,10 @@ struct PlacementBar: View {
         }
         .padding(Theme.spacing)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.corner))
+    }
+
+    private var buttonTitle: String {
+        if placedCount > 0, newCount == 0 { return "Alles in winkelmand" }
+        return newCount > 1 ? "Voeg \(newCount) toe aan winkelmand" : "Voeg toe aan winkelmand"
     }
 }

@@ -17,11 +17,14 @@ final class SimulatedMeasureProvider: ObservableObject, MeasureProvider {
     private weak var placement: PlacementSession?
     private var timer: AnyCancellable?
     private var travelled: Float = 0
+    /// Fixtures by id, for their frame sizes when snapping.
+    var catalog: [String: Fixture] = [:]
 
     func start(session: MeasureSession, placement: PlacementSession) {
         self.session = session
         self.placement = placement
         session.trackingMessage = nil
+        session.floorY = 0 // The simulated wall stands on y = 0.
         timer = Timer.publish(every: 1.0 / 15, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in self?.tick() }
@@ -36,15 +39,27 @@ final class SimulatedMeasureProvider: ObservableObject, MeasureProvider {
         let total = Float(MeasureMath.pathLength(Self.route))
         if travelled > total { travelled = 0 }
         let position = Self.position(at: travelled)
+        guard let session else { return }
+        let cables = session.runs.map(\.points)
         if let placement, placement.isActive {
             // The simulated wall is the x/y plane facing +z: identity rotation.
             var pose = matrix_identity_float4x4
             pose.columns.3 = SIMD4(position, 1)
-            placement.cursor = pose
-            session?.cursor = nil
+            let size = FixtureGeometry.size(frameMM: placement.selectedFixtureId.flatMap { catalog[$0] }?.frameMM)
+            let connections = placement.connectionPoints(catalog: catalog, cables: cables + [session.points])
+            let (snapped, kind) = ConnectionSnapping.snapFixture(pose: pose, size: size, to: connections)
+            placement.cursor = snapped
+            placement.guide = kind.map(MeasureGuide.init)
+            session.cursor = nil
+            session.guide = nil
         } else {
             placement?.cursor = nil
-            session?.cursor = position
+            placement?.guide = nil
+            let connections = placement?.connectionPoints(catalog: catalog, cables: cables) ?? []
+            let last = session.isFinished ? nil : session.points.last
+            let (cursor, guide) = Snapping.cursor(position, last: last, connections: connections)
+            session.cursor = cursor
+            session.guide = guide
         }
     }
 

@@ -99,7 +99,7 @@ final class CartStoreTests: XCTestCase {
         store.add(cable: cable, meters: 10)
         store.add(cable: cable, meters: 5)
         XCTAssertEqual(store.items.count, 1)
-        XCTAssertEqual(store.items.first?.meters, 15)
+        XCTAssertEqual(store.items.first?.quantity, 15)
         XCTAssertEqual(store.total, 14.85)
     }
 
@@ -111,14 +111,14 @@ final class CartStoreTests: XCTestCase {
 
     func testPersists() {
         CartStore(defaults: defaults).add(cable: cable, meters: 11)
-        XCTAssertEqual(CartStore(defaults: defaults).items.first?.meters, 11)
+        XCTAssertEqual(CartStore(defaults: defaults).items.first?.quantity, 11)
     }
 }
 
 final class WebShopOrderTests: XCTestCase {
     private func item(_ meters: Double, sku: String = "401169628") -> CartItem {
-        CartItem(id: UUID(), cableId: sku, sku: sku, name: "YMvK kabel 3x1,5", crossSection: "3x1,5 mm²",
-                 pricePerMeter: 1.45, meters: meters,
+        CartItem(id: UUID(), kind: .cable, productId: sku, sku: sku, name: "YMvK kabel 3x1,5",
+                 detail: "3x1,5 mm²", unitPrice: 1.45, quantity: meters,
                  productUrl: URL(string: "https://www.elektramat.nl/ymvk-kabel-3x1-5-per-meter/")!, isSample: false)
     }
 
@@ -204,6 +204,6 @@ final class CartStoreShopIdTests: XCTestCase {
         old.shopProductId = 42
         store.add(cable: old, meters: 3)
         XCTAssertEqual(store.items.first?.shopProductId, 42)
-        XCTAssertEqual(store.items.first?.meters, 5)
+        XCTAssertEqual(store.items.first?.quantity, 5)
     }
 }

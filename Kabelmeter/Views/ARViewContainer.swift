@@ -46,6 +46,25 @@ struct SimulatedMeasureView: View {
                                       width: 4.6 * scale + 40, height: 2.6 * scale)
                     context.fill(Path(wall), with: .color(Theme.simulatedWall))
 
+                    // Cables added earlier
+                    for run in session.runs {
+                        var runPath = Path()
+                        for (i, p) in run.points.enumerated() {
+                            i == 0 ? runPath.move(to: map(p)) : runPath.addLine(to: map(p))
+                        }
+                        context.stroke(runPath, with: .color(Theme.run), lineWidth: 3)
+                    }
+
+                    // Dotted height line from the crosshair (or the switch preview) to the floor.
+                    let heightPoint = placement.isActive ? placement.cursor?.translation : session.cursor
+                    if let heightPoint, let floorY = session.floorY, heightPoint.y > floorY + 0.05 {
+                        var line = Path()
+                        line.move(to: map(heightPoint))
+                        line.addLine(to: map(SIMD3(heightPoint.x, floorY, heightPoint.z)))
+                        context.stroke(line, with: .color(Theme.height),
+                                       style: StrokeStyle(lineWidth: 2, dash: [4, 4]))
+                    }
+
                     // Confirmed segments (as legs along the wall in that mode)
                     var path = Path()
                     for (a, b) in zip(session.points, session.points.dropFirst()) {
@@ -99,7 +118,10 @@ struct SimulatedMeasureView: View {
                     .position(x: geo.size.width / 2, y: geo.size.height * 0.30)
             }
         }
-        .onAppear { provider.start(session: session, placement: placement) }
+        .onAppear {
+            provider.catalog = Dictionary(fixtures.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            provider.start(session: session, placement: placement)
+        }
         .onDisappear { provider.stop() }
     }
 

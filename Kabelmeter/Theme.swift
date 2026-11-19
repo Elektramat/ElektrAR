@@ -44,6 +44,12 @@ enum Theme {
     static let arSegment = Token.secondary
     static let arPreview = Token.secondary.withAlphaComponent(0.6)
     static let arGuide = UIColor.white.withAlphaComponent(0.5)
+    /// Cables that are already in the cart.
+    static let arRun = UIColor.systemTeal
+    /// Dotted height line from the crosshair to the floor.
+    static let arHeight = UIColor.systemYellow
+    static let run = Color.teal
+    static let height = Color.yellow
 
     // Sizes (radius-xl = 0.75rem, radius-2xl = 1rem on the shop)
     static let spacing: CGFloat = 12

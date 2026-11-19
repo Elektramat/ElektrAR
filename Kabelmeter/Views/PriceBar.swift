@@ -9,6 +9,8 @@ struct PriceBar: View {
     /// Quote of the confirmed points only; this is what goes into the cart.
     let cartQuote: Quote?
     @Binding var mode: RouteMode
+    /// Cables measured and added before this one.
+    let earlierRuns: Int
     @Binding var reservePercent: Int
     let onAddToCart: () -> Void
 
@@ -43,6 +45,12 @@ struct PriceBar: View {
                 Text("Rechte lijn").tag(RouteMode.straight)
             }
             .pickerStyle(.segmented)
+            if earlierRuns > 0 {
+                Label(earlierRuns == 1 ? "1 kabel al in winkelmand" : "\(earlierRuns) kabels al in winkelmand",
+                      systemImage: "checkmark.circle")
+                    .font(Theme.labelFont)
+                    .foregroundStyle(Theme.run)
+            }
 
             Stepper(value: $reservePercent, in: 0...30, step: 5) {
                 Text("Reserve \(reservePercent)% + \(Format.orderLength(PricingCalculator.connectionAllowance)) aansluiting")
