@@ -10,3 +10,13 @@ export const orderLength = (v: number) =>
 export const pieces = (p: number[]) => p.map(orderLength).join(' + ');
 
 export const euro = (v: number) => v.toLocaleString(nl, { style: 'currency', currency: 'EUR' });
+
+/** "2 × 50 m + 1 × 25 m": rolls grouped by length, longest first. */
+export const rolls = (p: number[]) => {
+	const counts = new Map<number, number>();
+	for (const length of p) counts.set(length, (counts.get(length) ?? 0) + 1);
+	return [...counts]
+		.sort((a, b) => b[0] - a[0])
+		.map(([length, n]) => `${n} × ${orderLength(length)}`)
+		.join(' + ');
+};

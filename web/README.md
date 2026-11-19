@@ -19,6 +19,11 @@ backend: Supabase, auth, realtime, photo upload, pg_cron, Web Push, IndexedDB ou
   with zod at load (`src/lib/catalog.ts`).
 - Same pricing as the app: `src/lib/pricing.ts` is a port of `PricingCalculator.swift`, and both
   run `../shared/pricing-cases.json`.
+- Cables sold as separate roll products (Snelflex 3x2,5: rolls of 25, 50 and 100 m, each with
+  its own price) get a roll advice: the rolls with the lowest total price (`rollPlan` in
+  `src/lib/pricing.ts`, a port of `PricingCalculator.rollPlan`). The cart adds up the required
+  length of every route with that cable, chooses the rolls once and shows one line per roll size
+  with its own article number and product page.
 - Own service worker (`src/service-worker.ts`): caches the build per version.
 
 ```sh
