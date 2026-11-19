@@ -15,7 +15,7 @@ struct CartScreen: View {
     @StateObject private var shop = WebShopCart()
 
     private var lines: [BillLine] {
-        Bill.lines(projects: projectStore.projects, cables: cableStore.cables, fixtures: fixtureStore.fixtures,
+        BillCache.lines(projects: projectStore.projects, cables: cableStore.cables, fixtures: fixtureStore.fixtures,
                    reserve: Double(reservePercent) / 100)
     }
 
@@ -160,7 +160,7 @@ struct CartButton: View {
     @State private var showCart = false
 
     var body: some View {
-        let lines = Bill.lines(projects: projectStore.projects, cables: cableStore.cables,
+        let lines = BillCache.lines(projects: projectStore.projects, cables: cableStore.cables,
                                fixtures: fixtureStore.fixtures, reserve: Double(reservePercent) / 100)
         let total = Bill.total(lines)
         Button { showCart = true } label: {

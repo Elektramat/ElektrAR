@@ -82,7 +82,7 @@ struct RoomsScreen: View {
     }
 
     private func row(_ room: Project) -> some View {
-        let price = Bill.total(Bill.lines(projects: [room], cables: cableStore.cables, fixtures: fixtureStore.fixtures,
+        let price = Bill.total(BillCache.lines(projects: [room], cables: cableStore.cables, fixtures: fixtureStore.fixtures,
                                           reserve: Double(reservePercent) / 100))
         return HStack(spacing: Theme.spacing) {
             ProjectSketch(project: room, fixtures: fixtureStore.fixtures)

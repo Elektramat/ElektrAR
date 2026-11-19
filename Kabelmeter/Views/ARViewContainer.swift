@@ -30,6 +30,17 @@ struct SimulatedMeasureView: View {
     @ObservedObject var session: MeasureSession
     @ObservedObject var placement: PlacementSession
     let fixtures: [Fixture]
+    // The simulated view draws the crosshair position, so it follows the live cursors too.
+    @ObservedObject private var sessionLive: LiveValue<SIMD3<Float>>
+    @ObservedObject private var placementLive: LiveValue<simd_float4x4>
+
+    init(session: MeasureSession, placement: PlacementSession, fixtures: [Fixture]) {
+        self.session = session
+        self.placement = placement
+        self.fixtures = fixtures
+        _sessionLive = ObservedObject(wrappedValue: session.live)
+        _placementLive = ObservedObject(wrappedValue: placement.live)
+    }
     @StateObject private var provider = SimulatedMeasureProvider()
 
     var body: some View {

@@ -146,8 +146,9 @@ struct RoomScreen: View {
         }
         .overlay {
             if isEditing {
-                Crosshair(active: step == .parts ? placement.canPlace : session.cursor != nil)
-                heightLabel
+                Crosshair(active: step == .parts ? placement.canPlace : session.hasCursor)
+                LiveHeightLabel(sessionLive: session.live, placementLive: placement.live,
+                                usePlacement: step == .parts, floorY: session.floorY)
             }
         }
     }
@@ -266,29 +267,6 @@ struct RoomScreen: View {
         .background(Theme.pillBackground, in: Capsule())
     }
 
-    /// Height of the crosshair (or of the middle of the part preview) above the floor.
-    @ViewBuilder
-    private var heightLabel: some View {
-        let point = step == .parts ? placement.cursor?.translation : session.cursor
-        Group {
-            if let height = FloorHeight.height(of: point, floorY: session.floorY) {
-                Label("\(Format.height(height)) boven de vloer", systemImage: "arrow.up.and.down")
-                    .foregroundStyle(Theme.pillText)
-            } else if point != nil {
-                Label("Richt even op de vloer voor de hoogte", systemImage: "arrow.down.to.line")
-                    .foregroundStyle(.white.opacity(0.8))
-            }
-        }
-        .font(.footnote.weight(.semibold))
-        .monospacedDigit()
-        .padding(.horizontal, 10).padding(.vertical, 5)
-        .background(Theme.pillBackground, in: Capsule())
-        // Above the crosshair: below it sit the controls and the bottom card (DESIGN.md: one
-        // card at the bottom), and the dashed height line runs down to the floor anyway.
-        .offset(y: -(Theme.crosshair / 2 + 26))
-        .allowsHitTesting(false)
-    }
-
     // MARK: Controls
 
     @ViewBuilder
@@ -306,14 +284,14 @@ struct RoomScreen: View {
                     .disabled(session.points.isEmpty)
                 controlButton("Opnieuw", icon: "xmark") { session.reset() }
                     .disabled(session.points.isEmpty)
-                plusButton(enabled: session.cursor != nil, label: "Ankerpunt toevoegen", action: addAnchor)
+                plusButton(enabled: session.hasCursor, label: "Ankerpunt toevoegen", action: addAnchor)
                 controlButton("Klaar", icon: "checkmark") { finishCable() }
                     .disabled(session.points.count < 2)
             case (.cables, .auto):
                 controlButton("Wis start", icon: "xmark.square") { session.startPoint = nil }
                     .disabled(session.startPoint == nil)
                 spacer
-                plusButton(enabled: session.cursor != nil, label: "Startpunt hier (zonder groepenkast)") {
+                plusButton(enabled: session.hasCursor, label: "Startpunt hier (zonder groepenkast)") {
                     session.startPoint = session.cursor
                     confirm("Startpunt gezet")
                 }
@@ -373,7 +351,7 @@ struct RoomScreen: View {
 
     private var roomLines: [BillLine] {
         guard let room else { return [] }
-        return Bill.lines(projects: [current(room)], cables: cableStore.cables, fixtures: fixtureStore.fixtures,
+        return BillCache.lines(projects: [current(room)], cables: cableStore.cables, fixtures: fixtureStore.fixtures,
                           reserve: reserve)
     }
 
@@ -407,23 +385,8 @@ struct RoomScreen: View {
                 }
                 summaryLine
             case (.edit, .cables, .manual):
-                let quote = cable.flatMap { PricingCalculator.quote(for: $0, measured: session.totalLength, reserve: reserve) }
                 cableRow
-                HStack(alignment: .firstTextBaseline) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Deze kabel: \(Format.meters(session.totalLength))").font(Theme.lengthFont).monospacedDigit()
-                        Text(session.points.isEmpty ? "\(Format.count(session.runs.count, "kabel", "kabels")) in deze ruimte"
-                                                    : Format.count(session.points.count, "ankerpunt", "ankerpunten"))
-                            .font(Theme.labelFont).foregroundStyle(.secondary)
-                        if cable?.hasRolls == true, let quote {
-                            Text("Alleen deze kabel: \(Format.rolls(quote.pieces))")
-                                .font(Theme.labelFont).foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer()
-                    Text(quote.map { Format.euro($0.price) } ?? "–").font(Theme.priceFont).monospacedDigit()
-                        .contentTransition(.numericText())
-                }
+                LiveCableTotal(session: session, live: session.live, cable: cable, reserve: reserve)
                 Toggle(isOn: $session.rightAngles) {
                     Text("Rechte hoeken: eerst omhoog of omlaag, dan opzij").font(Theme.labelFont)
                 }
@@ -802,5 +765,63 @@ private struct Crosshair: View {
         .shadow(color: .black.opacity(0.6), radius: 2)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// Height of the crosshair (or of the middle of the part preview) above the floor. Its own
+/// view: it follows the live cursor (about 15 times a second) without redrawing the screen.
+private struct LiveHeightLabel: View {
+    @ObservedObject var sessionLive: LiveValue<SIMD3<Float>>
+    @ObservedObject var placementLive: LiveValue<simd_float4x4>
+    let usePlacement: Bool
+    let floorY: Float?
+
+    var body: some View {
+        let point = usePlacement ? placementLive.value?.translation : sessionLive.value
+        Group {
+            if let height = FloorHeight.height(of: point, floorY: floorY) {
+                Label("\(Format.height(height)) boven de vloer", systemImage: "arrow.up.and.down")
+                    .foregroundStyle(Theme.pillText)
+            } else if point != nil {
+                Label("Richt even op de vloer voor de hoogte", systemImage: "arrow.down.to.line")
+                    .foregroundStyle(.white.opacity(0.8))
+            }
+        }
+        .font(.footnote.weight(.semibold))
+        .monospacedDigit()
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(Theme.pillBackground, in: Capsule())
+        // Above the crosshair: below it sit the controls and the bottom card (DESIGN.md: one
+        // card at the bottom), and the dashed height line runs down to the floor anyway.
+        .offset(y: -(Theme.crosshair / 2 + 26))
+        .allowsHitTesting(false)
+    }
+}
+
+/// Length and price of the cable being drawn by hand, including the live piece to the
+/// crosshair. Its own view so only this part follows the live cursor.
+private struct LiveCableTotal: View {
+    @ObservedObject var session: MeasureSession
+    @ObservedObject var live: LiveValue<SIMD3<Float>>
+    let cable: Cable?
+    let reserve: Double
+
+    var body: some View {
+        let quote = cable.flatMap { PricingCalculator.quote(for: $0, measured: session.totalLength, reserve: reserve) }
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Deze kabel: \(Format.meters(session.totalLength))").font(Theme.lengthFont).monospacedDigit()
+                Text(session.points.isEmpty ? "\(Format.count(session.runs.count, "kabel", "kabels")) in deze ruimte"
+                                            : Format.count(session.points.count, "ankerpunt", "ankerpunten"))
+                    .font(Theme.labelFont).foregroundStyle(.secondary)
+                if cable?.hasRolls == true, let quote {
+                    Text("Alleen deze kabel: \(Format.rolls(quote.pieces))")
+                        .font(Theme.labelFont).foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            Text(quote.map { Format.euro($0.price) } ?? "–").font(Theme.priceFont).monospacedDigit()
+                .contentTransition(.numericText())
+        }
     }
 }
