@@ -40,6 +40,7 @@ Not allowed:
 - At least 55 % of the screen height stays camera image.
 - Modes and steps live in the bottom card (tabs, a menu), close to the thumb and the "+".
 - Hints are one line; longer explanations go in the intro or the info card.
+- Labels that follow the crosshair (height) sit above it, never below: the controls and the card are below.
 
 ## Typography
 

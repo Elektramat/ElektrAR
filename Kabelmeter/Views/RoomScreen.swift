@@ -304,7 +304,9 @@ struct RoomScreen: View {
         .monospacedDigit()
         .padding(.horizontal, 10).padding(.vertical, 5)
         .background(Theme.pillBackground, in: Capsule())
-        .offset(y: Theme.crosshair + 8)
+        // Above the crosshair: below it sit the controls and the bottom card (DESIGN.md: one
+        // card at the bottom), and the dashed height line runs down to the floor anyway.
+        .offset(y: -(Theme.crosshair / 2 + 26))
         .allowsHitTesting(false)
     }
 
@@ -654,7 +656,7 @@ struct RoomScreen: View {
     private var autoHint: String {
         let count = session.proposedRoutes.count
         if count > 0 {
-            return "\(Format.count(count, "kabel", "kabels")) voorgesteld: controleer en tik op Kabels toevoegen"
+            return "\(Format.count(count, "kabel", "kabels")) voorgesteld · tik op Kabels toevoegen"
         }
         if placement.placed.isEmpty { return "Plaats eerst onderdelen bij stap 1" }
         if autoPlan.ids.isEmpty { return "Alle onderdelen hebben een kabel" }
