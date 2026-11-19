@@ -27,7 +27,7 @@ import WebKit
 /// TODO: for production, ask the webshop team for a deep link (for example
 /// /kabelmeter/add?sku=…&qty=…) or a cart API with a hand-off to the browser session.
 @MainActor
-final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate {
+final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate, WKUIDelegate {
     enum Phase: Equatable {
         case idle
         case connecting
@@ -51,6 +51,11 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate {
 
     let webView: WKWebView
     @Published private(set) var phase: Phase = .idle
+    /// Loading progress of the page the user sees (0...1), nil when nothing loads. After a tap
+    /// in the shop (for example the trash button) the cart page reloads for a few seconds;
+    /// without a progress bar the button looked dead.
+    @Published private(set) var pageProgress: Double?
+    private var observers: [NSKeyValueObservation] = []
     @Published private(set) var failures: [Failure] = []
     /// Cables that are in the shop cart after this run (posted and confirmed by the cart check).
     @Published private(set) var addedCount = 0
@@ -73,7 +78,67 @@ final class WebShopCart: NSObject, ObservableObject, WKNavigationDelegate {
         webView = WKWebView(frame: .zero, configuration: config)
         super.init()
         webView.navigationDelegate = self
+        // Without a UI delegate a web view ignores alert/confirm dialogs (confirm returns false)
+        // and links that open a new window, so shop buttons that use them do nothing.
+        webView.uiDelegate = self
         webView.allowsBackForwardNavigationGestures = true
+        // WKWebView reports these key-value changes on the main thread.
+        observers = [
+            webView.observe(\.isLoading, options: [.initial, .new]) { [weak self] view, _ in
+                MainActor.assumeIsolated { self?.updateProgress(view) }
+            },
+            webView.observe(\.estimatedProgress, options: [.new]) { [weak self] view, _ in
+                MainActor.assumeIsolated { self?.updateProgress(view) }
+            },
+        ]
+    }
+
+    private func updateProgress(_ view: WKWebView) {
+        pageProgress = view.isLoading ? max(view.estimatedProgress, 0.05) : nil
+    }
+
+    // MARK: Dialogs and new windows from the shop page
+
+    nonisolated func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
+                             initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable () -> Void) {
+        MainActor.assumeIsolated {
+            let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler() })
+            guard Self.present(alert) else { return completionHandler() }
+        }
+    }
+
+    nonisolated func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String,
+                             initiatedByFrame frame: WKFrameInfo,
+                             completionHandler: @escaping @MainActor @Sendable (Bool) -> Void) {
+        MainActor.assumeIsolated {
+            let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Annuleer", style: .cancel) { _ in completionHandler(false) })
+            alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler(true) })
+            guard Self.present(alert) else { return completionHandler(false) }
+        }
+    }
+
+    /// Links with target="_blank" or window.open: open them in this same web view.
+    nonisolated func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration,
+                             for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        MainActor.assumeIsolated {
+            if navigationAction.targetFrame == nil { webView.load(navigationAction.request) }
+        }
+        return nil
+    }
+
+    /// Shows a dialog on top of whatever is on screen (the shop sheet). False when there is
+    /// no window to show it in.
+    private static func present(_ controller: UIViewController) -> Bool {
+        let window = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)
+        guard var top = window?.rootViewController else { return false }
+        while let presented = top.presentedViewController { top = presented }
+        top.present(controller, animated: true)
+        return true
     }
 
     /// Starts the web view and loads the session page in the background. Safe to call often.

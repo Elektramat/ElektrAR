@@ -16,6 +16,15 @@ struct WebShopSheet: View {
                 WebView(webView: shop.webView).ignoresSafeArea(edges: .bottom)
                     .opacity(shop.phase == .cart ? 1 : 0)
                     .allowsHitTesting(shop.phase == .cart)
+                    .overlay(alignment: .top) {
+                        // Shows that a tap in the shop (trash, quantity, checkout) is working.
+                        if shop.phase == .cart, shop.cartPageReady, let progress = shop.pageProgress {
+                            ProgressView(value: progress)
+                                .progressViewStyle(.linear)
+                                .tint(Theme.accent)
+                                .animation(.easeOut(duration: 0.2), value: progress)
+                        }
+                    }
 
                 switch shop.phase {
                 case .idle, .connecting: progress(step: nil)
