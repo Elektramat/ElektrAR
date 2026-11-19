@@ -63,6 +63,8 @@ enum Theme {
 
     // Sizes (radius-xl = 0.75rem, radius-2xl = 1rem on the shop)
     static let spacing: CGFloat = 12
+    /// Inner padding of the bottom bars (price and placing), so content keeps off the rounded edge.
+    static let barPadding: CGFloat = 20
     static let corner: CGFloat = 16
     static let buttonCorner: CGFloat = 12
     static let tapTarget: CGFloat = 56

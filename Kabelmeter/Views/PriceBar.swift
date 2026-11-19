@@ -68,7 +68,7 @@ struct PriceBar: View {
             .buttonBorderShape(.roundedRectangle(radius: Theme.buttonCorner))
             .disabled(cartQuote == nil || cable == nil)
         }
-        .padding(Theme.spacing)
+        .padding(Theme.barPadding)
         .surface(RoundedRectangle(cornerRadius: Theme.corner))
     }
 }

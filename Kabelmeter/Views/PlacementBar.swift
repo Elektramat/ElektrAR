@@ -50,7 +50,7 @@ struct PlacementBar: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(Theme.spacing)
+        .padding(Theme.barPadding)
         .surface(RoundedRectangle(cornerRadius: Theme.corner))
     }
 
