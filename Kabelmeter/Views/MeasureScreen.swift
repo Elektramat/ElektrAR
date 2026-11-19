@@ -214,7 +214,7 @@ struct MeasureScreen: View {
     private var modePicker: some View {
         Picker("Modus", selection: $mode) {
             Text("Kabel meten").tag(Mode.measure)
-            Text("Schakelaars plaatsen").tag(Mode.place)
+            Text("Schakelaars en lampen").tag(Mode.place)
         }
         .pickerStyle(.segmented)
         .controlSize(.large)
@@ -249,10 +249,10 @@ struct MeasureScreen: View {
                 if let fixture {
                     FixtureIcon(fixture: fixture, size: 36)
                 } else {
-                    Image(systemName: "lightswitch.on")
+                    Image(systemName: fixture?.isLight == true ? "lightbulb" : "lightswitch.on")
                 }
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(fixture?.title ?? "Kies schakelmateriaal").font(.subheadline.weight(.semibold)).lineLimit(1)
+                    Text(fixture?.title ?? "Kies schakelaar of lamp").font(.subheadline.weight(.semibold)).lineLimit(1)
                     if let fixture {
                         Text(fixture.subtitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
@@ -328,7 +328,8 @@ struct MeasureScreen: View {
                 if let guide = placement.guide {
                     pill(guide.label, color: Color(Theme.Token.secondary))
                 } else if placement.placed.isEmpty {
-                    pill("Richt op een muur en tik op +", color: .white)
+                    pill(fixture?.isCeiling == true ? "Richt op het plafond en tik op +" : "Richt op een muur en tik op +",
+                         color: .white)
                 }
             } else if session.isFinished {
                 pill("Meting klaar", color: .green)
@@ -375,7 +376,7 @@ struct MeasureScreen: View {
 
             Button(action: placeFixture) {
                 Image(systemName: "plus")
-                    .font(.system(size: 34, weight: .bold))
+                    .font(.system(size: 28, weight: .bold))
                     .frame(width: Theme.addButton, height: Theme.addButton)
                     .background(placement.canPlace && fixture != nil ? Theme.accent : Theme.secondaryButton,
                                 in: Circle())
@@ -402,7 +403,7 @@ struct MeasureScreen: View {
 
             Button(action: addPoint) {
                 Image(systemName: "plus")
-                    .font(.system(size: 34, weight: .bold))
+                    .font(.system(size: 28, weight: .bold))
                     .frame(width: Theme.addButton, height: Theme.addButton)
                     .background(session.canAddPoint ? Theme.accent : Theme.secondaryButton, in: Circle())
                     .foregroundStyle(Theme.onAccent)
@@ -578,19 +579,18 @@ private struct SummarySheet: View {
     }
 }
 
-/// White square button on the camera image: Elektramat-blue icon and black label; when
-/// disabled the same colors, lighter, so it never turns grey.
+/// White square button on the camera image with an Elektramat-blue icon, always at full
+/// opacity (also when disabled), so it never turns grey on the camera image.
 /// Icon only: the icons (undo, trash, reset, done) speak for themselves, and the text did not
 /// fit ("Ongedaan ma…"). The title stays as the accessibility label.
 private struct ControlLabel: View {
     let icon: String
-    @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
         Image(systemName: icon)
             .font(.title2.weight(.semibold))
-            .foregroundStyle(Theme.accent.opacity(isEnabled ? 1 : 0.4))
+            .foregroundStyle(Theme.accent)
             .frame(width: Theme.tapTarget, height: Theme.tapTarget)
-        .surface(RoundedRectangle(cornerRadius: 14))
+            .surface(RoundedRectangle(cornerRadius: 14))
     }
 }

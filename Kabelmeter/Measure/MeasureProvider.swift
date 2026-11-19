@@ -16,6 +16,7 @@ enum TrackingText {
     static let moveSideways = "Richt op een muur of vloer en beweeg zijwaarts"
     static let tooDark = "Te weinig licht"
     static let aimAtWall = "Richt op een muur"
+    static let aimAtCeiling = "Richt op het plafond"
     static let relocalizing = "Richt op de plek van de vorige keer om de schakelaars terug te zetten"
     static let unavailable = "AR werkt niet op dit toestel. Zet Demo-modus aan."
 }

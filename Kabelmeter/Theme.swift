@@ -41,7 +41,7 @@ enum Theme {
     static let warning = Color(Token.warning)
     static let alert = Color(Token.alert)
     static let success = Color(Token.success)
-    static let secondaryButton = Color(Token.black25).opacity(0.6)
+    static let secondaryButton = Color(Token.black25)
     static let crosshairActive = Color.white
     static let crosshairInactive = Color.white.opacity(0.35)
     static let simulatedBackground = Color(white: 0.12)
@@ -66,7 +66,7 @@ enum Theme {
     static let corner: CGFloat = 16
     static let buttonCorner: CGFloat = 12
     static let tapTarget: CGFloat = 56
-    static let addButton: CGFloat = 80
+    static let addButton: CGFloat = tapTarget
     static let crosshair: CGFloat = 28
 
     // Fonts. The shop uses Hellix (headings) and Avenir LT Std (body). Both are licensed

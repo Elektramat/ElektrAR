@@ -130,7 +130,9 @@ struct SimulatedMeasureView: View {
         context.fill(Path(roundedRect: rect, cornerRadius: size * 0.15), with: .color(.white))
         context.stroke(Path(roundedRect: rect, cornerRadius: size * 0.15), with: .color(.gray), lineWidth: 1)
         let inner = rect.insetBy(dx: size * 0.22, dy: size * 0.22)
-        if fixtures.first(where: { $0.id == fixtureId })?.product == "stopcontact" {
+        if fixtures.first(where: { $0.id == fixtureId })?.isLight == true {
+            context.fill(Path(ellipseIn: inner), with: .color(.yellow.opacity(0.85)))
+        } else if fixtures.first(where: { $0.id == fixtureId })?.product == "stopcontact" {
             context.stroke(Path(ellipseIn: inner), with: .color(.gray), lineWidth: 1.5)
         } else {
             context.stroke(Path(roundedRect: inner, cornerRadius: 2), with: .color(.gray), lineWidth: 1.5)

@@ -114,8 +114,11 @@ final class CartStore: ObservableObject {
         for part in fixture.parts {
             guard let price = part.price, price >= 0 else { continue }
             add(CartItem(id: UUID(), kind: .part, productId: part.sku, sku: part.sku, name: part.description,
-                         detail: "\(fixture.brand) \(fixture.line) · \(fixture.colourName)", unitPrice: price,
-                         quantity: Double(count), productUrl: part.productUrl, isSample: false))
+                         detail: fixture.isLight ? "\(fixture.brand) · \(fixture.title)"
+                                              : "\(fixture.brand) \(fixture.line) · \(fixture.colourName)",
+                         unitPrice: price,
+                         quantity: Double(count), productUrl: part.productUrl, isSample: false,
+                         shopProductId: part.shopProductId))
             result.pieces += count
         }
         save()

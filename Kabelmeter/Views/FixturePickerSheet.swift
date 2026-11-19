@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Searchable list of switches and sockets, grouped by design line.
+/// Searchable list of switches, sockets and lights, grouped by design line or light type.
 struct FixturePickerSheet: View {
     let fixtures: [Fixture]
     @Binding var selectedId: String?
@@ -41,8 +41,8 @@ struct FixturePickerSheet: View {
             .overlay {
                 if filtered.isEmpty { ContentUnavailableView.search(text: query) }
             }
-            .searchable(text: $query, prompt: "Zoek serie, kleur of type")
-            .navigationTitle("Kies schakelmateriaal")
+            .searchable(text: $query, prompt: "Zoek serie, kleur, lamp of type")
+            .navigationTitle("Kies schakelaar of lamp")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Sluit") { dismiss() } }
@@ -60,7 +60,7 @@ private struct FixtureRow: View {
             FixtureIcon(fixture: fixture)
             VStack(alignment: .leading, spacing: 2) {
                 Text(fixture.title).font(.headline)
-                Text(fixture.colourName).font(.subheadline).foregroundStyle(.secondary)
+                Text(fixture.detail).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
                 Text(FixtureText.price(fixture)).font(.subheadline)
                     .foregroundStyle(fixture.complete ? .primary : Theme.warning)
             }
@@ -86,7 +86,8 @@ struct FixtureIcon: View {
                 if let image = Self.preview(for: fixture) {
                     Image(uiImage: image).resizable().scaledToFit().padding(size * 0.04)
                 } else {
-                    Image(systemName: fixture.product == "stopcontact" ? "poweroutlet.type.f" : "lightswitch.on")
+                    Image(systemName: fixture.isLight ? "lightbulb"
+                          : fixture.product == "stopcontact" ? "poweroutlet.type.f" : "lightswitch.on")
                         .font(size > 40 ? .title3 : .body)
                         .foregroundStyle(.secondary)
                 }
@@ -95,6 +96,11 @@ struct FixtureIcon: View {
     }
 
     private static func preview(for fixture: Fixture) -> UIImage? {
+        if let sku = fixture.lightSku {
+            guard let path = Bundle.main.path(forResource: sku, ofType: "jpg")
+                ?? Bundle.main.path(forResource: sku, ofType: "jpg", inDirectory: "LightImages") else { return nil }
+            return UIImage(contentsOfFile: path)
+        }
         guard let path = Bundle.main.path(forResource: fixture.model, ofType: "png")
             ?? Bundle.main.path(forResource: fixture.model, ofType: "png", inDirectory: "FixtureImages") else { return nil }
         return UIImage(contentsOfFile: path)
@@ -103,7 +109,7 @@ struct FixtureIcon: View {
 
 enum FixtureText {
     static func price(_ fixture: Fixture) -> String {
-        if let price = fixture.price { return "\(Format.euro(price)) complete set" }
+        if let price = fixture.price { return fixture.isLight ? Format.euro(price) : "\(Format.euro(price)) complete set" }
         return "Niet compleet te bestellen"
     }
 }

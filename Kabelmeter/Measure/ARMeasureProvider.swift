@@ -6,7 +6,7 @@ import UIKit
 
 /// Real measuring with ARKit + RealityKit. A few times per second it finds the world
 /// point under the crosshair and draws points, segments and the live preview.
-/// In the "Schakelaars plaatsen" mode it hands the crosshair to `ARFixturePlacer`.
+/// In the "Schakelaars en lampen" mode it hands the crosshair to `ARFixturePlacer`.
 ///
 /// Two paths:
 /// - LiDAR (Pro models): read the smoothed LiDAR depth at the crosshair, then raycast
@@ -143,7 +143,10 @@ final class ARMeasureProvider: MeasureProvider {
         if let placement, placement.isActive {
             heightLine.update(at: placement.cursor?.translation, floorY: session.floorY)
             let message = Self.message(for: frame?.camera.trackingState)
-                ?? (placement.cursor == nil ? TrackingText.aimAtWall : nil)
+                ?? (placement.cursor == nil
+                    ? (placement.selectedFixtureId.flatMap { catalog[$0] }?.isCeiling == true
+                        ? TrackingText.aimAtCeiling : TrackingText.aimAtWall)
+                    : nil)
             if session.trackingMessage != message { session.trackingMessage = message }
             if session.guide != nil { session.guide = nil }
             if session.cursor != nil { session.cursor = nil }

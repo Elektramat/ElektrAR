@@ -1,0 +1,434 @@
+[
+  {
+    "id": "401328667",
+    "sku": "401328667",
+    "name": "Calex Smart Outdoor buiten wandlamp RGB en CCT up & down 4W 690lm IP54",
+    "brand": "Calex",
+    "surface": "wall",
+    "shape": "box",
+    "sizeMM": [
+      100,
+      100,
+      100
+    ],
+    "price": 24.45,
+    "productUrl": "https://www.elektramat.nl/calex-smart-outdoor-buiten-wandlamp-rgb-en-cct-up-down-4w-690lm-ip54-5401002500/",
+    "shopProductId": 1299151
+  },
+  {
+    "id": "401328651",
+    "sku": "401328651",
+    "name": "Calex Smart Halo LED inbouwspot RGB en CCT 6.5W 340lm IP44 - dimbaar",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "recessed",
+    "sizeMM": [
+      90,
+      90,
+      30
+    ],
+    "price": 21.34,
+    "productUrl": "https://www.elektramat.nl/calex-smart-halo-led-inbouwspot-rgb-en-cct-6-5w-340lm-ip44-dimbaar-5301001000/",
+    "shopProductId": 1299136
+  },
+  {
+    "id": "401329992",
+    "sku": "401329992",
+    "name": "BRENNENSTUHL buitenlamp met sensor 24W 2800lm IP54 connect WiFi",
+    "brand": "Brennenstuhl",
+    "surface": "wall",
+    "shape": "box",
+    "sizeMM": [
+      180,
+      120,
+      100
+    ],
+    "price": 49.42,
+    "productUrl": "https://www.elektramat.nl/brennenstuhl-buitenlamp-met-sensor-24w-2800lm-ip54-connect-wifi-1179050020/",
+    "shopProductId": 1638136
+  },
+  {
+    "id": "401332578",
+    "sku": "401332578",
+    "name": "BRENNENSTUHL buitenlamp duo met sensor 36W 4300lm IP54 connect WiFi",
+    "brand": "Brennenstuhl",
+    "surface": "wall",
+    "shape": "box",
+    "sizeMM": [
+      180,
+      120,
+      100
+    ],
+    "price": 60.61,
+    "productUrl": "https://www.elektramat.nl/brennenstuhl-buitenlamp-duo-met-sensor-36w-4300lm-ip54-connect-wifi-1179060020/",
+    "shopProductId": 1454030
+  },
+  {
+    "id": "401328664",
+    "sku": "401328664",
+    "name": "Calex Smart Outdoor wandlamp RGB en CCT up & down 4W 760lm IP54",
+    "brand": "Calex",
+    "surface": "wall",
+    "shape": "cylinder",
+    "sizeMM": [
+      80,
+      160,
+      110
+    ],
+    "price": 34.94,
+    "productUrl": "https://www.elektramat.nl/calex-smart-outdoor-wandlamp-rgb-en-cct-up-down-4w-760lm-ip54-5401000500/",
+    "shopProductId": 1299149
+  },
+  {
+    "id": "401328650",
+    "sku": "401328650",
+    "name": "Calex Smart Halo LED inbouwspot RGB en CCT 6.5W 500lm IP44 - dimbaar",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "recessed",
+    "sizeMM": [
+      90,
+      90,
+      30
+    ],
+    "price": 21.34,
+    "productUrl": "https://www.elektramat.nl/calex-smart-halo-led-inbouwspot-rgb-en-cct-6-5w-500lm-ip44-dimbaar-5301001100/",
+    "shopProductId": 1299135
+  },
+  {
+    "id": "401328813",
+    "sku": "401328813",
+    "name": "Calex Plafondlamp RGB 14W 1500lm 3000-6500K IP20 - zwart",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "disc",
+    "sizeMM": [
+      400,
+      400,
+      80
+    ],
+    "price": 29.03,
+    "productUrl": "https://www.elektramat.nl/calex-plafondlamp-rgb-14w-1500lm-3000-6500k-ip20-zwart-5301000270/",
+    "shopProductId": 1299203
+  },
+  {
+    "id": "401328657",
+    "sku": "401328657",
+    "name": "Calex Inbouwspots CCT 5W 345lm IP21 dimbaar - per 3 stuks",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "recessed",
+    "sizeMM": [
+      90,
+      90,
+      30
+    ],
+    "price": 34.94,
+    "productUrl": "https://www.elektramat.nl/calex-inbouwspots-cct-5w-345lm-ip21-dimbaar-per-3-stuks-429278/",
+    "shopProductId": 1299142
+  },
+  {
+    "id": "401328953",
+    "sku": "401328953",
+    "name": "Calex Smart LED inbouwspot CCT 5W 400lm IP21 - dimbaar",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "recessed",
+    "sizeMM": [
+      90,
+      90,
+      30
+    ],
+    "price": 11.42,
+    "productUrl": "https://www.elektramat.nl/calex-smart-led-inbouwspot-cct-5w-400lm-ip21-dimbaar-5601000300/",
+    "shopProductId": 1301503
+  },
+  {
+    "id": "401328648",
+    "sku": "401328648",
+    "name": "Calex Smart Halo LED plafondlamp CCT 25W 1900lm IP54 - dimbaar",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "disc",
+    "sizeMM": [
+      400,
+      400,
+      80
+    ],
+    "price": 62.13,
+    "productUrl": "https://www.elektramat.nl/calex-smart-halo-led-plafondlamp-cct-25w-1900lm-ip54-dimbaar-5301000700/",
+    "shopProductId": 1299132
+  },
+  {
+    "id": "401328649",
+    "sku": "401328649",
+    "name": "Calex Smart Halo LED plafondlamp RGB en CCT 22W 2200lm IP54 - dimbaar",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "disc",
+    "sizeMM": [
+      400,
+      400,
+      80
+    ],
+    "price": 54.37,
+    "productUrl": "https://www.elektramat.nl/calex-smart-halo-led-plafondlamp-rgb-en-cct-22w-2200lm-ip54-dimbaar-5301000600/",
+    "shopProductId": 1299134
+  },
+  {
+    "id": "401328655",
+    "sku": "401328655",
+    "name": "Calex Smart LED inbouwspot CCT 5W 400lm IP21 - dimbaar",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "recessed",
+    "sizeMM": [
+      90,
+      90,
+      30
+    ],
+    "price": 13.58,
+    "productUrl": "https://www.elektramat.nl/calex-smart-led-inbouwspot-cct-5w-400lm-ip21-dimbaar-429276/",
+    "shopProductId": 1299140
+  },
+  {
+    "id": "401328812",
+    "sku": "401328812",
+    "name": "Calex Smart plafondlamp RGB en CCT 20W 2350lm",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "disc",
+    "sizeMM": [
+      400,
+      400,
+      80
+    ],
+    "price": 40.76,
+    "productUrl": "https://www.elektramat.nl/calex-smart-plafondlamp-rgb-en-cct-20w-2350lm-5301000370/",
+    "shopProductId": 1299208
+  },
+  {
+    "id": "401336855",
+    "sku": "401336855",
+    "name": "Shelly LED downlight 8W 600lm 2200K-6000K IP44 dimbaar Ø90mm - wit (SLSH-DS8-W)",
+    "brand": "Shelly",
+    "surface": "ceiling",
+    "shape": "recessed",
+    "sizeMM": [
+      90,
+      90,
+      30
+    ],
+    "price": 50.01,
+    "productUrl": "https://www.elektramat.nl/shelly-led-downlight-8w-600lm-2200k-6000k-ip44-dimbaar-o90mm-wit-slsh-ds8-w/",
+    "shopProductId": 1715755
+  },
+  {
+    "id": "401336856",
+    "sku": "401336856",
+    "name": "Shelly LED downlight 8W 600lm 2200K-6000K IP44 dimbaar Ø90mm - wit (SLSH-DS8-B)",
+    "brand": "Shelly",
+    "surface": "ceiling",
+    "shape": "recessed",
+    "sizeMM": [
+      90,
+      90,
+      30
+    ],
+    "price": 50.01,
+    "productUrl": "https://www.elektramat.nl/shelly-led-downlight-8w-600lm-2200k-6000k-ip44-dimbaar-o90mm-wit-slsh-ds8-b/",
+    "shopProductId": 1715757
+  },
+  {
+    "id": "401340906",
+    "sku": "401340906",
+    "name": "Calex Smart Halo plafondlamp CCT en RGB 22W 2200lm IP54 zwart",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "disc",
+    "sizeMM": [
+      400,
+      400,
+      80
+    ],
+    "price": 54.37,
+    "productUrl": "https://www.elektramat.nl/calex-smart-halo-plafondlamp-cct-en-rgb-22w-2200lm-ip54-zwart-5301002400/",
+    "shopProductId": 1801860
+  },
+  {
+    "id": "401340907",
+    "sku": "401340907",
+    "name": "Calex Smart plafondlamp CCT en RGB 25W 1900lm IP54 zwart",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "disc",
+    "sizeMM": [
+      400,
+      400,
+      80
+    ],
+    "price": 62.13,
+    "productUrl": "https://www.elektramat.nl/calex-smart-plafondlamp-cct-en-rgb-25w-1900lm-ip54-zwart-5301002500/",
+    "shopProductId": 1801861
+  },
+  {
+    "id": "401340909",
+    "sku": "401340909",
+    "name": "Calex Smart Spot 2L ovaal CCT en RGB 5W 345lm dimbaar wit",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "surface",
+    "sizeMM": [
+      200,
+      100,
+      60
+    ],
+    "price": 34.94,
+    "productUrl": "https://www.elektramat.nl/calex-smart-spot-2l-ovaal-cct-en-rgb-5w-345lm-dimbaar-wit-5301002000/",
+    "shopProductId": 1801862
+  },
+  {
+    "id": "401340910",
+    "sku": "401340910",
+    "name": "Calex Smart Spot 3L rond CCT en RGB 5W 345lm dimbaar wit",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "surface",
+    "sizeMM": [
+      300,
+      100,
+      60
+    ],
+    "price": 52.42,
+    "productUrl": "https://www.elektramat.nl/calex-smart-spot-3l-rond-cct-en-rgb-5w-345lm-dimbaar-wit-5301002100/",
+    "shopProductId": 1801864
+  },
+  {
+    "id": "401340911",
+    "sku": "401340911",
+    "name": "Calex Smart Spot 3L ovaal CCT en RBG 5W 345lm dimbaar wit",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "surface",
+    "sizeMM": [
+      300,
+      100,
+      60
+    ],
+    "price": 52.42,
+    "productUrl": "https://www.elektramat.nl/calex-smart-spot-3l-ovaal-cct-en-rbg-5w-345lm-dimbaar-wit-5301002200/",
+    "shopProductId": 1801865
+  },
+  {
+    "id": "401340912",
+    "sku": "401340912",
+    "name": "Calex Smart Spot 4L ovaal Wit CCT en RGB 5W 345lm dimbaar wit",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "surface",
+    "sizeMM": [
+      400,
+      100,
+      60
+    ],
+    "price": 66.02,
+    "productUrl": "https://www.elektramat.nl/calex-smart-spot-4l-ovaal-wit-cct-en-rgb-5w-345lm-dimbaar-wit-5301002300/",
+    "shopProductId": 1801867
+  },
+  {
+    "id": "401328652",
+    "sku": "401328652",
+    "name": "Calex Smart Halo LED opbouwspot RGB en CCT 340lm IP20 - dimbaar",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "surface",
+    "sizeMM": [
+      100,
+      100,
+      60
+    ],
+    "price": 29.11,
+    "productUrl": "https://www.elektramat.nl/calex-smart-halo-led-opbouwspot-rgb-en-cct-340lm-ip20-dimbaar-5301000900/",
+    "shopProductId": 1299137
+  },
+  {
+    "id": "401324221",
+    "sku": "401324221",
+    "name": "Aqara plafondlamp T1M (CL-L02D)",
+    "brand": "Aqara",
+    "surface": "ceiling",
+    "shape": "disc",
+    "sizeMM": [
+      400,
+      400,
+      80
+    ],
+    "price": 149.99,
+    "productUrl": "https://www.elektramat.nl/aqara-plafondlamp-t1m-cl-l02d/",
+    "shopProductId": 1239261
+  },
+  {
+    "id": "401328666",
+    "sku": "401328666",
+    "name": "Calex Smart Outdoor schijnwerper CCT 24W 2500lm IP54",
+    "brand": "Calex",
+    "surface": "wall",
+    "shape": "box",
+    "sizeMM": [
+      180,
+      120,
+      100
+    ],
+    "price": 40.76,
+    "productUrl": "https://www.elektramat.nl/calex-smart-outdoor-schijnwerper-cct-24w-2500lm-ip54-5401000800/",
+    "shopProductId": 1299152
+  },
+  {
+    "id": "401340913",
+    "sku": "401340913",
+    "name": "Calex Smart outdoor buitenlamp ovaal CCT en RGB 4.9W Bluetooth Mesh IP54 zwart",
+    "brand": "Calex",
+    "surface": "wall",
+    "shape": "box",
+    "sizeMM": [
+      180,
+      120,
+      100
+    ],
+    "price": 32.02,
+    "productUrl": "https://www.elektramat.nl/calex-smart-outdoor-buitenlamp-ovaal-cct-en-rgb-4-9w-bluetooth-mesh-ip54-zwart-5401002400/",
+    "shopProductId": 1801866
+  },
+  {
+    "id": "401337338",
+    "sku": "401337338",
+    "name": "Lightpro Senso Smart wandlamp Zigbee RGB en CCT 7W 640lm zwart (265N)",
+    "brand": "Lightpro",
+    "surface": "wall",
+    "shape": "box",
+    "sizeMM": [
+      180,
+      120,
+      100
+    ],
+    "price": 84.87,
+    "productUrl": "https://www.elektramat.nl/lightpro-senso-smart-wandlamp-zigbee-rgb-en-cct-7w-640lm-zwart-265n/",
+    "shopProductId": 1722313
+  },
+  {
+    "id": "401340908",
+    "sku": "401340908",
+    "name": "Calex Smart spot 1L rond CCT en RGB 5W 345lm dimbaar wit",
+    "brand": "Calex",
+    "surface": "ceiling",
+    "shape": "surface",
+    "sizeMM": [
+      100,
+      100,
+      60
+    ],
+    "price": 17.46,
+    "productUrl": "https://www.elektramat.nl/calex-smart-spot-1l-rond-cct-en-rgb-5w-345lm-dimbaar-wit-5301001900/",
+    "shopProductId": 1801863
+  }
+]
