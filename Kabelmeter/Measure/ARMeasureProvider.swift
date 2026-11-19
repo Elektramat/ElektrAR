@@ -14,6 +14,8 @@ final class ARMeasureProvider: MeasureProvider {
     private weak var session: MeasureSession?
     private weak var placement: PlacementSession?
     private let placer: ARFixturePlacer
+    private let catalog: [String: Fixture]
+    private let heightLine = HeightLine()
     private var newRoomSubscription: AnyCancellable?
     private let root = AnchorEntity(world: .zero)
     private let preview: ModelEntity
@@ -23,8 +25,10 @@ final class ARMeasureProvider: MeasureProvider {
     /// Keep the last cursor this long when ARKit briefly loses the surface.
     private static let holdDuration: CFTimeInterval = 0.5
     private var placed: [Entity] = []
+    private var runEntities: [Entity] = []
     private var updateSubscription: Cancellable?
     private var pointsSubscription: AnyCancellable?
+    private var runsSubscription: AnyCancellable?
     private var lastTick: CFTimeInterval = 0
     private static let tickInterval: CFTimeInterval = 1.0 / 15
     /// ARKit ambient intensity in lumen; ~1000 is a well lit room.
@@ -34,12 +38,14 @@ final class ARMeasureProvider: MeasureProvider {
         arView = ARView(frame: .zero, cameraMode: .ar, automaticallyConfigureSession: false)
         arView.renderOptions.insert(.disableMotionBlur)
         placer = ARFixturePlacer(arView: arView, fixtures: fixtures)
+        catalog = Dictionary(fixtures.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         preview = Self.makeSegmentEntity(color: Theme.arPreview)
         preview.isEnabled = false
         root.addChild(preview)
         verticalGuide = Self.makeSegmentEntity(color: Theme.arGuide, thickness: 0.002)
         verticalGuide.isEnabled = false
         root.addChild(verticalGuide)
+        root.addChild(heightLine.entity)
         arView.scene.addAnchor(root)
 
         let coaching = ARCoachingOverlayView()
@@ -68,11 +74,15 @@ final class ARMeasureProvider: MeasureProvider {
         pointsSubscription = session.$points.sink { [weak self] points in
             self?.render(points: points)
         }
+        runsSubscription = session.$runs.sink { [weak self] runs in
+            self?.render(runs: runs)
+        }
     }
 
     func stop() {
         updateSubscription?.cancel()
         pointsSubscription?.cancel()
+        runsSubscription?.cancel()
         newRoomSubscription?.cancel()
         placer.flush()
         arView.session.pause()
@@ -92,7 +102,8 @@ final class ARMeasureProvider: MeasureProvider {
     private func startNewRoom() {
         placer.removeAll()
         smoother.reset()
-        session?.reset()
+        session?.resetAll()
+        session?.floorY = nil
         arView.session.run(Self.makeConfiguration(), options: [.resetTracking, .removeExistingAnchors])
     }
 
@@ -104,10 +115,17 @@ final class ARMeasureProvider: MeasureProvider {
         lastTick = now
 
         let frame = arView.session.currentFrame
-        placer.tick(frame: frame)
+        updateFloor(frame: frame, session: session)
+        let cables = session.runs.map(\.points)
+        if let placement {
+            // A new switch may click onto any cable point, also of the cable being measured.
+            placer.tick(frame: frame, connections: placement.connectionPoints(catalog: catalog,
+                                                                             cables: cables + [session.points]))
+        }
 
         // Placing switches: the placer owns the crosshair, measuring pauses.
         if let placement, placement.isActive {
+            heightLine.update(at: placement.cursor?.translation, floorY: session.floorY)
             let message = Self.message(for: frame?.camera.trackingState)
                 ?? (placement.cursor == nil ? TrackingText.aimAtWall : nil)
             if session.trackingMessage != message { session.trackingMessage = message }
@@ -136,11 +154,8 @@ final class ARMeasureProvider: MeasureProvider {
             if let raw {
                 lastHitTime = now
                 let smooth = smoother.add(raw)
-                if let last {
-                    (cursor, guide) = Snapping.snap(smooth, from: last)
-                } else {
-                    cursor = smooth
-                }
+                let connections = placement?.connectionPoints(catalog: catalog, cables: cables) ?? []
+                (cursor, guide) = Snapping.cursor(smooth, last: last, connections: connections)
                 if let light = frame?.lightEstimate, light.ambientIntensity < Self.darkThreshold {
                     message = TrackingText.tooDark
                 }
@@ -160,6 +175,22 @@ final class ARMeasureProvider: MeasureProvider {
         session.cursor = cursor
         updatePreview(from: last, to: cursor)
         updateVerticalGuide(through: guide == .vertical ? last : nil)
+        heightLine.update(at: cursor, floorY: session.floorY)
+    }
+
+    /// The floor is the lowest horizontal plane ARKit calls a floor, or else the lowest one
+    /// well below the camera. Only goes down over time, so a table seen later does not win.
+    private func updateFloor(frame: ARFrame?, session: MeasureSession) {
+        guard let frame else { return }
+        let planes = frame.anchors.compactMap { anchor -> (y: Float, isFloor: Bool)? in
+            guard let plane = anchor as? ARPlaneAnchor, plane.alignment == .horizontal else { return nil }
+            let isFloor = ARPlaneAnchor.isClassificationSupported && plane.classification == .floor
+            return (plane.transform.columns.3.y, isFloor)
+        }
+        guard let floor = FloorHeight.floorY(planes: planes, cameraY: frame.camera.transform.columns.3.y) else {
+            return
+        }
+        if session.floorY.map({ abs($0 - floor) > 0.005 }) ?? true { session.floorY = floor }
     }
 
     private static func message(for state: ARCamera.TrackingState?) -> String? {
@@ -211,6 +242,27 @@ final class ARMeasureProvider: MeasureProvider {
         }
     }
 
+    /// Cables added earlier: drawn thinner and in a calmer color than the cable being measured.
+    private func render(runs: [CableRun]) {
+        runEntities.forEach { $0.removeFromParent() }
+        runEntities.removeAll()
+        for run in runs {
+            for point in run.points {
+                let dot = ModelEntity(mesh: .generateSphere(radius: 0.006),
+                                      materials: [UnlitMaterial(color: Theme.arRun)])
+                dot.position = point
+                root.addChild(dot)
+                runEntities.append(dot)
+            }
+            for (a, b) in zip(run.points, run.points.dropFirst()) {
+                let segment = Self.makeSegmentEntity(color: Theme.arRun, thickness: 0.003)
+                Self.place(segment, from: a, to: b)
+                root.addChild(segment)
+                runEntities.append(segment)
+            }
+        }
+    }
+
     private func updatePreview(from start: SIMD3<Float>?, to end: SIMD3<Float>?) {
         guard let start, let end, simd_distance(start, end) > 0.005 else {
             preview.isEnabled = false
@@ -243,5 +295,43 @@ final class ARMeasureProvider: MeasureProvider {
         entity.position = (a + b) / 2
         entity.orientation = simd_quatf(from: [0, 1, 0], to: d / length)
         entity.scale = [1, length, 1]
+    }
+}
+
+/// Dotted vertical line from the crosshair down to the floor, so the user sees the height.
+@MainActor
+private final class HeightLine {
+    let entity = Entity()
+    private var dashes: [ModelEntity] = []
+    private static let dash: Float = 0.02
+    private static let period: Float = 0.04
+    private static let maxHeight: Float = 3.2
+
+    init() {
+        let count = Int(Self.maxHeight / Self.period)
+        for _ in 0..<count {
+            let dash = ModelEntity(mesh: .generateBox(width: 0.003, height: Self.dash, depth: 0.003),
+                                   materials: [UnlitMaterial(color: Theme.arHeight)])
+            dash.isEnabled = false
+            entity.addChild(dash)
+            dashes.append(dash)
+        }
+    }
+
+    /// Shows dashes from the floor up to `point`; hides the line without a point or floor.
+    func update(at point: SIMD3<Float>?, floorY: Float?) {
+        guard let point, let floorY, point.y > floorY + 0.05 else {
+            entity.isEnabled = false
+            return
+        }
+        entity.isEnabled = true
+        entity.position = [point.x, floorY, point.z]
+        let height = point.y - floorY
+        for (i, dash) in dashes.enumerated() {
+            let bottom = Float(i) * Self.period
+            let visible = bottom + Self.dash <= height
+            if dash.isEnabled != visible { dash.isEnabled = visible }
+            if visible { dash.position = [0, bottom + Self.dash / 2, 0] }
+        }
     }
 }

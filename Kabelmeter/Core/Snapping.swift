@@ -7,6 +7,27 @@ nonisolated enum MeasureGuide: Equatable, Sendable {
     case vertical
     /// Level with the last point (same height).
     case level
+    /// On a connection point (edge middle) of a placed switch or socket.
+    case fixture
+    /// On a point of a cable measured earlier.
+    case cable
+
+    init(_ kind: ConnectionKind) {
+        switch kind {
+        case .fixture: self = .fixture
+        case .cable: self = .cable
+        }
+    }
+
+    /// Dutch label for the status pill.
+    var label: String {
+        switch self {
+        case .vertical: "Verticaal"
+        case .level: "Waterpas"
+        case .fixture: "Vast aan schakelaar"
+        case .cable: "Vast aan kabel"
+        }
+    }
 }
 
 /// Helps measuring on walls that ARKit only partly sees (no LiDAR, plain walls).
@@ -33,6 +54,17 @@ nonisolated enum Snapping {
             return (SIMD3(point.x, last.y, point.z), .level)
         }
         return (point, nil)
+    }
+
+    /// The crosshair position for measuring: a connection point (switch edge or earlier cable)
+    /// within reach wins, otherwise vertical/level snapping from the last point.
+    static func cursor(_ point: SIMD3<Float>, last: SIMD3<Float>?,
+                       connections: [ConnectionPoint]) -> (SIMD3<Float>, MeasureGuide?) {
+        if let target = ConnectionSnapping.nearest(to: point, in: connections) {
+            return (target.position, MeasureGuide(target.kind))
+        }
+        guard let last else { return (point, nil) }
+        return snap(point, from: last)
     }
 
     /// The point on the vertical line through `last` that the camera ray aims at,

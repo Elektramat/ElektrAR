@@ -5,6 +5,8 @@ struct PriceBar: View {
     let cable: Cable?
     let measured: Double
     let quote: Quote?
+    /// Cables measured and added before this one.
+    let earlierRuns: Int
     @Binding var reservePercent: Int
     let onAddToCart: () -> Void
 
@@ -32,6 +34,13 @@ struct PriceBar: View {
                         Text("per meter").font(Theme.labelFont).foregroundStyle(.secondary)
                     }
                 }
+            }
+
+            if earlierRuns > 0 {
+                Label(earlierRuns == 1 ? "1 kabel al in winkelmand" : "\(earlierRuns) kabels al in winkelmand",
+                      systemImage: "checkmark.circle")
+                    .font(Theme.labelFont)
+                    .foregroundStyle(Theme.run)
             }
 
             Stepper(value: $reservePercent, in: 0...30, step: 5) {

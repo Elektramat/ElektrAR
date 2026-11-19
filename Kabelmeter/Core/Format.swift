@@ -9,6 +9,16 @@ nonisolated enum Format {
         value.formatted(.number.precision(.fractionLength(1)).locale(locale)) + " m"
     }
 
+    /// "1,05 m": heights on a wall, to the centimeter.
+    static func height(_ value: Double) -> String {
+        value.formatted(.number.precision(.fractionLength(2)).locale(locale)) + " m"
+    }
+
+    /// "3" or "2,5": a cart quantity.
+    static func quantity(_ value: Double) -> String {
+        value.formatted(.number.precision(.fractionLength(0...1)).locale(locale))
+    }
+
     /// "10 m" or "10,5 m": whole meters without decimals.
     static func orderLength(_ value: Double) -> String {
         value.formatted(.number.precision(.fractionLength(0...1)).locale(locale)) + " m"

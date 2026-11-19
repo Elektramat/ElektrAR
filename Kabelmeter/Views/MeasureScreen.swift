@@ -28,6 +28,7 @@ struct MeasureScreen: View {
     @State private var mode: Mode = .measure
     @State private var showFixturePicker = false
     @State private var confirmClear = false
+    @State private var confirmClearCables = false
     @State private var showEasterEgg = false
 
     private var cable: Cable? {
@@ -72,9 +73,12 @@ struct MeasureScreen: View {
                 controls
                 if isPlacing {
                     PlacementBar(fixture: fixture, placedCount: placement.placed.count,
-                                 total: placement.total(in: fixtureStore.fixtures), persists: !useSimulated)
+                                 total: placement.total(in: fixtureStore.fixtures), persists: !useSimulated,
+                                 newCount: placement.notInCart.reduce(0) { $0 + $1.count },
+                                 onAddToCart: addFixturesToCart)
                 } else {
                     PriceBar(cable: cable, measured: session.totalLength, quote: quote,
+                             earlierRuns: session.runs.count,
                              reservePercent: $reservePercent, onAddToCart: addToCart)
                 }
             }
@@ -106,6 +110,12 @@ struct MeasureScreen: View {
                             isPresented: $confirmClear, titleVisibility: .visible) {
             Button("Wis alles", role: .destructive) { placement.clearAll() }
         }
+        .confirmationDialog("Alle gemeten kabels wissen?", isPresented: $confirmClearCables,
+                            titleVisibility: .visible) {
+            Button("Wis alle kabels", role: .destructive) { session.resetAll() }
+        } message: {
+            Text("Wat al in de winkelmand zit, blijft daar staan.")
+        }
         .sheet(isPresented: $showPicker) {
             CablePickerSheet(cables: cableStore.cables, selectedId: Binding(
                 get: { cable?.id }, set: { storedCableId = $0 ?? "" }))
@@ -131,6 +141,28 @@ struct MeasureScreen: View {
             }
         }
         .overlay { Crosshair(active: isPlacing ? placement.canPlace : session.canAddPoint) }
+        .overlay { heightLabel }
+    }
+
+    /// Height of the crosshair (or of the middle of the switch preview) above the floor.
+    @ViewBuilder
+    private var heightLabel: some View {
+        let point = isPlacing ? placement.cursor?.translation : session.cursor
+        Group {
+            if let height = FloorHeight.height(of: point, floorY: session.floorY) {
+                Label("\(Format.height(height)) boven de vloer", systemImage: "arrow.up.and.down")
+                    .foregroundStyle(Theme.height)
+            } else if point != nil {
+                Label("Richt even op de vloer voor de hoogte", systemImage: "arrow.down.to.line")
+                    .foregroundStyle(.white.opacity(0.8))
+            }
+        }
+        .font(.footnote.weight(.semibold))
+        .monospacedDigit()
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(.black.opacity(0.55), in: Capsule())
+        .offset(y: Theme.crosshair + 8)
+        .allowsHitTesting(false)
     }
 
     private var modePicker: some View {
@@ -235,13 +267,18 @@ struct MeasureScreen: View {
             } else if let message = session.trackingMessage {
                 pill(message, color: Theme.warning)
             } else if isPlacing {
-                if placement.placed.isEmpty { pill("Richt op een muur en tik op +", color: .white) }
+                if let guide = placement.guide {
+                    pill(guide.label, color: Theme.accent)
+                } else if placement.placed.isEmpty {
+                    pill("Richt op een muur en tik op +", color: .white)
+                }
             } else if session.isFinished {
                 pill("Meting klaar", color: .green)
             } else if let guide = session.guide {
-                pill(guide == .vertical ? "Verticaal" : "Waterpas", color: Theme.accent)
+                pill(guide.label, color: Theme.accent)
             } else if session.points.isEmpty {
-                pill("Richt op het beginpunt en tik op +", color: .white)
+                pill(session.runs.isEmpty ? "Richt op het beginpunt en tik op +"
+                                          : "Volgende kabel: richt op het beginpunt en tik op +", color: .white)
             }
 
             if placement.isRestoring {
@@ -299,8 +336,11 @@ struct MeasureScreen: View {
         HStack(alignment: .center, spacing: Theme.spacing) {
             controlButton("Ongedaan maken", icon: "arrow.uturn.backward") { session.undo() }
                 .disabled(session.points.isEmpty)
-            controlButton("Opnieuw", icon: "arrow.counterclockwise") { session.reset() }
-                .disabled(session.points.isEmpty)
+            // With a cable in progress this clears that cable; otherwise it offers to clear the earlier ones.
+            controlButton("Opnieuw", icon: "arrow.counterclockwise") {
+                if session.points.isEmpty { confirmClearCables = true } else { session.reset() }
+            }
+            .disabled(session.points.isEmpty && session.runs.isEmpty)
 
             Button(action: addPoint) {
                 Image(systemName: "plus")
@@ -356,15 +396,39 @@ struct MeasureScreen: View {
         simulatedPlacement.selectedFixtureId = fixture?.id
     }
 
+    /// Adds the measured cable, keeps it visible as an earlier cable and starts the next one.
     private func addToCart() {
         guard let cable, let quote else { return }
         do {
             try LocalCartService(store: cartStore).add(cable: cable, meters: quote.billedLength)
+            // The price included the live segment to the crosshair: keep that end point too,
+            // so the cable on screen matches what was ordered.
+            if !session.isFinished, session.cursor != nil { session.addPoint() }
+            session.completeRun(cableId: cable.id)
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             show("\(Format.orderLength(quote.billedLength)) \(cable.name) toegevoegd")
         } catch {
             UINotificationFeedbackGenerator().notificationOccurred(.error)
             show("Toevoegen is niet gelukt")
+        }
+    }
+
+    /// Adds every placed switch and socket that is not in the cart yet, as its parts.
+    private func addFixturesToCart() {
+        var pieces = 0
+        var incomplete = 0
+        for group in placement.notInCart {
+            guard let fixture = fixtureStore.fixture(id: group.fixtureId) else { continue }
+            let result = cartStore.add(fixture: fixture, count: group.count)
+            pieces += result.pieces
+            incomplete += result.incompleteFixtures
+        }
+        placement.markAllInCart()
+        UINotificationFeedbackGenerator().notificationOccurred(incomplete > 0 ? .warning : .success)
+        if incomplete > 0 {
+            show("\(pieces) onderdelen toegevoegd, \(incomplete) niet compleet te bestellen")
+        } else {
+            show("\(pieces) onderdelen toegevoegd")
         }
     }
 

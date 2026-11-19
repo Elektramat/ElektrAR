@@ -9,17 +9,32 @@ nonisolated enum MeasureMath {
     }
 }
 
+/// A cable route that is done (added to the cart). It stays visible and its points are
+/// connection points for the next cable, so a second or third cable can branch off it.
+nonisolated struct CableRun: Identifiable, Equatable, Sendable {
+    let id: UUID
+    let cableId: String
+    let points: [SIMD3<Float>]
+
+    var length: Double { MeasureMath.pathLength(points) }
+}
+
 /// Points, segments and the total length. A MeasureProvider writes `cursor` and
 /// `trackingMessage`; the UI calls addPoint, undo, reset and finish.
 @MainActor
 final class MeasureSession: ObservableObject {
+    /// Points of the cable being measured now.
     @Published private(set) var points: [SIMD3<Float>] = []
+    /// Cables measured earlier in this session.
+    @Published private(set) var runs: [CableRun] = []
     /// World position under the crosshair, nil when nothing is hit.
     @Published var cursor: SIMD3<Float>?
     /// Dutch hint for the user, nil when tracking is fine.
     @Published var trackingMessage: String?
-    /// Set when the cursor is snapped to vertical or level from the last point.
+    /// Set when the cursor is snapped to vertical, level, a switch or an earlier cable.
     @Published var guide: MeasureGuide?
+    /// Height of the floor in world space, nil until ARKit has seen it.
+    @Published var floorY: Float?
     @Published private(set) var isFinished = false
 
     var canAddPoint: Bool { !isFinished && cursor != nil }
@@ -45,9 +60,16 @@ final class MeasureSession: ObservableObject {
         if !points.isEmpty { points.removeLast() }
     }
 
+    /// Clears the cable being measured; earlier cables stay.
     func reset() {
         isFinished = false
         points.removeAll()
+    }
+
+    /// Clears everything, also the earlier cables (e.g. a new room in AR).
+    func resetAll() {
+        reset()
+        runs.removeAll()
     }
 
     func finish() {
@@ -56,5 +78,12 @@ final class MeasureSession: ObservableObject {
 
     func resume() {
         isFinished = false
+    }
+
+    /// Keeps the current route as a finished cable and starts a new, empty one.
+    func completeRun(cableId: String) {
+        guard points.count >= 2 else { return }
+        runs.append(CableRun(id: UUID(), cableId: cableId, points: points))
+        reset()
     }
 }

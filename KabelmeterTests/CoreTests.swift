@@ -99,7 +99,7 @@ final class CartStoreTests: XCTestCase {
         store.add(cable: cable, meters: 10)
         store.add(cable: cable, meters: 5)
         XCTAssertEqual(store.items.count, 1)
-        XCTAssertEqual(store.items.first?.meters, 15)
+        XCTAssertEqual(store.items.first?.quantity, 15)
         XCTAssertEqual(store.total, 14.85)
     }
 
@@ -111,6 +111,6 @@ final class CartStoreTests: XCTestCase {
 
     func testPersists() {
         CartStore(defaults: defaults).add(cable: cable, meters: 11)
-        XCTAssertEqual(CartStore(defaults: defaults).items.first?.meters, 11)
+        XCTAssertEqual(CartStore(defaults: defaults).items.first?.quantity, 11)
     }
 }
